@@ -233,6 +233,34 @@ plot = plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONS
 plt.show()
 
 # TRY TO PLOT WEATHER WITH X = HOUR, Y = TEMP
+# Plot weather data with X = HOUR, Y = TEMP
+
+# First day
+hourly_weather_month_day = hourly_weather_data_dic_by_month[fsa][year_plot][month_plot]
+hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DAY'] == int(day_plot)]
+
+plot = plt.subplot(1, 3, 1)
+plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
+
+plt.title("HOURLY THREE DAY TEMPERATURE STARTING " + year_plot + "/" + month_plot + "/" + day_plot)
+plt.xlabel("HOUR")
+plt.ylabel("TEMPERATURE in °C")
+
+# Second day
+hourly_weather_month_day = hourly_weather_data_dic_by_month[fsa][year_plot][month_plot]
+hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DAY'] == int(day_plot)+1]
+
+plot = plt.subplot(1, 3, 2)
+plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
+
+# Third day
+hourly_weather_month_day = hourly_weather_data_dic_by_month[fsa][year_plot][month_plot]
+hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DAY'] == int(day_plot)+2]
+
+plot = plt.subplot(1, 3, 3)
+plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
+
+plt.show()
 
 
 
