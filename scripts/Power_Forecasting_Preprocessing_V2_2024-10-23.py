@@ -10,6 +10,7 @@ import pandas as pd
 import datetime
 from datetime import datetime, date, timedelta
 import matplotlib.pyplot as plt
+import os
 
 #%% Student directory
 joseph_run = "C:\\Users\\sposa\\OneDrive - Toronto Metropolitan University (TMU)\\"
@@ -60,9 +61,10 @@ years = ['2018']
 months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
 
 #%% Input files (PRE-PROCESSING)
-dirs_inputs = run_student + "ELE-70A (Capstone)\\Inputs\\"
+# dirs_inputs = run_student + "ELE-70A (Capstone)\\Inputs\\"
+dirs_inputs = "data"
 
-dirs_hourly_consumption_demand = dirs_inputs + "Hourly_Demand_Data\\"
+dirs_hourly_consumption_demand = os.path.join(dirs_inputs, "Hourly_Demand_Data")
 
 # Dictionary for reading in hourly consumption by FSA
 # FSA -> Year -> Month -> Value
@@ -87,7 +89,8 @@ for fsa in fsa_list:
             # Use try and catch if problems reading input data
             try:
                 # Not cooked yet, we are going to let it COOK below
-                hourly_data_raw = pd.read_csv(dirs_hourly_consumption_demand+hourly_data_string, skiprows=3, header = 0, usecols= ['FSA', 'DATE', 'HOUR', 'CUSTOMER_TYPE', 'TOTAL_CONSUMPTION'])
+                file_path = os.path.join(dirs_hourly_consumption_demand, hourly_data_string)
+                hourly_data_raw = pd.read_csv(file_path, skiprows=3, header = 0, usecols= ['FSA', 'DATE', 'HOUR', 'CUSTOMER_TYPE', 'TOTAL_CONSUMPTION'])
             except FileNotFoundError: # not all months had a file (for example, 2024 only has up to may)
                 continue
             except ValueError: # skiprows=x does not match the "normal sequence" of 3. For example, 2023 08 data had a different skip_row value
@@ -117,7 +120,7 @@ for fsa in fsa_list:
 
 
 # Conversion between FSA and latitude longitude - NOT IMPORTANT NOW
-dirs_hourly_weather = dirs_inputs + "Weather_Data\\Hamilton_Weather\\"
+dirs_hourly_weather = os.path.join(dirs_inputs, "Weather_Data\\Hamilton_Weather\\")
 
 # Dictionary for reading in weather data
 # FSA -> Year -> Month -> Value
@@ -144,7 +147,8 @@ for fsa in fsa_list:
             try:
                 # Not cooked yet, we are going to let it COOK below
                 ## TO DO: Calculate Hmdx using existing data (Link: https://weather.mcmaster.ca/parameter_calculation)
-                hourly_data_raw = pd.read_csv(dirs_hourly_weather+weather_data_string, skiprows=0, header = 0, usecols= ['Climate ID', 'Date/Time (LST)', 'Temp (°C)', 'Dew Point Temp (°C)', 'Rel Hum (%)', 'Wind Dir (10s deg)', 'Wind Spd (km/h)', 'Visibility (km)', 'Stn Press (kPa)', 'Wind Chill', 'Weather'])
+                file_path = os.path.join(dirs_hourly_weather, weather_data_string)
+                hourly_data_raw = pd.read_csv(file_path, skiprows=0, header = 0, usecols= ['Climate ID', 'Date/Time (LST)', 'Temp (°C)', 'Dew Point Temp (°C)', 'Rel Hum (%)', 'Wind Dir (10s deg)', 'Wind Spd (km/h)', 'Visibility (km)', 'Stn Press (kPa)', 'Wind Chill', 'Weather'])
             except FileNotFoundError: # not all months had a file (for example, 2024 only has up to may)
                 continue
             # except ValueError: # skiprows=x does not match the "normal sequence" of 3. For example, 2023 08 data had a different skip_row value
