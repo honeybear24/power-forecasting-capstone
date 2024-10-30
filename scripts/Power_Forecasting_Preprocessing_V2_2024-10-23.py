@@ -13,10 +13,10 @@ import matplotlib.pyplot as plt
 import os
 
 #%% Student directory
-joseph_run = "C:\\Users\\sposa\\OneDrive - Toronto Metropolitan University (TMU)\\"
-hanad_run = "C:\\Users\\hanad\\OneDrive - Toronto Metropolitan University (TMU)\\"
-# janna_run
-# clover_run
+joseph_run = "C:\\Users\\sposa\\Documents\\GitHub\\power-forecasting-capstone\\data"
+hanad_run = "./data"
+janna_run = "./data"
+clover_run = "./data"
 
 ###############################################################################
 ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
@@ -27,10 +27,10 @@ if (run_student == joseph_run):
     print("JOSEPH IS RUNNING!")
 elif (run_student == hanad_run):
     print("HANAD IS RUNNING!")
-# elif (run_student == janna_run):
-#     print("JANNA IS RUNNING!")
-# elif (run_student == clover_run):
-#     print("CLOVER IS RUNNING!")
+elif (run_student == janna_run):
+    print("JANNA IS RUNNING!")
+elif (run_student == clover_run):
+    print("CLOVER IS RUNNING!")
 else:
     print("ERROR!! NO ELIGIBLE STUDENT!")
             
@@ -43,8 +43,8 @@ fsa_list = ['L9G']
 # GUI INPUT
 fsa_chosen = "L9G"
 
-#years = ['2018', '2019', '2020', '2021', '2022', '2023']
-years = ['2018']
+years = ['2018', '2019', '2020', '2021', '2022', '2023']
+#years = ['2018']
 
 # Jan - 01
 # Feb - 02
@@ -61,8 +61,7 @@ years = ['2018']
 months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
 
 #%% Input files (PRE-PROCESSING)
-# dirs_inputs = run_student + "ELE-70A (Capstone)\\Inputs\\"
-dirs_inputs = "data"
+dirs_inputs = run_student
 
 dirs_hourly_consumption_demand = os.path.join(dirs_inputs, "Hourly_Demand_Data")
 
@@ -94,7 +93,7 @@ for fsa in fsa_list:
             except FileNotFoundError: # not all months had a file (for example, 2024 only has up to may)
                 continue
             except ValueError: # skiprows=x does not match the "normal sequence" of 3. For example, 2023 08 data had a different skip_row value
-                hourly_data_raw = pd.read_csv(dirs_hourly_consumption_demand+hourly_data_string, skiprows=7, header = 0, usecols= ['FSA', 'DATE', 'HOUR', 'CUSTOMER_TYPE', 'TOTAL_CONSUMPTION'])
+                hourly_data_raw = pd.read_csv(file_path, skiprows=7, header = 0, usecols= ['FSA', 'DATE', 'HOUR', 'CUSTOMER_TYPE', 'TOTAL_CONSUMPTION'])
        
             # Convert Date into year, month, day
             hourly_data_fix_date = hourly_data_raw
