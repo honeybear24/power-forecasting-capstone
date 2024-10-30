@@ -22,7 +22,7 @@ hanad_run = "C:\\Users\\hanad\\OneDrive - Toronto Metropolitan University (TMU)\
 ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
 ###############################################################################
 # Paste student name_run for whoever is running the code
-run_student = joseph_run
+run_student = hanad_run
 if (run_student == joseph_run):
     print("JOSEPH IS RUNNING!")
 elif (run_student == hanad_run):
@@ -43,8 +43,8 @@ fsa_list = ['L9G']
 # GUI INPUT
 fsa_chosen = "L9G"
 
-#years = ['2018', '2019', '2020', '2021', '2022', '2023']
-years = ['2018']
+years = ['2018', '2019', '2020', '2021', '2022', '2023']
+#years = ['2018']
 
 # Jan - 01
 # Feb - 02
@@ -62,7 +62,7 @@ months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'
 
 #%% Input files (PRE-PROCESSING)
 # dirs_inputs = run_student + "ELE-70A (Capstone)\\Inputs\\"
-dirs_inputs = "data"
+dirs_inputs = "./data"
 
 dirs_hourly_consumption_demand = os.path.join(dirs_inputs, "Hourly_Demand_Data")
 
@@ -94,7 +94,7 @@ for fsa in fsa_list:
             except FileNotFoundError: # not all months had a file (for example, 2024 only has up to may)
                 continue
             except ValueError: # skiprows=x does not match the "normal sequence" of 3. For example, 2023 08 data had a different skip_row value
-                hourly_data_raw = pd.read_csv(dirs_hourly_consumption_demand+hourly_data_string, skiprows=7, header = 0, usecols= ['FSA', 'DATE', 'HOUR', 'CUSTOMER_TYPE', 'TOTAL_CONSUMPTION'])
+                hourly_data_raw = pd.read_csv(file_path, skiprows=7, header = 0, usecols= ['FSA', 'DATE', 'HOUR', 'CUSTOMER_TYPE', 'TOTAL_CONSUMPTION'])
        
             # Convert Date into year, month, day
             hourly_data_fix_date = hourly_data_raw
@@ -103,7 +103,7 @@ for fsa in fsa_list:
             hourly_data_fix_date['MONTH'] = hourly_data_fix_date['DATE'].dt.month
             hourly_data_fix_date['DAY'] = hourly_data_fix_date['DATE'].dt.day
             
-            # Filter out only residential data
+            # Filter for only residential data
             hourly_data_res = hourly_data_fix_date.loc[hourly_data_fix_date['CUSTOMER_TYPE'] == "Residential"].reset_index(drop=True)
             
             # Then filter out by the fsa
@@ -112,19 +112,20 @@ for fsa in fsa_list:
             # Take the sum if fsa has more than 1 date (this is because there are different pay codes in residential loads)
             hourly_data_hour_sum = hourly_data_res_fsa.groupby(["FSA", "CUSTOMER_TYPE", "YEAR", "MONTH", "DAY", "HOUR"]).TOTAL_CONSUMPTION.sum().reset_index()
             
-            
+            # Steo data in month dictionary
             hourly_consumption_data_dic_by_month[fsa][year][month] = hourly_data_hour_sum
             
-            
+            # Print out name of files that has been parsed 
             print(hourly_data_string)
 
 
-# Conversion between FSA and latitude longitude - NOT IMPORTANT NOW
+# Conversion between FSA and latitude longitude - FEATURE TO IMPLIMENT LATER - NOT IMPORTANT NOW
 dirs_hourly_weather = os.path.join(dirs_inputs, "Weather_Data\\Hamilton_Weather\\")
 
 # Dictionary for reading in weather data
 # FSA -> Year -> Month -> Value
 
+# Initialize hourly weather data dictionary 
 hourly_weather_data_dic_by_month = {}
 
 for fsa in fsa_list:
@@ -140,7 +141,7 @@ for fsa in fsa_list:
             # hourly_data_res = pd.DataFrame()
             # hourly_data_res_fsa = pd.DataFrame()
             # hourly_data_hour_sum = pd.DataFrame()
-            climate_id = "6153193"
+            climate_id = "6153193" # Hardcoding which weather station to pull data from - TO BE MADE MODULAR FOR DIFFERENT FSA - LATER
             weather_data_string = "en_climate_hourly_ON_" + climate_id + "_" + month + "-" + year + "_P1H.csv"
             
             # Use try and catch if problems reading input data
@@ -151,8 +152,8 @@ for fsa in fsa_list:
                 hourly_data_raw = pd.read_csv(file_path, skiprows=0, header = 0, usecols= ['Climate ID', 'Date/Time (LST)', 'Temp (°C)', 'Dew Point Temp (°C)', 'Rel Hum (%)', 'Wind Dir (10s deg)', 'Wind Spd (km/h)', 'Visibility (km)', 'Stn Press (kPa)', 'Wind Chill', 'Weather'])
             except FileNotFoundError: # not all months had a file (for example, 2024 only has up to may)
                 continue
-            # except ValueError: # skiprows=x does not match the "normal sequence" of 3. For example, 2023 08 data had a different skip_row value
-            #     hourly_data_raw = pd.read_csv(dirs_hourly_weather+weather_data_string, skiprows=7, header = 0, usecols= ['FSA', 'DATE', 'HOUR', 'CUSTOMER_TYPE', 'TOTAL_CONSUMPTION'])
+            except ValueError: # skiprows=x does not match the "normal sequence" of 3. For example, 2023 08 data had a different skip_row value
+                 hourly_data_raw = pd.read_csv(dirs_hourly_weather+weather_data_string, skiprows=7, header = 0, usecols= ['FSA', 'DATE', 'HOUR', 'CUSTOMER_TYPE', 'TOTAL_CONSUMPTION'])
        
             # Convert Date into year, month, day
             hourly_data_fix_date = hourly_data_raw
@@ -171,7 +172,7 @@ for fsa in fsa_list:
             print(weather_data_string)
 
 
-# Calendar Variables
+# Calendar Variables - TBD FEATURE IN X_df
 
 # X Variables
 X_df = pd.DataFrame()
@@ -196,6 +197,12 @@ for year in years:
         X_df = pd.concat([X_df, hourly_data_by_month_X], ignore_index=True)
         Y_df = pd.concat([Y_df, hourly_data_by_month_Y], ignore_index=True)
 
+# Save X and Y data frames to csvs for easy use in models
+df_dir_path = os.path.join(dirs_inputs, "Data_Frames\\")
+if not os.path.exists(df_dir_path): # If Data_Frames directory does NOT exists, create it
+    os.makedirs(df_dir_path)
+X_df.to_csv(df_dir_path + "X_all.csv", index=False)
+Y_df.to_csv(df_dir_path + "Y_all.csv", index=False)
 
 
 #%% Plot Input Data
