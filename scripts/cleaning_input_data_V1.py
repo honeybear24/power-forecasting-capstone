@@ -11,8 +11,8 @@ import numpy as np
 data_dir = "./data"
 df_directory = os.path.join(data_dir, "Data_Frames")
 
-X = pd.read_csv(os.path.join(df_directory, "X_all.csv"))
-Y = pd.read_csv(os.path.join(df_directory, "Y_all.csv"))
+X = pd.read_csv(os.path.join(df_directory, "X_2018.csv"))
+Y = pd.read_csv(os.path.join(df_directory, "Y_2018.csv"))
 
 
 ## Cleaning up X dataframe
@@ -74,7 +74,7 @@ for column in X_columns:
 df_dir_path = os.path.join(".\data\Data_Frames\\")
 if not os.path.exists(df_dir_path): # If Data_Frames directory does NOT exists, create it
     os.makedirs(df_dir_path)
-X_without_bad_windchill.to_csv(df_dir_path + "X_all_interpolated.csv", index=False)
+X_without_bad_windchill.to_csv(df_dir_path + "X_2018_interpolated.csv", index=False)
             
             
 
