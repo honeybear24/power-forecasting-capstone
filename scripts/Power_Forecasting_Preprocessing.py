@@ -286,7 +286,7 @@ X_df_cleaned = X_without_bad_windchill
 
 #%% KNN Model
 # JOSEPH FILLS IN CODE HERE ON A NEW BRANCH
-
+print("JOSEPH IS COOL")
 
 
 
