@@ -11,6 +11,10 @@ import datetime
 from datetime import datetime, date, timedelta
 import matplotlib.pyplot as plt
 import os
+import numpy as np
+from sklearn.svm import SVR
+from sklearn.preprocessing import StandardScaler
+
 
 #%% Student directory
 joseph_run = "C:\\Users\\sposa\\Documents\\GitHub\\power-forecasting-capstone\\data"
@@ -22,7 +26,7 @@ clover_run = "./data"
 ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
 ###############################################################################
 # Paste student name_run for whoever is running the code
-run_student = joseph_run
+run_student = clover_run
 if (run_student == joseph_run):
     print("JOSEPH IS RUNNING!")
 elif (run_student == hanad_run):
@@ -261,9 +265,34 @@ plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourl
 
 plt.show()
 
+# SVR Model 
+sc_X = StandardScaler()
+sc_y = StandardScaler()
+
+# Reshape X data to handle multiple features
+X_scaled = sc_X.fit_transform(X_df['HOUR'])
+y_scaled = sc_y.fit_transform(Y_df['TOTAL_CONSUMPTION'].values.reshape(-1, 1))
 
 
+# Train SVR model
+regressor = SVR(kernel='rbf')
+regressor.fit(X_scaled, y_scaled.ravel())
 
+# Model predictions
+y_pred = regressor.predict(X_scaled)
+y_pred = sc_y.inverse_transform(y_pred.reshape(-1, 1))
+
+
+# Plotting with fixes
+plt.figure(figsize=(12, 6))
+plt.scatter(X_df['HOUR'], Y_df['TOTAL_CONSUMPTION'], color='red', label='Actual', alpha=0.5)
+plt.scatter(X_df['HOUR'], y_pred, color='blue', label='Predicted', alpha=0.5)
+plt.legend()
+plt.title('Power Consumption (SVR)')
+plt.xlabel('Hours')
+plt.ylabel('Power Consumption in KW')
+
+plt.show()
 
 
 
