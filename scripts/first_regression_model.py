@@ -54,11 +54,18 @@ print("MAPE: ", str(mape) + "\n")
 print("MAE: " , str(mae) + "\n")
 print("R^2 ", str(r2) + "\n" )
 
+# get importance
+importance = mod.coef_
+# summarize feature importance
+for i,v in enumerate(importance):
+	print('Feature: %0d, Score: %.5f' % (i,v))
+
+
 
 # Plotting
 year_plot = 2023
 month_plot = 12
-day_plot = 19
+day_plot = 21
 
 Y_pred_df = pd.DataFrame(Y_pred, columns=['TOTAL_CONSUMPTION'], index = Y_test.index)
 Y_test_df = pd.DataFrame(Y_test, columns=['TOTAL_CONSUMPTION'])
@@ -87,6 +94,7 @@ Y_pred_year_month_day = Y_pred_year_month_day[Y_pred_year_month_day['MONTH'] == 
 Y_pred_year_month_day = Y_pred_year_month_day[Y_pred_year_month_day['DAY'] == day_plot]
 
 # Plotting comparison for randomly selected day
+fig1 = plt.figure("Figure 1")
 plt.plot(X_test_year_month_day['HOUR'], Y_test_year_month_day['TOTAL_CONSUMPTION'], color="black",  label='Actual')
 plt.plot(X_test_year_month_day['HOUR'], Y_pred_year_month_day['TOTAL_CONSUMPTION'], color="blue", linewidth=3, label='Predicted')
 plt.xlabel("Hour")
@@ -95,9 +103,10 @@ plt.title("Comparison between Actual and Predition for " + str(month_plot) + "/"
 plt.legend()
 plt.xticks(())
 plt.yticks(())
-plt.show()
+plt.show(block=False)
 
 # Ploting comparison for a whole month 
+fig2 = plt.figure("Figure 2")
 plt.plot(X_test.index, Y_test_df['TOTAL_CONSUMPTION'], color="black",  label='Actual')
 plt.plot(X_test.index, Y_pred_df['TOTAL_CONSUMPTION'], color="blue",  label='Prediction')
 plt.title("Comparison between Actual and Predition for " + str(month_plot) + "/" + str(year_plot))
