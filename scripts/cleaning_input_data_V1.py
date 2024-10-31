@@ -6,9 +6,9 @@
 import os
 import pandas as pd
 import numpy as np
-
+import math
 ## Import saved CSV into script as dataframes
-data_dir = "./data"
+data_dir = "D:\\Users\\Joseph\\Documents\\GitHub\\power-forecasting-capstone\\data"
 df_directory = os.path.join(data_dir, "Data_Frames")
 
 X = pd.read_csv(os.path.join(df_directory, "X_2018.csv"))
@@ -31,12 +31,16 @@ for column in X_columns:
 
     print("Current Column: " + column) # Checking what columns make it here
     print("\n")
-
+    counter_adjacent_nan = 0
     # For current column, iterate through all rough
     for index, row in X_without_bad_windchill.iterrows():
-        
+        # Check if there are more than 2 nan values
+        if (counter_adjacent_nan>1):
+            counter_adjacent_nan -= 1
+            continue
         # Check if value for current index and column is missing
-        if row[column] != row[column]:
+        #if row[column] != row[column]:
+        if math.isnan(row[column]):
             print("MISSING DATA FOUND AT Index: " , str(index) , " | Column: " + column + " | Value: " + str(row[column]))
             
             # If found, take need to take linear interpolation between last actual value and next actual value (need to interpolate any consectutively missing data points too!)
@@ -61,15 +65,18 @@ for column in X_columns:
                     not_found = False
             
             # Get linear interpolation of data
-            interpolated_data = np.linspace(start=last_data_point, stop=next_data_point, num=counter)
+            interpolated_data = np.linspace(start=last_data_point, stop=next_data_point, num=counter+1, endpoint = False)[1:]
+            
 
             # Give interpolated values to missing data points
             counter = 0
+            counter_adjacent_nan=0
             for new_value in interpolated_data:
                 X_without_bad_windchill.loc[index+counter, column] = new_value
-                print(" NEW INTERPOLATED VALUE = " + str(new_value))
+                print(" NEW INTERPOLATED VALUE = " + str(X_without_bad_windchill.loc[index+counter, column]))
                 counter += 1
-
+                counter_adjacent_nan += 1
+            
 # Save modified data frame to csv for validation
 df_dir_path = os.path.join(".\data\Data_Frames\\")
 if not os.path.exists(df_dir_path): # If Data_Frames directory does NOT exists, create it
