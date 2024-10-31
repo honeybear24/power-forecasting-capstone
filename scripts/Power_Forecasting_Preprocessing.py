@@ -14,6 +14,10 @@ import os
 import math
 import numpy as np
 
+
+
+
+
 #%% Student directory
 hanad_run = ["./data", 1]
 clover_run = ["./data", 2]
