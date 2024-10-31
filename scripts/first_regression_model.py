@@ -55,11 +55,10 @@ print("MAE: " , str(mae) + "\n")
 print("R^2 ", str(r2) + "\n" )
 
 
+# Plotting
 year_plot = 2023
 month_plot = 12
 day_plot = 1
-
-
 
 Y_pred_df = pd.DataFrame(Y_pred, columns=['TOTAL_CONSUMPTION'], index = Y_test.index)
 Y_test_df = pd.DataFrame(Y_test, columns=['TOTAL_CONSUMPTION'])
