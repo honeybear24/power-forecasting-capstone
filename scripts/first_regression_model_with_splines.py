@@ -60,64 +60,57 @@ print("MAPE: ", str(mape))
 print("MAE: " , str(mae))
 print("R^2 ", str(r2))
 
-# # get importance
-# importance = pipe.
-# # summarize feature importance
-# print("Impo")
-# for i,v in enumerate(importance):
-# 	print('Feature: %0d, Score: %.5f' % (i,v))
 
 
+# # Plotting
+# year_plot = 2023
+# month_plot = 12
+# day_plot = 25
 
-# Plotting
-year_plot = 2023
-month_plot = 12
-day_plot = 25
+# Y_pred_df = pd.DataFrame(Y_pred, columns=['TOTAL_CONSUMPTION'], index = Y_test.index)
+# Y_test_df = pd.DataFrame(Y_test, columns=['TOTAL_CONSUMPTION'])
 
-Y_pred_df = pd.DataFrame(Y_pred, columns=['TOTAL_CONSUMPTION'], index = Y_test.index)
-Y_test_df = pd.DataFrame(Y_test, columns=['TOTAL_CONSUMPTION'])
+# Y_pred_df['YEAR'] = X_test['YEAR']
+# Y_pred_df['MONTH'] = X_test['MONTH']
+# Y_pred_df['DAY'] = X_test['DAY']
+# Y_pred_df['HOUR'] = X_test['HOUR']
 
-Y_pred_df['YEAR'] = X_test['YEAR']
-Y_pred_df['MONTH'] = X_test['MONTH']
-Y_pred_df['DAY'] = X_test['DAY']
-Y_pred_df['HOUR'] = X_test['HOUR']
-
-Y_test_df['YEAR'] = X_test['YEAR']
-Y_test_df['MONTH'] = X_test['MONTH']
-Y_test_df['DAY'] = X_test['DAY']
-Y_test_df['HOUR'] = X_test['HOUR']
+# Y_test_df['YEAR'] = X_test['YEAR']
+# Y_test_df['MONTH'] = X_test['MONTH']
+# Y_test_df['DAY'] = X_test['DAY']
+# Y_test_df['HOUR'] = X_test['HOUR']
 
 
-X_test_year_month_day = X_test[X_test['YEAR'] == year_plot]
-X_test_year_month_day = X_test_year_month_day[X_test_year_month_day['MONTH'] == month_plot]
-X_test_year_month_day = X_test_year_month_day[X_test_year_month_day['DAY'] == day_plot]
+# X_test_year_month_day = X_test[X_test['YEAR'] == year_plot]
+# X_test_year_month_day = X_test_year_month_day[X_test_year_month_day['MONTH'] == month_plot]
+# X_test_year_month_day = X_test_year_month_day[X_test_year_month_day['DAY'] == day_plot]
 
-Y_test_year_month_day = Y_test_df[Y_test_df['YEAR'] == year_plot]
-Y_test_year_month_day = Y_test_year_month_day[Y_test_year_month_day['MONTH'] == month_plot]
-Y_test_year_month_day = Y_test_year_month_day[Y_test_year_month_day['DAY'] == day_plot]
+# Y_test_year_month_day = Y_test_df[Y_test_df['YEAR'] == year_plot]
+# Y_test_year_month_day = Y_test_year_month_day[Y_test_year_month_day['MONTH'] == month_plot]
+# Y_test_year_month_day = Y_test_year_month_day[Y_test_year_month_day['DAY'] == day_plot]
 
-Y_pred_year_month_day = Y_pred_df[Y_pred_df['YEAR'] == year_plot]
-Y_pred_year_month_day = Y_pred_year_month_day[Y_pred_year_month_day['MONTH'] == month_plot]
-Y_pred_year_month_day = Y_pred_year_month_day[Y_pred_year_month_day['DAY'] == day_plot]
+# Y_pred_year_month_day = Y_pred_df[Y_pred_df['YEAR'] == year_plot]
+# Y_pred_year_month_day = Y_pred_year_month_day[Y_pred_year_month_day['MONTH'] == month_plot]
+# Y_pred_year_month_day = Y_pred_year_month_day[Y_pred_year_month_day['DAY'] == day_plot]
 
-# Plotting comparison for randomly selected day
-fig1 = plt.figure("Figure 1")
-plt.plot(X_test_year_month_day['HOUR'], Y_test_year_month_day['TOTAL_CONSUMPTION'], color="black",  label='Actual')
-plt.plot(X_test_year_month_day['HOUR'], Y_pred_year_month_day['TOTAL_CONSUMPTION'], color="blue", linewidth=3, label='Predicted')
-plt.xlabel("Hour")
-plt.ylabel("Power Demand")
-plt.title("Comparison between Actual and Predition for " + str(month_plot) + "/" + str(day_plot) + "/" + str(year_plot))
-plt.legend()
-plt.xticks(())
-plt.yticks(())
-plt.show(block=False)
+# # Plotting comparison for randomly selected day
+# fig1 = plt.figure("Figure 1")
+# plt.plot(X_test_year_month_day['HOUR'], Y_test_year_month_day['TOTAL_CONSUMPTION'], color="black",  label='Actual')
+# plt.plot(X_test_year_month_day['HOUR'], Y_pred_year_month_day['TOTAL_CONSUMPTION'], color="blue", linewidth=3, label='Predicted')
+# plt.xlabel("Hour")
+# plt.ylabel("Power Demand")
+# plt.title("Comparison between Actual and Predition for " + str(month_plot) + "/" + str(day_plot) + "/" + str(year_plot))
+# plt.legend()
+# plt.xticks(())
+# plt.yticks(())
+# plt.show(block=False)
 
-# Ploting comparison for a whole month 
-fig2 = plt.figure("Figure 2")
-plt.plot(X_test.index, Y_test_df['TOTAL_CONSUMPTION'], color="black",  label='Actual')
-plt.plot(X_test.index, Y_pred_df['TOTAL_CONSUMPTION'], color="blue",  label='Prediction')
-plt.title("Comparison between Actual and Predition for " + str(month_plot) + "/" + str(year_plot))
-plt.legend()
-plt.xticks(())
-plt.yticks(())
-plt.show()
+# # Ploting comparison for a whole month 
+# fig2 = plt.figure("Figure 2")
+# plt.plot(X_test.index, Y_test_df['TOTAL_CONSUMPTION'], color="black",  label='Actual')
+# plt.plot(X_test.index, Y_pred_df['TOTAL_CONSUMPTION'], color="blue",  label='Prediction')
+# plt.title("Comparison between Actual and Predition for " + str(month_plot) + "/" + str(year_plot))
+# plt.legend()
+# plt.xticks(())
+# plt.yticks(())
+# plt.show()
