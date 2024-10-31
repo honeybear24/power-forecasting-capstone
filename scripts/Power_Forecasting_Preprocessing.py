@@ -286,8 +286,11 @@ X_df_cleaned = X_without_bad_windchill
 
 #%% KNN Model
 # JOSEPH FILLS IN CODE HERE ON A NEW BRANCH
-print("JOSEPH IS COOL")
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X_df_cleaned, Y_df, test_size=0.20)
 
+X_train = X_train.sort_index
+y_train = y_train.sort_index
 
 
 
