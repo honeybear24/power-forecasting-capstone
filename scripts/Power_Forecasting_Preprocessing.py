@@ -26,7 +26,7 @@ janna_run = ["./data", 4]
 ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
 ###############################################################################
 # Paste student name_run for whoever is running the code
-run_student = joseph_pc_run
+run_student = hanad_run
 if (run_student[1] == joseph_laptop_run[1]):
     print("JOSEPH IS RUNNING!")
 elif (run_student[1] == hanad_run[1]):
@@ -203,11 +203,14 @@ for year in years:
         
         # Extract the monthly hourly data for y variables
         hourly_data_by_month_Y = hourly_consumption_data_dic_by_month[fsa_chosen][year][month].drop(["FSA", "CUSTOMER_TYPE", "YEAR", "MONTH", "DAY", "HOUR"], axis=1)
-        
+        hourly_data_by_month_Y = hourly_consumption_data_dic_by_month[fsa_chosen][year][month].drop(["FSA", "CUSTOMER_TYPE", "YEAR", "MONTH", "DAY", "HOUR"], axis=1)
+
         
         
         X_df = pd.concat([X_df, hourly_data_by_month_X], ignore_index=True)
         Y_df = pd.concat([Y_df, hourly_data_by_month_Y], ignore_index=True)
+
+
 
 ###############################################################################
 # Cleaning up X_df dataframe
@@ -273,6 +276,17 @@ for column in X_columns:
                 counter += 1
                 counter_adjacent_nan += 1
 X_df_cleaned = X_without_bad_windchill
+
+# Storing data in CSVs for later use
+data_dir = "./data"
+df_directory = os.path.join(data_dir, "Data_Frames")
+
+# Train model - Extract only January from X dataframe
+X_df_cleaned.to_csv(os.path.join(df_directory,'X_all.csv'), index=False) 
+Y_df.to_csv(os.path.join(df_directory,'Y_all.csv'), index=False) 
+
+
+
 
 #%% Regression Model
 # HANAD FILLS IN CODE HERE ON A NEW BRANCH
