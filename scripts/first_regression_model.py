@@ -58,7 +58,7 @@ print("R^2 ", str(r2) + "\n" )
 # Plotting
 year_plot = 2023
 month_plot = 12
-day_plot = 1
+day_plot = 19
 
 Y_pred_df = pd.DataFrame(Y_pred, columns=['TOTAL_CONSUMPTION'], index = Y_test.index)
 Y_test_df = pd.DataFrame(Y_test, columns=['TOTAL_CONSUMPTION'])
@@ -86,12 +86,22 @@ Y_pred_year_month_day = Y_pred_df[Y_pred_df['YEAR'] == year_plot]
 Y_pred_year_month_day = Y_pred_year_month_day[Y_pred_year_month_day['MONTH'] == month_plot]
 Y_pred_year_month_day = Y_pred_year_month_day[Y_pred_year_month_day['DAY'] == day_plot]
 
-
-plt.plot(X_test_year_month_day['HOUR'], Y_test_year_month_day['TOTAL_CONSUMPTION'], color="black")
-plt.plot(X_test_year_month_day['HOUR'], Y_pred_year_month_day['TOTAL_CONSUMPTION'], color="blue", linewidth=3)
+# Plotting comparison for randomly selected day
+plt.plot(X_test_year_month_day['HOUR'], Y_test_year_month_day['TOTAL_CONSUMPTION'], color="black",  label='Actual')
+plt.plot(X_test_year_month_day['HOUR'], Y_pred_year_month_day['TOTAL_CONSUMPTION'], color="blue", linewidth=3, label='Predicted')
 plt.xlabel("Hour")
 plt.ylabel("Power Demand")
+plt.title("Comparison between Actual and Predition for " + str(month_plot) + "/" + str(day_plot) + "/" + str(year_plot))
+plt.legend()
 plt.xticks(())
 plt.yticks(())
+plt.show()
 
+# Ploting comparison for a whole month 
+plt.plot(X_test.index, Y_test_df['TOTAL_CONSUMPTION'], color="black",  label='Actual')
+plt.plot(X_test.index, Y_pred_df['TOTAL_CONSUMPTION'], color="blue",  label='Prediction')
+plt.title("Comparison between Actual and Predition for " + str(month_plot) + "/" + str(year_plot))
+plt.legend()
+plt.xticks(())
+plt.yticks(())
 plt.show()
