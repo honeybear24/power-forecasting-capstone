@@ -286,18 +286,30 @@ X_df_cleaned = X_without_bad_windchill
 
 #%% KNN Model
 # JOSEPH FILLS IN CODE HERE ON A NEW BRANCH
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.neighbors import KNeighborsRegressor 
 from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error, mean_squared_error, r2_score
+from sklearn.pipeline import Pipeline
 
-X_train, X_test, Y_train, Y_test = train_test_split(X_df_cleaned, Y_df['TOTAL_CONSUMPTION'], test_size=0.20, shuffle = False)
+X_train, X_test, Y_train, Y_test = train_test_split(X_df_cleaned['YEAR'], Y_df['TOTAL_CONSUMPTION'], test_size=0.20, shuffle = False)
 
-knn_model = KNeighborsRegressor(n_neighbors=5)
+# knn_model = KNeighborsRegressor(n_neighbors=21)
+# knn_model.fit(X_train, Y_train)
+
+# Y_pred = knn_model.predict(X_test)
+
+# TRY GRID SEARCH
+pipeline_knn = Pipeline([("model", KNeighborsRegressor(n_neighbors=1))])
+
+knn_model = GridSearchCV(estimator = pipeline_knn, param_grid = {'model__n_neighbors': range(1,50)}, cv=3)
+
 knn_model.fit(X_train, Y_train)
+output = pd.DataFrame(knn_model.cv_results_)
 
 Y_pred = knn_model.predict(X_test)
 
 mape = mean_absolute_percentage_error(Y_test, Y_pred)
+print("MAPE = " + str(round(mape*100, 3)) + "%.")
 mae = mean_absolute_error(Y_test, Y_pred)
 mse = mean_squared_error(Y_test, Y_pred)
 r2 = r2_score(Y_test, Y_pred)
@@ -305,8 +317,8 @@ r2 = r2_score(Y_test, Y_pred)
 
 ## PLOTTING
 year_plot = 2023
-month_plot = 4
-day_plot = 22
+month_plot = 1
+day_plot = 1
 
 
 
@@ -324,26 +336,59 @@ Y_test_df['DAY'] = X_test['DAY']
 Y_test_df['HOUR'] = X_test['HOUR']
 
 
-X_test_year_month_day = X_test[X_test['YEAR'] == year_plot]
-X_test_year_month_day = X_test_year_month_day[X_test_year_month_day['MONTH'] == month_plot]
-X_test_year_month_day = X_test_year_month_day[X_test_year_month_day['DAY'] == day_plot]
+X_test_year = X_test[X_test['YEAR'] == year_plot]
+X_test_year_month = X_test_year[X_test_year['MONTH'] == month_plot]
+X_test_year_month_day = X_test_year_month[X_test_year_month['DAY'] == day_plot]
 
-Y_test_year_month_day = Y_test_df[Y_test_df['YEAR'] == year_plot]
-Y_test_year_month_day = Y_test_year_month_day[Y_test_year_month_day['MONTH'] == month_plot]
-Y_test_year_month_day = Y_test_year_month_day[Y_test_year_month_day['DAY'] == day_plot]
+Y_test_year = Y_test_df[Y_test_df['YEAR'] == year_plot]
+Y_test_year_month = Y_test_year[Y_test_year['MONTH'] == month_plot]
+Y_test_year_month_day = Y_test_year_month[Y_test_year_month['DAY'] == day_plot]
 
-Y_pred_year_month_day = Y_pred_df[Y_pred_df['YEAR'] == year_plot]
-Y_pred_year_month_day = Y_pred_year_month_day[Y_pred_year_month_day['MONTH'] == month_plot]
-Y_pred_year_month_day = Y_pred_year_month_day[Y_pred_year_month_day['DAY'] == day_plot]
+Y_pred_year = Y_pred_df[Y_pred_df['YEAR'] == year_plot]
+Y_pred_year_month = Y_pred_year[Y_pred_year['MONTH'] == month_plot]
+Y_pred_year_month_day = Y_pred_year_month[Y_pred_year_month['DAY'] == day_plot]
 
+# Yearly Plot
+plt.title(str(year_plot) + " Prediction VS Actual of KNN Model")
 
-plt.plot(X_test_year_month_day['HOUR'], Y_test_year_month_day['TOTAL_CONSUMPTION'], color="black")
-plt.plot(X_test_year_month_day['HOUR'], Y_pred_year_month_day['TOTAL_CONSUMPTION'], color="blue", linewidth=3)
-plt.xlabel("Hour")
-plt.ylabel("Power Demand")
+plt.plot(X_test_year['HOUR'].index, Y_pred_year['TOTAL_CONSUMPTION'], color="blue", linewidth=3)
+plt.plot(X_test_year['HOUR'].index, Y_test_year['TOTAL_CONSUMPTION'], color="black")
+plt.xlabel("HOUR")
+plt.ylabel("CONSUMPTION in KW")
 plt.xticks(())
 plt.yticks(())
+plt.show()
 
+plt.title(str(year_plot) + " Prediction VS Actual of KNN Model")
+
+plt.plot(X_test_year['HOUR'].index, Y_test_year['TOTAL_CONSUMPTION'], color="black")
+plt.plot(X_test_year['HOUR'].index, Y_pred_year['TOTAL_CONSUMPTION'], color="blue", linewidth=3)
+plt.xlabel("HOUR")
+plt.ylabel("CONSUMPTION in KW")
+plt.xticks(())
+plt.yticks(())
+plt.show()
+
+# Monthly Plot
+plt.title(str(year_plot) + ", Month = " + str(month_plot) + " Prediction VS Actual of KNN Model")
+
+plt.plot(Y_test_year_month['HOUR'].index, Y_pred_year_month['TOTAL_CONSUMPTION'], color="blue", linewidth=3)
+plt.plot(Y_test_year_month['HOUR'].index, Y_test_year_month['TOTAL_CONSUMPTION'], color="black")
+plt.xlabel("HOUR")
+plt.ylabel("CONSUMPTION in KW")
+plt.xticks(())
+plt.yticks(())
+plt.show()
+
+# Daily Plot
+plt.title(str(year_plot) + "/" + str(month_plot) + "/" + str(day_plot) + " Prediction VS Actual of KNN Model")
+
+plt.plot(X_test_year_month_day['HOUR'].index, Y_pred_year_month_day['TOTAL_CONSUMPTION'], color="blue", linewidth=3)
+plt.plot(X_test_year_month_day['HOUR'].index, Y_test_year_month_day['TOTAL_CONSUMPTION'], color="black")
+plt.xlabel("HOUR")
+plt.ylabel("CONSUMPTION in KW")
+plt.xticks(())
+plt.yticks(())
 plt.show()
 
 #%% Neural Network Model
