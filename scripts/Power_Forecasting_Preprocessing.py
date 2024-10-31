@@ -11,25 +11,28 @@ import datetime
 from datetime import datetime, date, timedelta
 import matplotlib.pyplot as plt
 import os
+import math
+import numpy as np
 
 #%% Student directory
-joseph_run = "C:\\Users\\sposa\\Documents\\GitHub\\power-forecasting-capstone\\data"
-hanad_run = "./data"
-janna_run = "./data"
-clover_run = "./data"
+hanad_run = ["./data", 1]
+clover_run = ["./data", 2]
+joseph_laptop_run = ["C:\\Users\\sposa\\Documents\\GitHub\\power-forecasting-capstone\\data", 3]
+joseph_pc_run = ["D:\\Users\\Joseph\\Documents\\GitHub\\power-forecasting-capstone\\data", 3]
+janna_run = ["./data", 4]
 
 ###############################################################################
 ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
 ###############################################################################
 # Paste student name_run for whoever is running the code
-run_student = joseph_run
-if (run_student == joseph_run):
+run_student = joseph_pc_run
+if (run_student[1] == joseph_laptop_run[1]):
     print("JOSEPH IS RUNNING!")
-elif (run_student == hanad_run):
+elif (run_student[1] == hanad_run[1]):
     print("HANAD IS RUNNING!")
-elif (run_student == janna_run):
+elif (run_student[1] == janna_run[1]):
     print("JANNA IS RUNNING!")
-elif (run_student == clover_run):
+elif (run_student[1] == clover_run[1]):
     print("CLOVER IS RUNNING!")
 else:
     print("ERROR!! NO ELIGIBLE STUDENT!")
@@ -61,11 +64,13 @@ years = ['2018', '2019', '2020', '2021', '2022', '2023']
 months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
 
 #%% Input files (PRE-PROCESSING)
-dirs_inputs = run_student
+dirs_inputs = run_student[0]
 
 dirs_hourly_consumption_demand = os.path.join(dirs_inputs, "Hourly_Demand_Data")
 
+###############################################################################
 # Dictionary for reading in hourly consumption by FSA
+###############################################################################
 # FSA -> Year -> Month -> Value
 hourly_consumption_data_dic_by_month = {}
 
@@ -117,11 +122,14 @@ for fsa in fsa_list:
             
             print(hourly_data_string)
 
-
+###############################################################################
 # Conversion between FSA and latitude longitude - NOT IMPORTANT NOW
+###############################################################################
 dirs_hourly_weather = os.path.join(dirs_inputs, "Weather_Data\\Hamilton_Weather\\")
 
+###############################################################################
 # Dictionary for reading in weather data
+###############################################################################
 # FSA -> Year -> Month -> Value
 
 hourly_weather_data_dic_by_month = {}
@@ -170,9 +178,14 @@ for fsa in fsa_list:
             print(weather_data_string)
 
 
+###############################################################################
 # Calendar Variables
+###############################################################################
 
-# X Variables
+
+###############################################################################
+# X and Y Dataframes
+###############################################################################
 X_df = pd.DataFrame()
 Y_df = pd.DataFrame()
 
@@ -194,6 +207,100 @@ for year in years:
         
         X_df = pd.concat([X_df, hourly_data_by_month_X], ignore_index=True)
         Y_df = pd.concat([Y_df, hourly_data_by_month_Y], ignore_index=True)
+
+###############################################################################
+# Cleaning up X_df dataframe
+###############################################################################
+
+# Exclude "Wind Chill" column
+X_without_bad_windchill = X_df.drop(columns="Wind Chill")
+
+## Smooth out missing data
+#    METHOD FOR MISSING WEATHER DATA: If value is blank, set black as average of pervious and next values
+# Get columns in dataframe and cycle through them in a for loop
+X_columns = X_without_bad_windchill.columns
+for column in X_columns:
+    # Skip over date/time columns
+    if column == "YEAR" or column == "MONTH" or column == "DAY" or column == "HOUR":
+        continue
+
+    #print("Current Column: " + column) # Checking what columns make it here
+    #print("\n")
+    counter_adjacent_nan = 0
+    # For current column, iterate through all rough
+    for index, row in X_without_bad_windchill.iterrows():
+        # Check if there are more than 2 nan values
+        if (counter_adjacent_nan>1):
+            counter_adjacent_nan -= 1
+            continue
+        # Check if value for current index and column is missing
+        #if row[column] != row[column]:
+        if math.isnan(row[column]):
+            #print("MISSING DATA FOUND AT Index: " , str(index) , " | Column: " + column + " | Value: " + str(row[column]))
+            
+            # If found, take need to take linear interpolation between last actual value and next actual value (need to interpolate any consectutively missing data points too!)
+            # Finding last actual data point
+            last_data_point = X_without_bad_windchill.loc[index-1, column]
+            #print("Last viable data point: " + str(last_data_point)  + "\n")
+            
+            # Find next available data point
+            counter = 0
+            not_found = True
+            while not_found == True:
+                counter += 1
+
+                try: # Try to get value of next data point
+                    next_data_point = X_without_bad_windchill.loc[index+counter, column]
+                except KeyError: # If there are NaN values at the end of the data frame, set the value of the next data point to be eqaul last data point
+                    next_data_point = last_data_point
+
+                # Check if variable is a real value (NaN values wil ALWAYS fail this condition)
+                if next_data_point == next_data_point:
+                    # If found, set not_found to False and leave loop
+                    not_found = False
+            
+            # Get linear interpolation of data
+            interpolated_data = np.linspace(start=last_data_point, stop=next_data_point, num=counter+1, endpoint = False)[1:]
+            
+
+            # Give interpolated values to missing data points
+            counter = 0
+            counter_adjacent_nan=0
+            for new_value in interpolated_data:
+                X_without_bad_windchill.loc[index+counter, column] = new_value
+                #print(" NEW INTERPOLATED VALUE = " + str(X_without_bad_windchill.loc[index+counter, column]))
+                counter += 1
+                counter_adjacent_nan += 1
+X_df_cleaned = X_without_bad_windchill
+
+#%% Regression Model
+# HANAD FILLS IN CODE HERE ON A NEW BRANCH
+
+
+
+
+#%% SVR Model
+# CLOVER FILLS IN CODE HERE ON A NEW BRANCH
+
+
+
+#%% KNN Model
+# JOSEPH FILLS IN CODE HERE ON A NEW BRANCH
+
+
+
+
+
+#%% Neural Network Model
+# JANNA FILLS IN CODE HERE ON A NEW BRANCH
+
+
+
+
+
+
+
+
 
 
 
