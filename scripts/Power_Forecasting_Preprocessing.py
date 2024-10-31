@@ -201,7 +201,7 @@ for year in years:
         hourly_data_by_month_X = pd.concat([hourly_data_consumption_by_month_X, hourly_data_weather_by_month_X], axis = 1)
         
         # Extract the monthly hourly data for y variables
-        hourly_data_by_month_Y = hourly_consumption_data_dic_by_month[fsa_chosen][year][month].drop(["FSA", "CUSTOMER_TYPE", "YEAR", "MONTH", "DAY", "HOUR"], axis=1)
+        hourly_data_by_month_Y = hourly_consumption_data_dic_by_month[fsa_chosen][year][month].drop(["FSA", "CUSTOMER_TYPE"], axis=1)
         
         
         
@@ -287,17 +287,64 @@ X_df_cleaned = X_without_bad_windchill
 #%% KNN Model
 # JOSEPH FILLS IN CODE HERE ON A NEW BRANCH
 from sklearn.model_selection import train_test_split
-X_train, X_test, y_train, y_test = train_test_split(X_df_cleaned, Y_df, test_size=0.20)
+from sklearn.neighbors import KNeighborsRegressor 
+from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error, mean_squared_error, r2_score
+
+X_train, X_test, Y_train, Y_test = train_test_split(X_df_cleaned, Y_df['TOTAL_CONSUMPTION'], test_size=0.20, shuffle = False)
+
+knn_model = KNeighborsRegressor(n_neighbors=5)
+knn_model.fit(X_train, Y_train)
+
+Y_pred = knn_model.predict(X_test)
+
+mape = mean_absolute_percentage_error(Y_test, Y_pred)
+mae = mean_absolute_error(Y_test, Y_pred)
+mse = mean_squared_error(Y_test, Y_pred)
+r2 = r2_score(Y_test, Y_pred)
+
+
+## PLOTTING
+year_plot = 2023
+month_plot = 4
+day_plot = 22
 
 
 
+Y_pred_df = pd.DataFrame(Y_pred, columns=['TOTAL_CONSUMPTION'], index = Y_test.index)
+Y_test_df = pd.DataFrame(Y_test, columns=['TOTAL_CONSUMPTION'])
+
+Y_pred_df['YEAR'] = X_test['YEAR']
+Y_pred_df['MONTH'] = X_test['MONTH']
+Y_pred_df['DAY'] = X_test['DAY']
+Y_pred_df['HOUR'] = X_test['HOUR']
+
+Y_test_df['YEAR'] = X_test['YEAR']
+Y_test_df['MONTH'] = X_test['MONTH']
+Y_test_df['DAY'] = X_test['DAY']
+Y_test_df['HOUR'] = X_test['HOUR']
 
 
+X_test_year_month_day = X_test[X_test['YEAR'] == year_plot]
+X_test_year_month_day = X_test_year_month_day[X_test_year_month_day['MONTH'] == month_plot]
+X_test_year_month_day = X_test_year_month_day[X_test_year_month_day['DAY'] == day_plot]
 
-X_train = X_train.sort_index
-y_train = y_train.sort_index
+Y_test_year_month_day = Y_test_df[Y_test_df['YEAR'] == year_plot]
+Y_test_year_month_day = Y_test_year_month_day[Y_test_year_month_day['MONTH'] == month_plot]
+Y_test_year_month_day = Y_test_year_month_day[Y_test_year_month_day['DAY'] == day_plot]
+
+Y_pred_year_month_day = Y_pred_df[Y_pred_df['YEAR'] == year_plot]
+Y_pred_year_month_day = Y_pred_year_month_day[Y_pred_year_month_day['MONTH'] == month_plot]
+Y_pred_year_month_day = Y_pred_year_month_day[Y_pred_year_month_day['DAY'] == day_plot]
 
 
+plt.plot(X_test_year_month_day['HOUR'], Y_test_year_month_day['TOTAL_CONSUMPTION'], color="black")
+plt.plot(X_test_year_month_day['HOUR'], Y_pred_year_month_day['TOTAL_CONSUMPTION'], color="blue", linewidth=3)
+plt.xlabel("Hour")
+plt.ylabel("Power Demand")
+plt.xticks(())
+plt.yticks(())
+
+plt.show()
 
 #%% Neural Network Model
 # JANNA FILLS IN CODE HERE ON A NEW BRANCH
