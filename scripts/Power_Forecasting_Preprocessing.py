@@ -296,7 +296,6 @@ X_train, X_test, y_train, y_test = train_test_split(X_df_cleaned, Y_df, test_siz
 
 X_train = X_train.sort_index
 y_train = y_train.sort_index
-# ADDING STUFF
 
 
 
