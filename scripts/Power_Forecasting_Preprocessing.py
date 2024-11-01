@@ -25,7 +25,7 @@ janna_run = ["./data", 4]
 ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
 ###############################################################################
 # Paste student name_run for whoever is running the code
-run_student = joseph_pc_run
+run_student = janna_run
 if (run_student[1] == joseph_laptop_run[1]):
     print("JOSEPH IS RUNNING!")
 elif (run_student[1] == hanad_run[1]):
@@ -369,7 +369,10 @@ plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourl
 plt.show()
 
 
-
+#%%
+# Save to a CSV
+X_df_cleaned.to_csv('X_df.csv', index=False)
+Y_df.to_csv('Y_df.csv', index=False)
 
 
 
