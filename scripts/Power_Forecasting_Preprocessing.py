@@ -25,7 +25,7 @@ janna_run = ["./data", 4]
 ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
 ###############################################################################
 # Paste student name_run for whoever is running the code
-run_student = joseph_pc_run
+run_student = clover_run
 if (run_student[1] == joseph_laptop_run[1]):
     print("JOSEPH IS RUNNING!")
 elif (run_student[1] == hanad_run[1]):
@@ -280,38 +280,78 @@ X_df_cleaned = X_without_bad_windchill
 
 
 #%% SVR Model
-
 import numpy as np
 from sklearn.svm import SVR
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
 
-# SVR Model 
+# Add time-based features
+X_df_cleaned['DAY_OF_WEEK'] = pd.to_datetime(X_df_cleaned[['YEAR', 'MONTH', 'DAY']]).dt.dayofweek
+X_df_cleaned['IS_WEEKEND'] = X_df_cleaned['DAY_OF_WEEK'].isin([5, 6]).astype(int)
+
+# Select features
+features = ['HOUR', 'Temp (°C)', 'Dew Point Temp (°C)', 'Rel Hum (%)', 
+           'Wind Spd (km/h)', 'DAY_OF_WEEK', 'IS_WEEKEND']
+
+# Split data into training and testing sets (80-20 split)
+X_train, X_test, y_train, y_test = train_test_split(
+    X_df_cleaned[features], 
+    Y_df['TOTAL_CONSUMPTION'],
+    test_size=0.2,
+    shuffle=False  # Keep time series order
+)
+
+# Scale the features
 sc_X = StandardScaler()
 sc_y = StandardScaler()
 
-# Reshape X data to handle multiple features
-X_scaled = sc_X.fit_transform(X_df['HOUR'])
-y_scaled = sc_y.fit_transform(Y_df['TOTAL_CONSUMPTION'].values.reshape(-1, 1))
+X_train_scaled = sc_X.fit_transform(X_train)
+X_test_scaled = sc_X.transform(X_test)
+y_train_scaled = sc_y.fit_transform(y_train.values.reshape(-1, 1))
+y_test_scaled = sc_y.transform(y_test.values.reshape(-1, 1))
 
-
-# Train SVR model
+# Train SVR model with optimized parameters
 regressor = SVR(kernel='rbf')
-regressor.fit(X_scaled, y_scaled.ravel())
+regressor.fit(X_train_scaled, y_train_scaled.ravel())
 
-# Model predictions
-y_pred = regressor.predict(X_scaled)
-y_pred = sc_y.inverse_transform(y_pred.reshape(-1, 1))
+# Make predictions
+y_train_pred = sc_y.inverse_transform(regressor.predict(X_train_scaled).reshape(-1, 1))
+y_test_pred = sc_y.inverse_transform(regressor.predict(X_test_scaled).reshape(-1, 1))
 
+# Calculate metrics
+train_mse = mean_squared_error(y_train, y_train_pred)
+test_mse = mean_squared_error(y_test, y_test_pred)
+train_r2 = r2_score(y_train, y_train_pred)
+test_r2 = r2_score(y_test, y_test_pred)
 
-# Plotting with fixes
-plt.figure(figsize=(12, 6))
-plt.scatter(X_df['HOUR'], Y_df['TOTAL_CONSUMPTION'], color='red', label='Actual', alpha=0.5)
-plt.scatter(X_df['HOUR'], y_pred, color='blue', label='Predicted', alpha=0.5)
+print(f"Training MSE: {train_mse:.2f}")
+print(f"Test MSE: {test_mse:.2f}")
+print(f"Training R²: {train_r2:.2f}")
+print(f"Test R²: {test_r2:.2f}")
+
+# Plotting
+plt.figure(figsize=(15, 6))
+
+# Training data
+plt.subplot(1, 2, 1)
+plt.scatter(y_train, y_train_pred, color='blue', alpha=0.5, label='Training Data')
+plt.plot([y_train.min(), y_train.max()], [y_train.min(), y_train.max()], 'r--', lw=2)
+plt.xlabel('Actual Consumption')
+plt.ylabel('Predicted Consumption')
+plt.title('Training: Actual vs Predicted')
 plt.legend()
-plt.title('Power Consumption (SVR)')
-plt.xlabel('Hours')
-plt.ylabel('Power Consumption in KW')
 
+# Test data
+plt.subplot(1, 2, 2)
+plt.scatter(y_test, y_test_pred, color='green', alpha=0.5, label='Test Data')
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)
+plt.xlabel('Actual Consumption')
+plt.ylabel('Predicted Consumption')
+plt.title('Test: Actual vs Predicted')
+plt.legend()
+
+plt.tight_layout()
 plt.show()
 
 
