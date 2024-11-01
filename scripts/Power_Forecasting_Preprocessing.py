@@ -298,15 +298,15 @@ knn_model.fit(X_train, Y_train)
 
 Y_pred = knn_model.predict(X_test)
 
-# # TRY GRID SEARCH
-# pipeline_knn = Pipeline([("model", KNeighborsRegressor(n_neighbors=1))])
+# TRY GRID SEARCH
+pipeline_knn = Pipeline([("model", KNeighborsRegressor(n_neighbors=1))])
 
-# knn_model = GridSearchCV(estimator = pipeline_knn, param_grid = {'model__n_neighbors': range(1,50)}, cv=3)
+knn_model = GridSearchCV(estimator = pipeline_knn, param_grid = {'model__n_neighbors': range(1,50)}, cv=3)
 
-# knn_model.fit(X_train, Y_train)
-# output = pd.DataFrame(knn_model.cv_results_)
+knn_model.fit(X_train, Y_train)
+output = pd.DataFrame(knn_model.cv_results_)
 
-# Y_pred = knn_model.predict(X_test)
+Y_pred = knn_model.predict(X_test)
 
 mape = mean_absolute_percentage_error(Y_test, Y_pred)
 print("MAPE = " + str(round(mape*100, 3)) + "%.")
