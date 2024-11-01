@@ -49,17 +49,16 @@ mape = mean_absolute_percentage_error(Y_test, Y_pred)
 mae = mean_absolute_error(Y_test, Y_pred)
 r2 = r2_score(Y_test, Y_pred)
 
-print("##Model Evaluation##\n")
-print("MAPE: ", str(mape) + "\n")
-print("MAE: " , str(mae) + "\n")
-print("R^2 ", str(r2) + "\n" )
+print("## Model Evaluation ##")
+print("MAPE: ", str(mape))
+print("MAE: " , str(mae) )
+print("R^2 ", str(r2))
 
-# get importance
-importance = mod.coef_
-# summarize feature importance
-for i,v in enumerate(importance):
-	print('Feature: %0d, Score: %.5f' % (i,v))
-
+# # get importance
+# importance = mod.coef_
+# # summarize feature importance
+# for i,v in enumerate(importance):
+# 	print('Feature: %0d, Score: %.5f' % (i,v))
 
 
 # Plotting
@@ -99,7 +98,7 @@ plt.plot(X_test_year_month_day['HOUR'], Y_test_year_month_day['TOTAL_CONSUMPTION
 plt.plot(X_test_year_month_day['HOUR'], Y_pred_year_month_day['TOTAL_CONSUMPTION'], color="blue", linewidth=3, label='Predicted')
 plt.xlabel("Hour")
 plt.ylabel("Power Demand")
-plt.title("Comparison between Actual and Predition for " + str(month_plot) + "/" + str(day_plot) + "/" + str(year_plot))
+plt.title("Comparison between Actual and Prediction for " + str(month_plot) + "/" + str(day_plot) + "/" + str(year_plot))
 plt.legend()
 plt.xticks(())
 plt.yticks(())
@@ -109,7 +108,7 @@ plt.show(block=False)
 fig2 = plt.figure("Figure 2")
 plt.plot(X_test.index, Y_test_df['TOTAL_CONSUMPTION'], color="black",  label='Actual')
 plt.plot(X_test.index, Y_pred_df['TOTAL_CONSUMPTION'], color="blue",  label='Prediction')
-plt.title("Comparison between Actual and Predition for " + str(month_plot) + "/" + str(year_plot))
+plt.title("Comparison between Actual and Prediction for " + str(month_plot) + "/" + str(year_plot))
 plt.legend()
 plt.xticks(())
 plt.yticks(())
