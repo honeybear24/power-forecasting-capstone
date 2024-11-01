@@ -284,7 +284,7 @@ import numpy as np
 from sklearn.svm import SVR
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error, r2_score,mean_absolute_error,mean_absolute_percentage_error
 
 # Add time-based features
 X_df_cleaned['DAY_OF_WEEK'] = pd.to_datetime(X_df_cleaned[['YEAR', 'MONTH', 'DAY']]).dt.dayofweek
@@ -329,6 +329,9 @@ print(f"Training MSE: {train_mse:.2f}")
 print(f"Test MSE: {test_mse:.2f}")
 print(f"Training R²: {train_r2:.2f}")
 print(f"Test R²: {test_r2:.2f}")
+
+mape = mean_absolute_percentage_error(y_test, y_test_pred)
+print("MAPE = " + str(round(mape*100, 3)) + "%.")
 
 # Plotting
 plt.figure(figsize=(15, 6))
