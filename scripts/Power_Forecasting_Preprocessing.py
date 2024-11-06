@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import os
 import math
 import numpy as np
+import canada_holiday
 
 #%% Student directory
 hanad_run = ["./data", 1]
@@ -181,6 +182,42 @@ for fsa in fsa_list:
 ###############################################################################
 # Calendar Variables
 ###############################################################################
+
+# Dictionary for holidays
+# -> Year -> Day -> Value
+from datetime import datetime, date, timedelta
+holiday_date_dic = {}
+for year in years:   
+    holiday_date_dic[year] = {}     
+    for month in months: 
+        holiday_date_dic[year][month] = pd.DataFrame()
+        
+        for index, row in  hourly_consumption_data_dic_by_month[fsa_chosen][year][month].iterrows():
+            date = date(int(year), int(month), int(hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DAY"].iloc[[index]]))
+            if canada_holiday.is_holiday(date, "Ontario"):
+                holiday_date_dic[year][month]["HOLIDAY"] = 1
+            else:
+                holiday_date_dic[year][month]["HOLIDAY"] = 0
+
+
+
+for year in years:
+    ontario_holiday_list = canada_holiday.get_holidays("Ontario", int(year))
+    ontario_holidays[year] = {}
+    for day in range(len(ontario_holiday_list)):
+        ontario_singular_holiday = ontario_holiday_list[day]
+        holiday_date = str(ontario_singular_holiday.date)
+        
+        ontario_holidays[year][day] = holiday_date
+        
+ontario_holidays_df = pd.DataFrame()
+for year in years:
+    for day in range(len(ontario_holiday_list)):
+        ontario_holidays_df = ontario_holidays[year][day]
+    
+    
+    
+      
 
 
 ###############################################################################
