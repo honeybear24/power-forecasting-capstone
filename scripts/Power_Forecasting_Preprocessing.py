@@ -115,7 +115,7 @@ for fsa in fsa_list:
             hourly_data_res_fsa = hourly_data_res.loc[hourly_data_res['FSA'] == fsa].reset_index(drop=True)
             
             # Take the sum if fsa has more than 1 date (this is because there are different pay codes in residential loads)
-            hourly_data_hour_sum = hourly_data_res_fsa.groupby(["FSA", "CUSTOMER_TYPE", "YEAR", "MONTH", "DAY", "HOUR"]).TOTAL_CONSUMPTION.sum().reset_index()
+            hourly_data_hour_sum = hourly_data_res_fsa.groupby(["FSA", "CUSTOMER_TYPE", "YEAR", "MONTH", "DAY", "HOUR", "DATE"]).TOTAL_CONSUMPTION.sum().reset_index()
             
             
             hourly_consumption_data_dic_by_month[fsa][year][month] = hourly_data_hour_sum
@@ -182,6 +182,32 @@ for fsa in fsa_list:
 ###############################################################################
 # Calendar Variables
 ###############################################################################
+
+
+
+# Add weekdays to hourly consumption dataframe
+# Monday = 0 
+# Tuesday = 1
+# Wednesday = 2
+# Thursday = 3
+# Friday = 4 
+# Saturday = 5
+# Sunday = 6
+
+for year in years:        
+    for month in months:
+        # Get day of week and check if it is a weekend or weekday
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DAY_OF_WEEK"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DATE"].dt.weekday
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKEND"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DAY_OF_WEEK"]>4
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKDAY"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DAY_OF_WEEK"]<5
+        
+        # Convert boolean of weekend or weekday to integer numbers (1-True, 0-False)
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKEND"].astype(int)
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKEND"].astype(int)
+        
+        
+
+
 
 # Dictionary for holidays
 # -> Year -> Day -> Value
