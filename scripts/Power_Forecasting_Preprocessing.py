@@ -178,12 +178,9 @@ for fsa in fsa_list:
             
             print(weather_data_string)
 
-
 ###############################################################################
 # Calendar Variables
 ###############################################################################
-
-
 
 # Add weekdays to hourly consumption dataframe
 # Monday = 0 
@@ -206,56 +203,28 @@ for year in years:
         hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKDAY"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DAY_OF_WEEK"]<5
         
         # Convert boolean of weekend or weekday to integer numbers (1-True, 0-False)
-        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKEND"].astype(int)
-        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKEND"].astype(int)
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKEND"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKEND"].astype(int)
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKDAY"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKDAY"].astype(int)
         
         # Get Season and check if it is winter or summer
-        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["MONTH"][(hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["MONTH"]<5) | (hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["MONTH"]>10)]
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"] = (hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["MONTH"]<5) | (hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["MONTH"]>10)
         
         # Convert boolean of weekend or weekday to integer numbers (1-Winter, 0-Summer)
-        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"].fillna(0)
-        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"].astype(int)
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"].astype(int)
         
-        
-
-
-
-# Dictionary for holidays
-# -> Year -> Day -> Value
-from datetime import datetime, date, timedelta
-holiday_date_dic = {}
-for year in years:   
-    holiday_date_dic[year] = {}     
-    for month in months: 
-        holiday_date_dic[year][month] = pd.DataFrame()
+        # Pad the holiday column with zeros to initialize it
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["HOLIDAY"] = 0
         
         for index, row in  hourly_consumption_data_dic_by_month[fsa_chosen][year][month].iterrows():
-            date = date(int(year), int(month), int(hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DAY"].iloc[[index]]))
-            if canada_holiday.is_holiday(date, "Ontario"):
-                holiday_date_dic[year][month]["HOLIDAY"] = 1
+            date_temp = date(row["YEAR"], row["MONTH"], row["DAY"])
+            if (row["HOUR"] == 1):
+                if canada_holiday.is_holiday(date_temp, "Ontario"):
+                    hourly_consumption_data_dic_by_month[fsa_chosen][year][month].loc[index, "HOLIDAY"] = 1
+                    temp_value = 1
+                else:
+                    temp_value = 0
             else:
-                holiday_date_dic[year][month]["HOLIDAY"] = 0
-
-
-
-for year in years:
-    ontario_holiday_list = canada_holiday.get_holidays("Ontario", int(year))
-    ontario_holidays[year] = {}
-    for day in range(len(ontario_holiday_list)):
-        ontario_singular_holiday = ontario_holiday_list[day]
-        holiday_date = str(ontario_singular_holiday.date)
-        
-        ontario_holidays[year][day] = holiday_date
-        
-ontario_holidays_df = pd.DataFrame()
-for year in years:
-    for day in range(len(ontario_holiday_list)):
-        ontario_holidays_df = ontario_holidays[year][day]
-    
-    
-    
-      
-
+                hourly_consumption_data_dic_by_month[fsa_chosen][year][month].loc[index, "HOLIDAY"] = temp_value
 
 ###############################################################################
 # X and Y Dataframes
@@ -267,7 +236,7 @@ Y_df = pd.DataFrame()
 for year in years:        
     for month in months:
         # Extract the monthly hourly data for x variables
-        hourly_data_consumption_by_month_X = hourly_consumption_data_dic_by_month[fsa_chosen][year][month].drop(["FSA", "CUSTOMER_TYPE", "TOTAL_CONSUMPTION"], axis=1)
+        hourly_data_consumption_by_month_X = hourly_consumption_data_dic_by_month[fsa_chosen][year][month].drop(["FSA", "CUSTOMER_TYPE", "TOTAL_CONSUMPTION", "DATE"], axis=1)
         hourly_data_weather_by_month_X = hourly_weather_data_dic_by_month[fsa_chosen][year][month].drop(['Climate ID', 'Date/Time (LST)', 'Wind Dir (10s deg)', 'Visibility (km)', 'Stn Press (kPa)', 'Weather', 'DATE', 'YEAR', 'MONTH', 'DAY', 'HOUR'], axis=1)
         
         
@@ -347,6 +316,10 @@ for column in X_columns:
                 counter_adjacent_nan += 1
 X_df_cleaned = X_without_bad_windchill
 
+# Add Date back into X_df_cleaned variable
+X_df_cleaned["DATE"] = 0
+for index, row in  X_df_cleaned.iterrows():
+    X_df_cleaned.loc[index, "DATE"] = date(int(row["YEAR"]),int(row["MONTH"]),int(row["DAY"]))
 #%% Regression Model
 # HANAD FILLS IN CODE HERE ON A NEW BRANCH
 
