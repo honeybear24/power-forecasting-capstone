@@ -8,7 +8,6 @@ from sklearn.pipeline import make_pipeline
 from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error, r2_score
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import SplineTransformer
@@ -21,7 +20,8 @@ X = pd.read_csv(os.path.join(df_directory, "X_all.csv"))
 Y = pd.read_csv(os.path.join(df_directory, "Y_all.csv"))
 
 # Create pipeline containing linear regression model and standard scalar
-pipe = make_pipeline(SplineTransformer(n_knots=5, degree=2), linear_model.LinearRegression())
+pipe = make_pipeline(SplineTransformer(n_knots=5, degree=4), linear_model.Ridge(alpha=1.6667))
+#pipe = make_pipeline(linear_model.Ridge(alpha=5.0))
 #mod = linear_model.LinearRegression()
 
 # Train model - Extract only January from X dataframe
