@@ -26,7 +26,7 @@ janna_run = ["./data", 4]
 ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
 ###############################################################################
 # Paste student name_run for whoever is running the code
-run_student = joseph_pc_run
+run_student = joseph_laptop_run
 if (run_student[1] == joseph_laptop_run[1]):
     print("JOSEPH IS RUNNING!")
 elif (run_student[1] == hanad_run[1]):
@@ -194,6 +194,10 @@ for fsa in fsa_list:
 # Saturday = 5
 # Sunday = 6
 
+# Add season to hourly consumption dataframe
+# As per OEB:
+# Winter = November (Including) to April (Including)
+# Summer = May (Including) to October (Including)
 for year in years:        
     for month in months:
         # Get day of week and check if it is a weekend or weekday
@@ -204,6 +208,13 @@ for year in years:
         # Convert boolean of weekend or weekday to integer numbers (1-True, 0-False)
         hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKEND"].astype(int)
         hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKEND"].astype(int)
+        
+        # Get Season and check if it is winter or summer
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["MONTH"][(hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["MONTH"]<5) | (hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["MONTH"]>10)]
+        
+        # Convert boolean of weekend or weekday to integer numbers (1-Winter, 0-Summer)
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"].fillna(0)
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"].astype(int)
         
         
 
