@@ -279,7 +279,8 @@ X_df_cleaned = X_without_bad_windchill
 
 
 
-#%% SVR Model
+# SVR Model
+#these are the libraries needed for the SVR model
 import numpy as np
 from sklearn.svm import SVR
 from sklearn.preprocessing import StandardScaler
@@ -287,12 +288,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score,mean_absolute_error,mean_absolute_percentage_error
 
 # Add time-based features
-X_df_cleaned['DAY_OF_WEEK'] = pd.to_datetime(X_df_cleaned[['YEAR', 'MONTH', 'DAY']]).dt.dayofweek
-X_df_cleaned['IS_WEEKEND'] = X_df_cleaned['DAY_OF_WEEK'].isin([5, 6]).astype(int)
+#X_df_cleaned['DAY_OF_WEEK'] = pd.to_datetime(X_df_cleaned[['YEAR', 'MONTH', 'DAY']]).dt.dayofweek
+#X_df_cleaned['IS_WEEKEND'] = X_df_cleaned['DAY_OF_WEEK'].isin([5, 6]).astype(int)
 
-# Select features
-features = ['HOUR', 'Temp (°C)', 'Dew Point Temp (°C)', 'Rel Hum (%)', 
-           'Wind Spd (km/h)', 'DAY_OF_WEEK', 'IS_WEEKEND']
+
+
+# Select features, these are the features that will be used to train the model 
+features = ['HOUR','DAY', 'MONTH', 'YEAR', 'Temp (°C)', 'Dew Point Temp (°C)', 'Rel Hum (%)', 
+           'Wind Spd (km/h)']
 
 # Split data into training and testing sets (80-20 split)
 X_train, X_test, y_train, y_test = train_test_split(
@@ -302,10 +305,11 @@ X_train, X_test, y_train, y_test = train_test_split(
     shuffle=False  # Keep time series order
 )
 
-# Scale the features
+# Scale the features specifically for the SVR model
 sc_X = StandardScaler()
 sc_y = StandardScaler()
 
+# Scale the training and testing data for the SVR model
 X_train_scaled = sc_X.fit_transform(X_train)
 X_test_scaled = sc_X.transform(X_test)
 y_train_scaled = sc_y.fit_transform(y_train.values.reshape(-1, 1))
@@ -318,6 +322,11 @@ regressor.fit(X_train_scaled, y_train_scaled.ravel())
 # Make predictions
 y_train_pred = sc_y.inverse_transform(regressor.predict(X_train_scaled).reshape(-1, 1))
 y_test_pred = sc_y.inverse_transform(regressor.predict(X_test_scaled).reshape(-1, 1))
+
+
+X_test.to_csv('X_df.csv', index=False)
+y_test.to_csv('Y_df.csv', index=False) 
+
 
 # Calculate metrics
 train_mse = mean_squared_error(y_train, y_train_pred)
@@ -334,7 +343,7 @@ mape = mean_absolute_percentage_error(y_test, y_test_pred)
 print("MAPE = " + str(round(mape*100, 3)) + "%.")
 
 # Plotting
-plt.figure(figsize=(15, 6))
+'''plt.figure(figsize=(15, 6))
 
 # Training data
 plt.subplot(1, 2, 1)
@@ -355,6 +364,85 @@ plt.title('Test: Actual vs Predicted')
 plt.legend()
 
 plt.tight_layout()
+plt.show()'''
+
+## PLOTTING
+year_plot = 2023
+month_plot = 1
+day_plot = 1
+
+
+
+Y_pred_df = pd.DataFrame(y_test_pred, columns=['TOTAL_CONSUMPTION'], index = y_test.index)
+Y_test_df = pd.DataFrame(y_test, columns=['TOTAL_CONSUMPTION'])
+
+Y_pred_df['YEAR'] = X_test['YEAR']
+Y_pred_df['MONTH'] = X_test['MONTH']
+Y_pred_df['DAY'] = X_test['DAY']
+Y_pred_df['HOUR'] = X_test['HOUR']
+
+Y_test_df['YEAR'] = X_test['YEAR']
+Y_test_df['MONTH'] = X_test['MONTH']
+Y_test_df['DAY'] = X_test['DAY']
+Y_test_df['HOUR'] = X_test['HOUR']
+
+
+X_test_year = X_test[X_test['YEAR'] == year_plot]
+X_test_year_month = X_test_year[X_test_year['MONTH'] == month_plot]
+X_test_year_month_day = X_test_year_month[X_test_year_month['DAY'] == day_plot]
+
+Y_test_year = Y_test_df[Y_test_df['YEAR'] == year_plot]
+Y_test_year_month = Y_test_year[Y_test_year['MONTH'] == month_plot]
+Y_test_year_month_day = Y_test_year_month[Y_test_year_month['DAY'] == day_plot]
+
+Y_pred_year = Y_pred_df[Y_pred_df['YEAR'] == year_plot]
+Y_pred_year_month = Y_pred_year[Y_pred_year['MONTH'] == month_plot]
+Y_pred_year_month_day = Y_pred_year_month[Y_pred_year_month['DAY'] == day_plot]
+
+# Yearly Plot
+plt.title(str(year_plot) + " Prediction VS Actual of KNN Model")
+
+plt.plot(X_test_year['HOUR'].index, Y_pred_year['TOTAL_CONSUMPTION'], color="blue", linewidth=3)
+plt.plot(X_test_year['HOUR'].index, Y_test_year['TOTAL_CONSUMPTION'], color="black")
+plt.xlabel("HOUR")
+plt.ylabel("CONSUMPTION in KW")
+plt.xticks(())
+plt.yticks(())
+plt.show()
+
+plt.title(str(year_plot) + " Prediction VS Actual of KNN Model")
+
+plt.plot(X_test_year['HOUR'].index, Y_test_year['TOTAL_CONSUMPTION'], color="black", label="ACTUAL")
+plt.plot(X_test_year['HOUR'].index, Y_pred_year['TOTAL_CONSUMPTION'], color="blue", linewidth=3, label="PREDICTION")
+plt.legend(loc="upper left")
+plt.xlabel("HOUR")
+plt.ylabel("CONSUMPTION in KW")
+plt.xticks(())
+plt.yticks(())
+plt.show()
+
+# Monthly Plot
+plt.title(str(year_plot) + ", Month = " + str(month_plot) + " Prediction VS Actual of KNN Model")
+
+plt.plot(Y_test_year_month['HOUR'].index, Y_pred_year_month['TOTAL_CONSUMPTION'], color="blue", linewidth=3, label="PREDICTION")
+plt.plot(Y_test_year_month['HOUR'].index, Y_test_year_month['TOTAL_CONSUMPTION'], color="black", label="ACTUAL")
+plt.legend(loc="upper left")
+plt.xlabel("HOUR")
+plt.ylabel("CONSUMPTION in KW")
+plt.xticks(())
+plt.yticks(())
+plt.show()
+
+# Daily Plot
+plt.title(str(year_plot) + "/" + str(month_plot) + "/" + str(day_plot) + " Prediction VS Actual of KNN Model")
+
+plt.plot(X_test_year_month_day['HOUR'].index, Y_pred_year_month_day['TOTAL_CONSUMPTION'], color="blue", linewidth=3, label="PREDICTION")
+plt.plot(X_test_year_month_day['HOUR'].index, Y_test_year_month_day['TOTAL_CONSUMPTION'], color="black", label="ACTUAL")
+plt.legend(loc="upper left")
+plt.xlabel("HOUR")
+plt.ylabel("CONSUMPTION in KW")
+plt.xticks(())
+plt.yticks(())
 plt.show()
 
 
