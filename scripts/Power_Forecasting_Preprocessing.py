@@ -169,10 +169,13 @@ for fsa in fsa_list:
             hourly_data_fix_date['MONTH'] = hourly_data_fix_date['DATE'].dt.month
             hourly_data_fix_date['DAY'] = hourly_data_fix_date['DATE'].dt.day
             hourly_data_fix_date['HOUR'] = hourly_data_fix_date['DATE'].dt.hour
-            hourly_data_fix_date['HOUR'] = hourly_data_fix_date['HOUR']+1   
-            
+            hourly_data_fix_date['HOUR'] = hourly_data_fix_date['HOUR']+1  
+    
             # Manual Calculation for WindChill
             hourly_data_fix_date['WIND CHILL CALCULATION'] = 13.12 + hourly_data_fix_date['Temp (°C)']*0.6125 - 11.37 * hourly_data_fix_date['Wind Spd (km/h)']**0.16 + 0.3965 * hourly_data_fix_date['Temp (°C)'] * hourly_data_fix_date['Wind Spd (km/h)']**0.16
+            
+            # Change Temperature column names so it does not have symbols anymore
+            hourly_data_fix_date.rename(columns = {'Temp (°C)':'Temp (C)', 'Dew Point Temp (°C)':'Dew Point Temp (C)'}, inplace = True)
             
             hourly_weather_data_dic_by_month[fsa][year][month] = hourly_data_fix_date
             
@@ -193,8 +196,8 @@ for fsa in fsa_list:
 
 # Add season to hourly consumption dataframe
 # As per OEB:
-# Winter = November (Including) to April (Including)
-# Summer = May (Including) to October (Including)
+# Winter(1) = November (Including) to April (Including)
+# Summer(0) = May (Including) to October (Including)
 for year in years:        
     for month in months:
         # Get day of week and check if it is a weekend or weekday
@@ -244,7 +247,7 @@ for year in years:
         hourly_data_by_month_X = pd.concat([hourly_data_consumption_by_month_X, hourly_data_weather_by_month_X], axis = 1)
         
         # Extract the monthly hourly data for y variables
-        hourly_data_by_month_Y = hourly_consumption_data_dic_by_month[fsa_chosen][year][month].drop(["FSA", "CUSTOMER_TYPE", "YEAR", "MONTH", "DAY", "HOUR"], axis=1)
+        hourly_data_by_month_Y = hourly_consumption_data_dic_by_month[fsa_chosen][year][month].drop(["FSA", "CUSTOMER_TYPE", "YEAR", "MONTH", "DAY", "HOUR", "DATE", "DAY_OF_WEEK", "WEEKEND", "WEEKDAY", "SEASON", "HOLIDAY"], axis=1)
         
         
         
@@ -320,15 +323,24 @@ X_df_cleaned = X_without_bad_windchill
 X_df_cleaned["DATE"] = 0
 for index, row in  X_df_cleaned.iterrows():
     X_df_cleaned.loc[index, "DATE"] = date(int(row["YEAR"]),int(row["MONTH"]),int(row["DAY"]))
+
+
+
+
+
+dirs_dataframes = os.path.join(dirs_inputs, "X_Y_Inputs")
+X_df_output_string =  os.path.join(dirs_dataframes, "X_df_"+fsa_chosen+".csv"".csv")
+X_df_cleaned.to_csv(X_df_output_string, index=False)
+Y_df_output_string =  os.path.join(dirs_dataframes, "Y_df_"+fsa_chosen+".csv"".csv")
+Y_df.to_csv(Y_df_output_string, index=False)
+
 #%% Regression Model
 # HANAD FILLS IN CODE HERE ON A NEW BRANCH
 
 
 
-
 #%% SVR Model
 # CLOVER FILLS IN CODE HERE ON A NEW BRANCH
-
 
 
 #%% KNN Model
