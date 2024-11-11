@@ -16,6 +16,8 @@ from sklearn.preprocessing import SplineTransformer
 ## Import saved CSV into script as dataframes
 data_dir = "./data"
 temp_dir = "./temp"
+#data_dir = "C://Users//hanad//capstone_github//power-forecasting-capstone//data"
+#dtemp_dir = "C://Users//hanad//capstone_github//power-forecasting-capstone//temp"
 df_directory = os.path.join(data_dir, "Data_Frames")
 X = pd.read_csv(os.path.join(df_directory, "X_all.csv"))
 Y = pd.read_csv(os.path.join(df_directory, "Y_all.csv"))
