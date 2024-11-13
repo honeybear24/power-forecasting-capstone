@@ -68,8 +68,8 @@ dirs_inputs = run_student[0]
 
 dirs_x_y_input = os.path.join(dirs_inputs, "X_Y_Inputs")
 
-file_path_x = os.path.join(dirs_x_y_input, "X_df_"+fsa_chosen+".csv")
-file_path_y = os.path.join(dirs_x_y_input, "Y_df_"+fsa_chosen+".csv")
+file_path_x = os.path.join(dirs_x_y_input, ("X_df_"+fsa_chosen+".csv.csv"))
+file_path_y = os.path.join(dirs_x_y_input, "Y_df_"+fsa_chosen+".csv.csv")
 X_df_knn = pd.read_csv(file_path_x)
 Y_df_knn = pd.read_csv(file_path_y)
 
@@ -91,17 +91,28 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error, mean_squared_error, r2_score
 from sklearn.pipeline import Pipeline
 
-X_train, X_test, Y_train, Y_test = train_test_split(X_df_cleaned, Y_df['TOTAL_CONSUMPTION'], test_size=0.20, shuffle = False)
 
-knn_model = KNeighborsRegressor(n_neighbors=5)
+X_df_knn = X_df_knn.drop(["DATE", "WEEKDAY", "Rel Hum (%)", "Wind Spd (km/h)", "Temp (C)"], axis = 1)
+
+X_train, X_test, Y_train, Y_test = train_test_split(X_df_knn, Y_df_knn, test_size=0.2, shuffle = False)
+
+knn_model = KNeighborsRegressor(n_neighbors=12)
 knn_model.fit(X_train, Y_train)
-
 Y_pred = knn_model.predict(X_test)
+mape = mean_absolute_percentage_error(Y_test, Y_pred)
+print("MAPE1 = " + str(round(mape*100, 3)) + "%.")
+mae = mean_absolute_error(Y_test, Y_pred)
+mse = mean_squared_error(Y_test, Y_pred)
+r2 = r2_score(Y_test, Y_pred)
+
 
 # TRY GRID SEARCH
 pipeline_knn = Pipeline([("model", KNeighborsRegressor(n_neighbors=1))])
 
-knn_model = GridSearchCV(estimator = pipeline_knn, param_grid = {'model__n_neighbors': range(1,50)}, cv=3)
+knn_model = GridSearchCV(estimator = pipeline_knn,
+                         scoring = 'neg_mean_absolute_percentage_error',
+                         param_grid = {'model__n_neighbors': range(1,50)},
+                         refit = 'neg_mean_absolute_percentage_error')
 
 knn_model.fit(X_train, Y_train)
 output = pd.DataFrame(knn_model.cv_results_)
@@ -194,85 +205,42 @@ plt.xticks(())
 plt.yticks(())
 plt.show()
 
-#%% Neural Network Model
-# JANNA FILLS IN CODE HERE ON A NEW BRANCH
+#%% Plot X Variables
 
 
 
-
-
-
-
-
-
-
-
-#%% Plot Input Data
-year_plot = "2018"
-month_plot =  "02"
-day_plot = "03"
-
-# First day
-hourly_data_month_day = hourly_consumption_data_dic_by_month[fsa][year_plot][month_plot]
-hourly_data_month_day = hourly_data_month_day[hourly_data_month_day['DAY'] == int(day_plot)]
-
-plot = plt.subplot(1, 3, 1)
-plot = plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-')
-
-plt.title("HOURLY THREE DAY CONSUMPTION STARTING " + year_plot + "/" + month_plot + "/" + day_plot)
-plt.xlabel("HOUR")
-plt.ylabel("CONSUMPTION in KW")
-
-
-# Second day
-hourly_data_month_day = hourly_consumption_data_dic_by_month[fsa][year_plot][month_plot]
-hourly_data_month_day = hourly_data_month_day[hourly_data_month_day['DAY'] == int(day_plot)+1]
-
-plot = plt.subplot(1, 3, 2)
-plot = plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-')
-
-# Third day
-hourly_data_month_day = hourly_consumption_data_dic_by_month[fsa][year_plot][month_plot]
-hourly_data_month_day = hourly_data_month_day[hourly_data_month_day['DAY'] == int(day_plot)+2]
-
-plot = plt.subplot(1, 3, 3)
-plot = plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-')
-
-
+plt.scatter(X_df_knn["WEEKEND"], Y_df_knn)
+plt.title("Weekend")
 plt.show()
 
-# TRY TO PLOT WEATHER WITH X = HOUR, Y = TEMP
-# Plot weather data with X = HOUR, Y = TEMP
+plt.scatter(X_df_knn["WEEKDAY"], Y_df_knn)
+plt.title("Weekday")
+plt.show()
 
-# First day
-hourly_weather_month_day = hourly_weather_data_dic_by_month[fsa][year_plot][month_plot]
-hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DAY'] == int(day_plot)]
+plt.scatter(X_df_knn["HOLIDAY"], Y_df_knn)
+plt.title("Holiday")
+plt.show()
 
-plot = plt.subplot(1, 3, 1)
-plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
+plt.scatter(X_df_knn["Temp (C)"], Y_df_knn)
+plt.title("Temperature")
+plt.show()
 
-plt.title("HOURLY THREE DAY TEMPERATURE STARTING " + year_plot + "/" + month_plot + "/" + day_plot)
-plt.xlabel("HOUR")
-plt.ylabel("TEMPERATURE in °C")
+plt.scatter(X_df_knn["Dew Point Temp (C)"], Y_df_knn)
+plt.title("Dew Point Temperature")
+plt.show()
 
-# Second day
-hourly_weather_month_day = hourly_weather_data_dic_by_month[fsa][year_plot][month_plot]
-hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DAY'] == int(day_plot)+1]
-
-plot = plt.subplot(1, 3, 2)
-plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
-
-# Third day
-hourly_weather_month_day = hourly_weather_data_dic_by_month[fsa][year_plot][month_plot]
-hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DAY'] == int(day_plot)+2]
-
-plot = plt.subplot(1, 3, 3)
-plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
-
+plt.scatter(X_df_knn["Rel Hum (%)"], Y_df_knn)
+plt.title("Relative Humidity")
 plt.show()
 
 
+plt.scatter(X_df_knn["Wind Spd (km/h)"], Y_df_knn)
+plt.title("Wind Speed")
+plt.show()
 
+plt.scatter(X_df_knn["WIND CHILL CALCULATION"], Y_df_knn)
+plt.title("Wind Chill")
+plt.show()
 
 
 
