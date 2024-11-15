@@ -14,6 +14,8 @@ import os
 import math
 import numpy as np
 import canada_holiday
+from pyhelpers.store import save_fig, save_svg_as_emf
+import subprocess
 
 #%% Student directory
 hanad_run = ["./data", 1]
@@ -26,7 +28,7 @@ janna_run = ["./data", 4]
 ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
 ###############################################################################
 # Paste student name_run for whoever is running the code
-run_student = joseph_laptop_run
+run_student = joseph_pc_run
 if (run_student[1] == joseph_laptop_run[1]):
     print("JOSEPH IS RUNNING!")
 elif (run_student[1] == hanad_run[1]):
@@ -200,34 +202,37 @@ for fsa in fsa_list:
 # Summer(0) = May (Including) to October (Including)
 for year in years:        
     for month in months:
-        # Get day of week and check if it is a weekend or weekday
-        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DAY_OF_WEEK"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DATE"].dt.weekday
-        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKEND"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DAY_OF_WEEK"]>4
-        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKDAY"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DAY_OF_WEEK"]<5
-        
-        # Convert boolean of weekend or weekday to integer numbers (1-True, 0-False)
-        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKEND"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKEND"].astype(int)
-        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKDAY"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKDAY"].astype(int)
-        
-        # Get Season and check if it is winter or summer
-        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"] = (hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["MONTH"]<5) | (hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["MONTH"]>10)
-        
-        # Convert boolean of weekend or weekday to integer numbers (1-Winter, 0-Summer)
-        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"].astype(int)
-        
-        # Pad the holiday column with zeros to initialize it
-        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["HOLIDAY"] = 0
-        
-        for index, row in  hourly_consumption_data_dic_by_month[fsa_chosen][year][month].iterrows():
-            date_temp = date(row["YEAR"], row["MONTH"], row["DAY"])
-            if (row["HOUR"] == 1):
-                if canada_holiday.is_holiday(date_temp, "Ontario"):
-                    hourly_consumption_data_dic_by_month[fsa_chosen][year][month].loc[index, "HOLIDAY"] = 1
-                    temp_value = 1
+        try:
+            # Get day of week and check if it is a weekend or weekday
+            hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DAY_OF_WEEK"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DATE"].dt.weekday
+            hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKEND"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DAY_OF_WEEK"]>4
+            hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKDAY"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DAY_OF_WEEK"]<5
+            
+            # Convert boolean of weekend or weekday to integer numbers (1-True, 0-False)
+            hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKEND"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKEND"].astype(int)
+            hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKDAY"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKDAY"].astype(int)
+            
+            # Get Season and check if it is winter or summer
+            hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"] = (hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["MONTH"]<5) | (hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["MONTH"]>10)
+            
+            # Convert boolean of weekend or weekday to integer numbers (1-Winter, 0-Summer)
+            hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"].astype(int)
+            
+            # Pad the holiday column with zeros to initialize it
+            hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["HOLIDAY"] = 0
+            
+            for index, row in  hourly_consumption_data_dic_by_month[fsa_chosen][year][month].iterrows():
+                date_temp = date(row["YEAR"], row["MONTH"], row["DAY"])
+                if (row["HOUR"] == 1):
+                    if canada_holiday.is_holiday(date_temp, "Ontario"):
+                        hourly_consumption_data_dic_by_month[fsa_chosen][year][month].loc[index, "HOLIDAY"] = 1
+                        temp_value = 1
+                    else:
+                        temp_value = 0
                 else:
-                    temp_value = 0
-            else:
-                hourly_consumption_data_dic_by_month[fsa_chosen][year][month].loc[index, "HOLIDAY"] = temp_value
+                    hourly_consumption_data_dic_by_month[fsa_chosen][year][month].loc[index, "HOLIDAY"] = temp_value
+        except KeyError:
+            continue
 
 ###############################################################################
 # X and Y Dataframes
@@ -238,21 +243,24 @@ Y_df = pd.DataFrame()
 # Combine hourly data by month into the X_df
 for year in years:        
     for month in months:
-        # Extract the monthly hourly data for x variables
-        hourly_data_consumption_by_month_X = hourly_consumption_data_dic_by_month[fsa_chosen][year][month].drop(["FSA", "CUSTOMER_TYPE", "TOTAL_CONSUMPTION", "DATE"], axis=1)
-        hourly_data_weather_by_month_X = hourly_weather_data_dic_by_month[fsa_chosen][year][month].drop(['Climate ID', 'Date/Time (LST)', 'Wind Dir (10s deg)', 'Visibility (km)', 'Stn Press (kPa)', 'Weather', 'DATE', 'YEAR', 'MONTH', 'DAY', 'HOUR'], axis=1)
-        
-        
-        # Combine all hourly data for x variables
-        hourly_data_by_month_X = pd.concat([hourly_data_consumption_by_month_X, hourly_data_weather_by_month_X], axis = 1)
-        
-        # Extract the monthly hourly data for y variables
-        hourly_data_by_month_Y = hourly_consumption_data_dic_by_month[fsa_chosen][year][month].drop(["FSA", "CUSTOMER_TYPE", "YEAR", "MONTH", "DAY", "HOUR", "DATE", "DAY_OF_WEEK", "WEEKEND", "WEEKDAY", "SEASON", "HOLIDAY"], axis=1)
-        
-        
-        
-        X_df = pd.concat([X_df, hourly_data_by_month_X], ignore_index=True)
-        Y_df = pd.concat([Y_df, hourly_data_by_month_Y], ignore_index=True)
+        try:
+            # Extract the monthly hourly data for x variables
+            hourly_data_consumption_by_month_X = hourly_consumption_data_dic_by_month[fsa_chosen][year][month].drop(["FSA", "CUSTOMER_TYPE", "TOTAL_CONSUMPTION", "DATE"], axis=1)
+            hourly_data_weather_by_month_X = hourly_weather_data_dic_by_month[fsa_chosen][year][month].drop(['Climate ID', 'Date/Time (LST)', 'Wind Dir (10s deg)', 'Visibility (km)', 'Stn Press (kPa)', 'Weather', 'DATE', 'YEAR', 'MONTH', 'DAY', 'HOUR'], axis=1)
+            
+            
+            # Combine all hourly data for x variables
+            hourly_data_by_month_X = pd.concat([hourly_data_consumption_by_month_X, hourly_data_weather_by_month_X], axis = 1)
+            
+            # Extract the monthly hourly data for y variables
+            hourly_data_by_month_Y = hourly_consumption_data_dic_by_month[fsa_chosen][year][month].drop(["FSA", "CUSTOMER_TYPE", "DATE", "DAY_OF_WEEK", "WEEKEND", "WEEKDAY", "SEASON", "HOLIDAY"], axis=1)
+            
+            
+            
+            X_df = pd.concat([X_df, hourly_data_by_month_X], ignore_index=True)
+            Y_df = pd.concat([Y_df, hourly_data_by_month_Y], ignore_index=True)
+        except KeyError:
+            continue
 
 ###############################################################################
 # Cleaning up X_df dataframe
@@ -329,10 +337,10 @@ for index, row in  X_df_cleaned.iterrows():
 
 
 dirs_dataframes = os.path.join(dirs_inputs, "X_Y_Inputs")
-X_df_output_string =  os.path.join(dirs_dataframes, "X_df_"+fsa_chosen+".csv"".csv")
+X_df_output_string =  os.path.join(dirs_dataframes, "X_df_"+fsa_chosen+".csv")
 X_df_cleaned.to_csv(X_df_output_string, index=False)
-Y_df_output_string =  os.path.join(dirs_dataframes, "Y_df_"+fsa_chosen+".csv"".csv")
-Y_df.to_csv(Y_df_output_string, index=False)
+Y_df_output_string =  os.path.join(dirs_dataframes, "Y_df_"+fsa_chosen+".csv")
+Y_df["TOTAL_CONSUMPTION"].to_csv(Y_df_output_string, index=False)
 
 #%% Regression Model
 # HANAD FILLS IN CODE HERE ON A NEW BRANCH
@@ -363,7 +371,7 @@ Y_df.to_csv(Y_df_output_string, index=False)
 
 
 
-#%% Plot Input Data
+#%% Plot Power Consumption and Temperature over time period
 year_plot = "2018"
 month_plot =  "02"
 day_plot = "03"
@@ -424,14 +432,127 @@ hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DA
 
 plot = plt.subplot(1, 3, 3)
 plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
-
 plt.show()
 
+#%% Plot All Input Variables Over Power Consumption
 
 
+dirs_plots = os.path.join(dirs_inputs, "Input_Plots")
+inkspace_path = "D:\\Program Files\\Inkscape\\bin\\inkscape.exe"
 
+save_plots = False
 
+for year in years:
+    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
+    plt.scatter(X_year["WEEKEND"], Y_year["TOTAL_CONSUMPTION"], label = year)
+    plt.title("Weekend")
+    plt.legend()
+    plot_svg =  os.path.join(dirs_plots, "Weekend_VS_Consumption.svg")
+    plot_emf =  os.path.join(dirs_plots, "Weekend_VS_Consumption.emf")
+if save_plots:
+    plt.savefig(plot_svg)
+    save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    os.remove(plot_svg)
+plt.show()
 
+for year in years:
+    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
+    plt.scatter(X_year["WEEKDAY"], Y_year["TOTAL_CONSUMPTION"], label = year)
+    plt.title("Weekday")
+    plt.legend()
+    plot_svg =  os.path.join(dirs_plots, "Weekday_VS_Consumption.svg")
+    plot_emf =  os.path.join(dirs_plots, "Weekday_VS_Consumption.emf")
+if save_plots:
+    plt.savefig(plot_svg)
+    save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    os.remove(plot_svg)
+plt.show()
+
+for year in years:
+    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
+    plt.scatter(X_year["HOLIDAY"], Y_year["TOTAL_CONSUMPTION"], label = year)
+    plt.title("Holiday")
+    plot_svg =  os.path.join(dirs_plots, "Holiday_VS_Consumption.svg")
+    plot_emf =  os.path.join(dirs_plots, "Holiday_VS_Consumption.emf")
+    plt.legend()
+if save_plots:
+    plt.savefig(plot_svg)
+    save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    os.remove(plot_svg)
+plt.show()
+
+for year in years:
+    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
+    plt.scatter(X_year["Temp (C)"], Y_year["TOTAL_CONSUMPTION"], label = year)
+    plt.title("Temperature")
+    plt.legend()
+    plot_svg =  os.path.join(dirs_plots, "Temp_VS_Consumption.svg")
+    plot_emf =  os.path.join(dirs_plots, "Temp_VS_Consumption.emf")
+if save_plots:
+    plt.savefig(plot_svg)
+    save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    os.remove(plot_svg)
+plt.show()
+
+for year in years:
+    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
+    plt.scatter(X_year["Dew Point Temp (C)"], Y_year["TOTAL_CONSUMPTION"], label = year)
+    plt.title("Dew Point Temperature")
+    plt.legend()
+    plot_svg =  os.path.join(dirs_plots, "Dew_Point_Temp_VS_Consumption.svg")
+    plot_emf =  os.path.join(dirs_plots, "Dew_Point_Temp_VS_Consumption.emf")
+if save_plots:
+    plt.savefig(plot_svg)
+    save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    os.remove(plot_svg)
+plt.show()
+
+for year in years:
+    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
+    plt.scatter(X_year["Rel Hum (%)"], Y_year["TOTAL_CONSUMPTION"], label = year)
+    plt.title("Relative Humidity")
+    plt.legend()
+    plot_svg =  os.path.join(dirs_plots, "Relative_Humidity_VS_Consumption.svg")
+    plot_emf =  os.path.join(dirs_plots, "Relative_Humidity_VS_Consumption.emf")
+if save_plots:
+    plt.savefig(plot_svg)
+    save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    os.remove(plot_svg)
+plt.show()
+
+for year in years:
+    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
+    plt.scatter(X_year["Wind Spd (km/h)"], Y_year["TOTAL_CONSUMPTION"], label = year)
+    plt.title("Wind Speed")
+    plt.legend()
+    plot_svg =  os.path.join(dirs_plots, "Wind_Speed_VS_Consumption.svg")
+    plot_emf =  os.path.join(dirs_plots, "Wind_Speed_VS_Consumption.emf")
+if save_plots:
+    plt.savefig(plot_svg)
+    save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    os.remove(plot_svg)
+plt.show()
+
+for year in years:
+    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
+    plt.scatter(X_year["WIND CHILL CALCULATION"], Y_year["TOTAL_CONSUMPTION"], label = year)
+    plt.title("Wind Chill")
+    plt.legend()
+    plot_svg =  os.path.join(dirs_plots, "Wind_Chill_VS_Consumption.svg")
+    plot_emf =  os.path.join(dirs_plots, "Wind_Chill_VS_Consumption.emf")
+if save_plots:
+    plt.savefig(plot_svg)
+    save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    os.remove(plot_svg)
+plt.show()
 
 
 
