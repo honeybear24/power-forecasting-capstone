@@ -68,8 +68,8 @@ dirs_inputs = run_student[0]
 
 dirs_x_y_input = os.path.join(dirs_inputs, "X_Y_Inputs")
 
-file_path_x = os.path.join(dirs_x_y_input, ("X_df_"+fsa_chosen+".csv.csv"))
-file_path_y = os.path.join(dirs_x_y_input, "Y_df_"+fsa_chosen+".csv.csv")
+file_path_x = os.path.join(dirs_x_y_input, ("X_df_"+fsa_chosen+".csv"))
+file_path_y = os.path.join(dirs_x_y_input, "Y_df_"+fsa_chosen+".csv")
 X_df_knn = pd.read_csv(file_path_x)
 Y_df_knn = pd.read_csv(file_path_y)
 
@@ -91,6 +91,9 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error, mean_squared_error, r2_score
 from sklearn.pipeline import Pipeline
 
+
+
+X_df_knn = 
 
 X_df_knn = X_df_knn.drop(["DATE", "WEEKDAY", "Rel Hum (%)", "Wind Spd (km/h)", "Temp (C)"], axis = 1)
 
