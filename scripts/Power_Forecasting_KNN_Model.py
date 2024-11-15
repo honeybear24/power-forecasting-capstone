@@ -25,8 +25,8 @@ janna_run = ["./data", 4]
 ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
 ###############################################################################
 # Paste student name_run for whoever is running the code
-run_student = joseph_laptop_run
-if (run_student[1] == joseph_laptop_run[1]):
+run_student = joseph_pc_run
+if (run_student[1] == joseph_pc_run[1]):
     print("JOSEPH IS RUNNING!")
 elif (run_student[1] == hanad_run[1]):
     print("HANAD IS RUNNING!")
@@ -68,7 +68,7 @@ dirs_inputs = run_student[0]
 
 dirs_x_y_input = os.path.join(dirs_inputs, "X_Y_Inputs")
 
-file_path_x = os.path.join(dirs_x_y_input, ("X_df_"+fsa_chosen+".csv"))
+file_path_x = os.path.join(dirs_x_y_input, "X_df_"+fsa_chosen+".csv")
 file_path_y = os.path.join(dirs_x_y_input, "Y_df_"+fsa_chosen+".csv")
 X_df_knn = pd.read_csv(file_path_x)
 Y_df_knn = pd.read_csv(file_path_y)
@@ -92,14 +92,12 @@ from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error,
 from sklearn.pipeline import Pipeline
 
 
+X_df_knn = X_df_knn.drop(["DATE", "WEEKDAY", "Rel Hum (%)", "Wind Spd (km/h)"], axis = 1)
 
-X_df_knn = 
-
-X_df_knn = X_df_knn.drop(["DATE", "WEEKDAY", "Rel Hum (%)", "Wind Spd (km/h)", "Temp (C)"], axis = 1)
 
 X_train, X_test, Y_train, Y_test = train_test_split(X_df_knn, Y_df_knn, test_size=0.2, shuffle = False)
 
-knn_model = KNeighborsRegressor(n_neighbors=12)
+knn_model = KNeighborsRegressor(n_neighbors=12, weights = 'distance')
 knn_model.fit(X_train, Y_train)
 Y_pred = knn_model.predict(X_test)
 mape = mean_absolute_percentage_error(Y_test, Y_pred)
@@ -109,24 +107,24 @@ mse = mean_squared_error(Y_test, Y_pred)
 r2 = r2_score(Y_test, Y_pred)
 
 
-# TRY GRID SEARCH
-pipeline_knn = Pipeline([("model", KNeighborsRegressor(n_neighbors=1))])
+# # TRY GRID SEARCH
+# pipeline_knn = Pipeline([("model", KNeighborsRegressor(n_neighbors=1))])
 
-knn_model = GridSearchCV(estimator = pipeline_knn,
-                         scoring = 'neg_mean_absolute_percentage_error',
-                         param_grid = {'model__n_neighbors': range(1,50)},
-                         refit = 'neg_mean_absolute_percentage_error')
+# knn_model = GridSearchCV(estimator = pipeline_knn,
+#                          scoring = 'neg_mean_absolute_percentage_error',
+#                          param_grid = {'model__n_neighbors': range(1,50)},
+#                          refit = 'neg_mean_absolute_percentage_error')
 
-knn_model.fit(X_train, Y_train)
-output = pd.DataFrame(knn_model.cv_results_)
+# knn_model.fit(X_train, Y_train)
+# output = pd.DataFrame(knn_model.cv_results_)
 
-Y_pred = knn_model.predict(X_test)
+# Y_pred = knn_model.predict(X_test)
 
-mape = mean_absolute_percentage_error(Y_test, Y_pred)
-print("MAPE = " + str(round(mape*100, 3)) + "%.")
-mae = mean_absolute_error(Y_test, Y_pred)
-mse = mean_squared_error(Y_test, Y_pred)
-r2 = r2_score(Y_test, Y_pred)
+# mape = mean_absolute_percentage_error(Y_test, Y_pred)
+# print("MAPE = " + str(round(mape*100, 3)) + "%.")
+# mae = mean_absolute_error(Y_test, Y_pred)
+# mse = mean_squared_error(Y_test, Y_pred)
+# r2 = r2_score(Y_test, Y_pred)
 
 
 ## PLOTTING
@@ -162,23 +160,24 @@ Y_pred_year = Y_pred_df[Y_pred_df['YEAR'] == year_plot]
 Y_pred_year_month = Y_pred_year[Y_pred_year['MONTH'] == month_plot]
 Y_pred_year_month_day = Y_pred_year_month[Y_pred_year_month['DAY'] == day_plot]
 
-# Yearly Plot
+# # Yearly Plot
+# plt.title(str(year_plot) + " Prediction VS Actual of KNN Model")
+
+# plt.plot(X_test_year['HOUR'].index, Y_pred_year['TOTAL_CONSUMPTION'], color="blue", linewidth=3)
+# plt.plot(X_test_year['HOUR'].index, Y_test_year['TOTAL_CONSUMPTION'], color="black")
+# plt.xlabel("HOUR")
+# plt.ylabel("CONSUMPTION in KW")
+# plt.xticks(())
+# plt.yticks(())
+# plt.show()
+
 plt.title(str(year_plot) + " Prediction VS Actual of KNN Model")
-
-plt.plot(X_test_year['HOUR'].index, Y_pred_year['TOTAL_CONSUMPTION'], color="blue", linewidth=3)
-plt.plot(X_test_year['HOUR'].index, Y_test_year['TOTAL_CONSUMPTION'], color="black")
-plt.xlabel("HOUR")
-plt.ylabel("CONSUMPTION in KW")
-plt.xticks(())
-plt.yticks(())
-plt.show()
-
-plt.title(str(year_plot) + " Prediction VS Actual of KNN Model")
-
+plt.plot(X_test_year['HOUR'].index, Y_test_year['TOTAL_CONSUMPTION'], color="black", label="ACTUAL")
+plt.axes()
 plt.plot(X_test_year['HOUR'].index, Y_test_year['TOTAL_CONSUMPTION'], color="black", label="ACTUAL")
 plt.plot(X_test_year['HOUR'].index, Y_pred_year['TOTAL_CONSUMPTION'], color="blue", linewidth=3, label="PREDICTION")
 plt.legend(loc="upper left")
-plt.xlabel("HOUR")
+plt.xlabel("INDEX")
 plt.ylabel("CONSUMPTION in KW")
 plt.xticks(())
 plt.yticks(())
@@ -188,9 +187,11 @@ plt.show()
 plt.title(str(year_plot) + ", Month = " + str(month_plot) + " Prediction VS Actual of KNN Model")
 
 plt.plot(Y_test_year_month['HOUR'].index, Y_pred_year_month['TOTAL_CONSUMPTION'], color="blue", linewidth=3, label="PREDICTION")
+plt.axes()
+plt.plot(Y_test_year_month['HOUR'].index, Y_pred_year_month['TOTAL_CONSUMPTION'], color="blue", linewidth=3, label="PREDICTION")
 plt.plot(Y_test_year_month['HOUR'].index, Y_test_year_month['TOTAL_CONSUMPTION'], color="black", label="ACTUAL")
 plt.legend(loc="upper left")
-plt.xlabel("HOUR")
+plt.xlabel("INDEX")
 plt.ylabel("CONSUMPTION in KW")
 plt.xticks(())
 plt.yticks(())
@@ -198,53 +199,19 @@ plt.show()
 
 # Daily Plot
 
+plt.title(str(year_plot) + "/" + str(month_plot) + "/" + str(day_plot) + " Prediction VS Actual of KNN Model")
+
+plt.plot(X_test_year_month_day['HOUR'].index, Y_pred_year_month_day['TOTAL_CONSUMPTION'], 'o-', color="blue", linewidth=3, label="PREDICTION")
+plt.axes()
 plt.plot(X_test_year_month_day['HOUR'].index, Y_pred_year_month_day['TOTAL_CONSUMPTION'], 'o-', color="blue", linewidth=3, label="PREDICTION")
 plt.plot(X_test_year_month_day['HOUR'].index, Y_test_year_month_day['TOTAL_CONSUMPTION'], 'o-', color="black", label="ACTUAL")
 plt.title(str(year_plot) + "/" + str(month_plot) + "/" + str(day_plot) + " Prediction VS Actual of KNN Model")
 plt.legend(loc="upper left")
-plt.xlabel("HOUR")
+plt.xlabel("INDEX")
 plt.ylabel("CONSUMPTION in KW")
 plt.xticks(())
 plt.yticks(())
 plt.show()
-
-#%% Plot X Variables
-
-
-
-plt.scatter(X_df_knn["WEEKEND"], Y_df_knn)
-plt.title("Weekend")
-plt.show()
-
-plt.scatter(X_df_knn["WEEKDAY"], Y_df_knn)
-plt.title("Weekday")
-plt.show()
-
-plt.scatter(X_df_knn["HOLIDAY"], Y_df_knn)
-plt.title("Holiday")
-plt.show()
-
-plt.scatter(X_df_knn["Temp (C)"], Y_df_knn)
-plt.title("Temperature")
-plt.show()
-
-plt.scatter(X_df_knn["Dew Point Temp (C)"], Y_df_knn)
-plt.title("Dew Point Temperature")
-plt.show()
-
-plt.scatter(X_df_knn["Rel Hum (%)"], Y_df_knn)
-plt.title("Relative Humidity")
-plt.show()
-
-
-plt.scatter(X_df_knn["Wind Spd (km/h)"], Y_df_knn)
-plt.title("Wind Speed")
-plt.show()
-
-plt.scatter(X_df_knn["WIND CHILL CALCULATION"], Y_df_knn)
-plt.title("Wind Chill")
-plt.show()
-
 
 
 
