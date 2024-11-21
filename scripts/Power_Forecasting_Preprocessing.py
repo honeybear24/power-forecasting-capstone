@@ -435,18 +435,28 @@ plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourl
 plt.show()
 
 #%% Plot All Input Variables Over Power Consumption
-
+ 
 
 dirs_plots = os.path.join(dirs_inputs, "Input_Plots")
 inkspace_path = "D:\\Program Files\\Inkscape\\bin\\inkscape.exe"
 
 save_plots = False
 
+
+plt.xlabel("INDEX")
+plt.ylabel("CONSUMPTION in KW")
+plt.xticks(())
+plt.yticks(())
+plt.show()
+
+
 for year in years:
     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
     plt.scatter(X_year["WEEKEND"], Y_year["TOTAL_CONSUMPTION"], label = year)
     plt.title("Weekend")
+    plt.xlabel("CONSUMPTION in KW")
+    plt.ylabel("Weekend Boolean")
     plt.legend()
     plot_svg =  os.path.join(dirs_plots, "Weekend_VS_Consumption.svg")
     plot_emf =  os.path.join(dirs_plots, "Weekend_VS_Consumption.emf")
@@ -518,6 +528,8 @@ for year in years:
     plt.scatter(X_year["Rel Hum (%)"], Y_year["TOTAL_CONSUMPTION"], label = year)
     plt.title("Relative Humidity")
     plt.legend()
+    plt.xlabel("Relative Humidity in percentage")
+    plt.ylabel("CONSUMPTION in KW")
     plot_svg =  os.path.join(dirs_plots, "Relative_Humidity_VS_Consumption.svg")
     plot_emf =  os.path.join(dirs_plots, "Relative_Humidity_VS_Consumption.emf")
 if save_plots:
@@ -532,6 +544,8 @@ for year in years:
     plt.scatter(X_year["Wind Spd (km/h)"], Y_year["TOTAL_CONSUMPTION"], label = year)
     plt.title("Wind Speed")
     plt.legend()
+    plt.xlabel("Wind Speed")
+    plt.ylabel("CONSUMPTION in KW")
     plot_svg =  os.path.join(dirs_plots, "Wind_Speed_VS_Consumption.svg")
     plot_emf =  os.path.join(dirs_plots, "Wind_Speed_VS_Consumption.emf")
 if save_plots:
