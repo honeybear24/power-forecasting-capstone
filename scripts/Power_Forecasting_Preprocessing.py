@@ -16,6 +16,8 @@ import numpy as np
 import canada_holiday
 from pyhelpers.store import save_fig, save_svg_as_emf
 import subprocess
+import  aspose.cells 
+from aspose.cells import Workbook
 
 #%% Student directory
 hanad_run = ["./data", 1]
@@ -440,132 +442,202 @@ plt.show()
 dirs_plots = os.path.join(dirs_inputs, "Input_Plots")
 inkspace_path = "D:\\Program Files\\Inkscape\\bin\\inkscape.exe"
 
-save_plots = False
+
+save_plots = True
 
 
-plt.xlabel("INDEX")
-plt.ylabel("CONSUMPTION in KW")
-plt.xticks(())
-plt.yticks(())
+
+
+for year in years:
+    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)] 
+    plt.scatter(X_year["YEAR"], Y_year["TOTAL_CONSUMPTION"], label = year, rasterized=True)
+    plt.title("Year Versus Consumption.")
+    plt.ylabel("Consumption (KW)")
+    plt.xlabel("Year")
+    plt.legend() 
+    plot_svg =  os.path.join(dirs_plots, "Year_VS_Consumption.png")
+    plot_emf =  os.path.join(dirs_plots, "Year_VS_Consumption.emf")
+if save_plots:
+    plt.savefig(plot_svg)
+    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    #os.remove(plot_svg)
 plt.show()
 
+for year in years:
+    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
+    plt.scatter(X_year["MONTH"], Y_year["TOTAL_CONSUMPTION"], label = year)
+    plt.title("Month Versus Consumption.")
+    plt.ylabel("Consumption (KW)")
+    plt.xlabel("Month")
+    plt.legend()
+    plot_svg =  os.path.join(dirs_plots, "Month_VS_Consumption.png")
+    plot_emf =  os.path.join(dirs_plots, "Month_VS_Consumption.emf")
+if save_plots:
+    plt.savefig(plot_svg)
+    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    #os.remove(plot_svg)
+plt.show()
+
+for year in years:
+    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
+    plt.scatter(X_year["DAY_OF_WEEK"], Y_year["TOTAL_CONSUMPTION"], label = year)
+    plt.title("Day of Week Versus Consumption.")
+    plt.ylabel("Consumption (KW)")
+    plt.xlabel("Day of Week")
+    plt.legend()
+    plot_svg =  os.path.join(dirs_plots, "DOW_VS_Consumption.png")
+    plot_emf =  os.path.join(dirs_plots, "DOW_VS_Consumption.emf")
+if save_plots:
+    plt.savefig(plot_svg)
+    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    #os.remove(plot_svg)
+plt.show()
+
+for year in years:
+    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
+    plt.scatter(X_year["SEASON"], Y_year["TOTAL_CONSUMPTION"], label = year)
+    plt.title("Season Versus Consumption.")
+    plt.ylabel("Consumption (KW)")
+    plt.xlabel("Season (1-Winter, 0-Summer)")
+    plt.legend()
+    plot_svg =  os.path.join(dirs_plots, "Season_VS_Consumption.png")
+    plot_emf =  os.path.join(dirs_plots, "Season_VS_Consumption.emf")
+if save_plots:
+    plt.savefig(plot_svg)
+    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    #os.remove(plot_svg)
+plt.show()
+
+for year in years:
+    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
+    plt.scatter(X_year["HOUR"], Y_year["TOTAL_CONSUMPTION"], label = year)
+    plt.title("Hour Versus Consumption.")
+    plt.ylabel("Consumption (KW)")
+    plt.xlabel("Hour")
+    plt.legend()
+    plot_svg =  os.path.join(dirs_plots, "Hour_VS_Consumption.png")
+    plot_emf =  os.path.join(dirs_plots, "Hour_VS_Consumption.emf")
+if save_plots:
+    plt.savefig(plot_svg)
+    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    #os.remove(plot_svg)
+plt.show()
 
 for year in years:
     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
     plt.scatter(X_year["WEEKEND"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Weekend")
-    plt.xlabel("CONSUMPTION in KW")
-    plt.ylabel("Weekend Boolean")
+    plt.title("Weekend Versus Consumption.")
+    plt.ylabel("Consumption (KW)")
+    plt.xlabel("Weekend (Boolean)")
     plt.legend()
-    plot_svg =  os.path.join(dirs_plots, "Weekend_VS_Consumption.svg")
+    plot_svg =  os.path.join(dirs_plots, "Weekend_VS_Consumption.png")
     plot_emf =  os.path.join(dirs_plots, "Weekend_VS_Consumption.emf")
 if save_plots:
     plt.savefig(plot_svg)
-    save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    os.remove(plot_svg)
-plt.show()
-
-for year in years:
-    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
-    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
-    plt.scatter(X_year["WEEKDAY"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Weekday")
-    plt.legend()
-    plot_svg =  os.path.join(dirs_plots, "Weekday_VS_Consumption.svg")
-    plot_emf =  os.path.join(dirs_plots, "Weekday_VS_Consumption.emf")
-if save_plots:
-    plt.savefig(plot_svg)
-    save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    os.remove(plot_svg)
+    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    #os.remove(plot_svg)
 plt.show()
 
 for year in years:
     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
     plt.scatter(X_year["HOLIDAY"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Holiday")
-    plot_svg =  os.path.join(dirs_plots, "Holiday_VS_Consumption.svg")
+    plt.title("Holiday Versus Consumption.")
+    plt.ylabel("Consumption (KW)")
+    plt.xlabel("Holiday (Boolean)")
+    plot_svg =  os.path.join(dirs_plots, "Holiday_VS_Consumption.png")
     plot_emf =  os.path.join(dirs_plots, "Holiday_VS_Consumption.emf")
     plt.legend()
 if save_plots:
     plt.savefig(plot_svg)
-    save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    os.remove(plot_svg)
+    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    #os.remove(plot_svg)
 plt.show()
 
 for year in years:
     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
     plt.scatter(X_year["Temp (C)"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Temperature")
+    plt.title("Temperature Versus Consumption.")
     plt.legend()
-    plot_svg =  os.path.join(dirs_plots, "Temp_VS_Consumption.svg")
+    plt.ylabel("Consumption (KW)")
+    plt.xlabel("Temperature (°C)")
+    plot_svg =  os.path.join(dirs_plots, "Temp_VS_Consumption.png")
     plot_emf =  os.path.join(dirs_plots, "Temp_VS_Consumption.emf")
 if save_plots:
     plt.savefig(plot_svg)
-    save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    os.remove(plot_svg)
+    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    #os.remove(plot_svg)
 plt.show()
 
 for year in years:
     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
     plt.scatter(X_year["Dew Point Temp (C)"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Dew Point Temperature")
+    plt.title("Dew Point Temperature Versus Consumption.")
     plt.legend()
-    plot_svg =  os.path.join(dirs_plots, "Dew_Point_Temp_VS_Consumption.svg")
+    plt.ylabel("Consumption (KW)")
+    plt.xlabel("Dew Point Temperature (°C)")
+    plot_svg =  os.path.join(dirs_plots, "Dew_Point_Temp_VS_Consumption.png")
     plot_emf =  os.path.join(dirs_plots, "Dew_Point_Temp_VS_Consumption.emf")
 if save_plots:
     plt.savefig(plot_svg)
-    save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    os.remove(plot_svg)
+    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    #os.remove(plot_svg)
 plt.show()
 
 for year in years:
     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
     plt.scatter(X_year["Rel Hum (%)"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Relative Humidity")
+    plt.title("Relative Humidity Versus Consumption.")
     plt.legend()
-    plt.xlabel("Relative Humidity in percentage")
-    plt.ylabel("CONSUMPTION in KW")
-    plot_svg =  os.path.join(dirs_plots, "Relative_Humidity_VS_Consumption.svg")
+    plt.ylabel("Consumption (KW)")
+    plt.xlabel("Relative Humidity (%)")
+    plot_svg =  os.path.join(dirs_plots, "Relative_Humidity_VS_Consumption.png")
     plot_emf =  os.path.join(dirs_plots, "Relative_Humidity_VS_Consumption.emf")
 if save_plots:
     plt.savefig(plot_svg)
-    save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    os.remove(plot_svg)
+    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    #os.remove(plot_svg)
 plt.show()
 
 for year in years:
     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
     plt.scatter(X_year["Wind Spd (km/h)"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Wind Speed")
+    plt.title("Wind Speed Versus Consumption.")
     plt.legend()
-    plt.xlabel("Wind Speed")
-    plt.ylabel("CONSUMPTION in KW")
-    plot_svg =  os.path.join(dirs_plots, "Wind_Speed_VS_Consumption.svg")
+    plt.ylabel("Consumption (KW)")
+    plt.xlabel("Wind Speed (km/h)")
+    plot_svg =  os.path.join(dirs_plots, "Wind_Speed_VS_Consumption.png")
     plot_emf =  os.path.join(dirs_plots, "Wind_Speed_VS_Consumption.emf")
 if save_plots:
     plt.savefig(plot_svg)
-    save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    os.remove(plot_svg)
+    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    #os.remove(plot_svg)
 plt.show()
 
 for year in years:
     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
     plt.scatter(X_year["WIND CHILL CALCULATION"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Wind Chill")
+    plt.title("Wind Chill Versus Consumption.")
     plt.legend()
-    plot_svg =  os.path.join(dirs_plots, "Wind_Chill_VS_Consumption.svg")
+    plt.ylabel("Consumption (KW)")
+    plt.xlabel("Wind Speed (°C)")
+    plot_svg =  os.path.join(dirs_plots, "Wind_Chill_VS_Consumption.png")
     plot_emf =  os.path.join(dirs_plots, "Wind_Chill_VS_Consumption.emf")
 if save_plots:
     plt.savefig(plot_svg)
-    save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    os.remove(plot_svg)
+    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
+    #os.remove(plot_svg)
 plt.show()
 
 
