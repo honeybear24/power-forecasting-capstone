@@ -90,12 +90,17 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.neighbors import KNeighborsRegressor 
 from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error, mean_squared_error, r2_score
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 
 X_df_knn = X_df_knn.drop(["DATE", "WEEKDAY", "Rel Hum (%)", "Wind Spd (km/h)"], axis = 1)
 
 
 X_train, X_test, Y_train, Y_test = train_test_split(X_df_knn, Y_df_knn, test_size=0.2, shuffle = False)
+
+X_train_scaled = StandardScaler().fit_transform(X_train)
+X_test_scaled = StandardScaler().fit_transform(X_test)
+
 
 knn_model = KNeighborsRegressor(n_neighbors=12, weights = 'distance')
 knn_model.fit(X_train, Y_train)
