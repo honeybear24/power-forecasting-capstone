@@ -68,6 +68,8 @@ years = ['2018', '2019', '2020', '2021', '2022', '2023']
 # Dec - 12
 months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
 
+months_name = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
 #%% Input files (PRE-PROCESSING)
 dirs_inputs = run_student[0]
 
@@ -220,6 +222,9 @@ for year in years:
             # Convert boolean of weekend or weekday to integer numbers (1-Winter, 0-Summer)
             hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"].astype(int)
             
+            
+            
+            
             # Pad the holiday column with zeros to initialize it
             hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["HOLIDAY"] = 0
             
@@ -256,7 +261,6 @@ for year in years:
             
             # Extract the monthly hourly data for y variables
             hourly_data_by_month_Y = hourly_consumption_data_dic_by_month[fsa_chosen][year][month].drop(["FSA", "CUSTOMER_TYPE", "DATE", "DAY_OF_WEEK", "WEEKEND", "WEEKDAY", "SEASON", "HOLIDAY"], axis=1)
-            
             
             
             X_df = pd.concat([X_df, hourly_data_by_month_X], ignore_index=True)
@@ -334,10 +338,34 @@ X_df_cleaned["DATE"] = 0
 for index, row in  X_df_cleaned.iterrows():
     X_df_cleaned.loc[index, "DATE"] = date(int(row["YEAR"]),int(row["MONTH"]),int(row["DAY"]))
 
+# Convert year, month, day, hour to boolean values
 
+# Day range 1 to 31
+days = [*range(1, 32)]
+# Hour range 1 to 24
+hours = [*range(1, 25)]
 
+for year in years:
+    X_df_cleaned[year] = X_df_cleaned["YEAR"]==int(year)
+    X_df_cleaned[year] = X_df_cleaned[year].astype(int)
 
+for month in months_name:
+    X_df_cleaned[month] = X_df_cleaned["MONTH"]==int(months_name.index(month)+1)
+    X_df_cleaned[month] = X_df_cleaned[month].astype(int)
 
+for day in days:
+    X_df_cleaned["DAY_"+str(day)] = X_df_cleaned["DAY"]==int(day)
+    X_df_cleaned["DAY_"+str(day)] = X_df_cleaned["DAY_"+str(day)].astype(int)
+
+for hour in hours:
+    X_df_cleaned["HOUR_"+str(hour)] = X_df_cleaned["HOUR"]==int(hour)
+    X_df_cleaned["HOUR_"+str(hour)] = X_df_cleaned["HOUR_"+str(hour)].astype(int)
+
+X_df_cleaned = X_df_cleaned.drop(['YEAR', 'MONTH', 'DAY', 'HOUR', 'DATE'], axis=1)
+
+###############################################################################
+# Export X and Y Dataframes to CSV
+###############################################################################
 dirs_dataframes = os.path.join(dirs_inputs, "X_Y_Inputs")
 X_df_output_string =  os.path.join(dirs_dataframes, "X_df_"+fsa_chosen+".csv")
 X_df_cleaned.to_csv(X_df_output_string, index=False)
