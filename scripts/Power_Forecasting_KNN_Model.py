@@ -137,8 +137,8 @@ r2 = r2_score(Y_test, Y_pred)
 
 #%% PLOTTING
 year_plot = 2023
-month_plot = 1
-day_plot = 1
+month_plot = 4
+day_plot = 23
 
 
 
@@ -210,17 +210,18 @@ plt.show()
 
 # Daily Plot
 
-plt.title(str(year_plot) + "/" + str(month_plot) + "/" + str(day_plot) + " Prediction VS Actual of KNN Model")
+plt.title(str(day_plot) + "/" + str(month_plot) + "/" + str(year_plot) + " Prediction VS Actual of KNN Model")
 
 plt.plot(X_test_year_month_day['HOUR'].index, Y_pred_year_month_day['TOTAL_CONSUMPTION'], 'o-', color="blue", linewidth=3, label="PREDICTION")
-plt.xlabel("INDEX")
-plt.ylabel("CONSUMPTION in KW")
+plt.plot(X_test_year_month_day['HOUR'].index, Y_test_year_month_day['TOTAL_CONSUMPTION'], 'o-', color="black", label="ACTUAL")
+plt.xlabel("Hour")
+plt.ylabel("Power Consumption [KW]")
+plt.xticks(np.arange(0, 25, 2))
+plt.xlim(0, 25)
 plt.axes()
 plt.plot(X_test_year_month_day['HOUR'].index, Y_pred_year_month_day['TOTAL_CONSUMPTION'], 'o-', color="blue", linewidth=3, label="PREDICTION")
 plt.plot(X_test_year_month_day['HOUR'].index, Y_test_year_month_day['TOTAL_CONSUMPTION'], 'o-', color="black", label="ACTUAL")
-plt.title(str(year_plot) + "/" + str(month_plot) + "/" + str(day_plot) + " Prediction VS Actual of KNN Model")
 plt.legend(loc="upper left")
-
 plt.xticks(())
 plt.yticks(())
 plt.show()
