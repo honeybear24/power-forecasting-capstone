@@ -14,6 +14,8 @@ import os
 import math
 import numpy as np
 import canada_holiday
+
+
 from pyhelpers.store import save_fig, save_svg_as_emf
 import subprocess
 import  aspose.cells 
@@ -361,14 +363,14 @@ for hour in hours:
     X_df_cleaned["HOUR_"+str(hour)] = X_df_cleaned["HOUR"]==int(hour)
     X_df_cleaned["HOUR_"+str(hour)] = X_df_cleaned["HOUR_"+str(hour)].astype(int)
 
-X_df_cleaned = X_df_cleaned.drop(['YEAR', 'MONTH', 'DAY', 'HOUR', 'DATE'], axis=1)
+X_df_cleaned_output = X_df_cleaned.drop(['YEAR', 'MONTH', 'DAY', 'HOUR', 'DATE', 'WEEKDAY', 'DAY_OF_WEEK'], axis=1)
 
 ###############################################################################
 # Export X and Y Dataframes to CSV
 ###############################################################################
 dirs_dataframes = os.path.join(dirs_inputs, "X_Y_Inputs")
 X_df_output_string =  os.path.join(dirs_dataframes, "X_df_"+fsa_chosen+".csv")
-X_df_cleaned.to_csv(X_df_output_string, index=False)
+X_df_cleaned_output.to_csv(X_df_output_string, index=False)
 Y_df_output_string =  os.path.join(dirs_dataframes, "Y_df_"+fsa_chosen+".csv")
 Y_df["TOTAL_CONSUMPTION"].to_csv(Y_df_output_string, index=False)
 
@@ -391,89 +393,11 @@ Y_df["TOTAL_CONSUMPTION"].to_csv(Y_df_output_string, index=False)
 #%% Neural Network Model
 # JANNA FILLS IN CODE HERE ON A NEW BRANCH
 
-
-
-
-
-
-
-
-
-
-
-#%% Plot Power Consumption and Temperature over time period
-year_plot = "2018"
-month_plot =  "02"
-day_plot = "03"
-
-# First day
-hourly_data_month_day = hourly_consumption_data_dic_by_month[fsa][year_plot][month_plot]
-hourly_data_month_day = hourly_data_month_day[hourly_data_month_day['DAY'] == int(day_plot)]
-
-plot = plt.subplot(1, 3, 1)
-plot = plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-')
-
-plt.title("HOURLY THREE DAY CONSUMPTION STARTING " + year_plot + "/" + month_plot + "/" + day_plot)
-plt.xlabel("HOUR")
-plt.ylabel("CONSUMPTION in KW")
-
-
-# Second day
-hourly_data_month_day = hourly_consumption_data_dic_by_month[fsa][year_plot][month_plot]
-hourly_data_month_day = hourly_data_month_day[hourly_data_month_day['DAY'] == int(day_plot)+1]
-
-plot = plt.subplot(1, 3, 2)
-plot = plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-')
-
-# Third day
-hourly_data_month_day = hourly_consumption_data_dic_by_month[fsa][year_plot][month_plot]
-hourly_data_month_day = hourly_data_month_day[hourly_data_month_day['DAY'] == int(day_plot)+2]
-
-plot = plt.subplot(1, 3, 3)
-plot = plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-')
-
-
-plt.show()
-
-# TRY TO PLOT WEATHER WITH X = HOUR, Y = TEMP
-# Plot weather data with X = HOUR, Y = TEMP
-
-# First day
-hourly_weather_month_day = hourly_weather_data_dic_by_month[fsa][year_plot][month_plot]
-hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DAY'] == int(day_plot)]
-
-plot = plt.subplot(1, 3, 1)
-plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
-
-plt.title("HOURLY THREE DAY TEMPERATURE STARTING " + year_plot + "/" + month_plot + "/" + day_plot)
-plt.xlabel("HOUR")
-plt.ylabel("TEMPERATURE in °C")
-
-# Second day
-hourly_weather_month_day = hourly_weather_data_dic_by_month[fsa][year_plot][month_plot]
-hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DAY'] == int(day_plot)+1]
-
-plot = plt.subplot(1, 3, 2)
-plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
-
-# Third day
-hourly_weather_month_day = hourly_weather_data_dic_by_month[fsa][year_plot][month_plot]
-hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DAY'] == int(day_plot)+2]
-
-plot = plt.subplot(1, 3, 3)
-plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
-plt.show()
-
 #%% Plot All Input Variables Over Power Consumption
  
 
 dirs_plots = os.path.join(dirs_inputs, "Input_Plots")
-inkspace_path = "D:\\Program Files\\Inkscape\\bin\\inkscape.exe"
-
-
 save_plots = True
-
-
 
 
 for year in years:
@@ -485,11 +409,8 @@ for year in years:
     plt.xlabel("Year")
     plt.legend() 
     plot_svg =  os.path.join(dirs_plots, "Year_VS_Consumption.png")
-    plot_emf =  os.path.join(dirs_plots, "Year_VS_Consumption.emf")
 if save_plots:
     plt.savefig(plot_svg)
-    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    #os.remove(plot_svg)
 plt.show()
 
 for year in years:
@@ -501,11 +422,8 @@ for year in years:
     plt.xlabel("Month")
     plt.legend()
     plot_svg =  os.path.join(dirs_plots, "Month_VS_Consumption.png")
-    plot_emf =  os.path.join(dirs_plots, "Month_VS_Consumption.emf")
 if save_plots:
     plt.savefig(plot_svg)
-    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    #os.remove(plot_svg)
 plt.show()
 
 for year in years:
@@ -517,11 +435,8 @@ for year in years:
     plt.xlabel("Day of Week")
     plt.legend()
     plot_svg =  os.path.join(dirs_plots, "DOW_VS_Consumption.png")
-    plot_emf =  os.path.join(dirs_plots, "DOW_VS_Consumption.emf")
 if save_plots:
     plt.savefig(plot_svg)
-    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    #os.remove(plot_svg)
 plt.show()
 
 for year in years:
@@ -533,11 +448,8 @@ for year in years:
     plt.xlabel("Season (1-Winter, 0-Summer)")
     plt.legend()
     plot_svg =  os.path.join(dirs_plots, "Season_VS_Consumption.png")
-    plot_emf =  os.path.join(dirs_plots, "Season_VS_Consumption.emf")
 if save_plots:
     plt.savefig(plot_svg)
-    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    #os.remove(plot_svg)
 plt.show()
 
 for year in years:
@@ -549,11 +461,8 @@ for year in years:
     plt.xlabel("Hour")
     plt.legend()
     plot_svg =  os.path.join(dirs_plots, "Hour_VS_Consumption.png")
-    plot_emf =  os.path.join(dirs_plots, "Hour_VS_Consumption.emf")
 if save_plots:
     plt.savefig(plot_svg)
-    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    #os.remove(plot_svg)
 plt.show()
 
 for year in years:
@@ -565,11 +474,8 @@ for year in years:
     plt.xlabel("Weekend (Boolean)")
     plt.legend()
     plot_svg =  os.path.join(dirs_plots, "Weekend_VS_Consumption.png")
-    plot_emf =  os.path.join(dirs_plots, "Weekend_VS_Consumption.emf")
 if save_plots:
     plt.savefig(plot_svg)
-    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    #os.remove(plot_svg)
 plt.show()
 
 for year in years:
@@ -579,13 +485,10 @@ for year in years:
     plt.title("Holiday Versus Consumption.")
     plt.ylabel("Consumption (KW)")
     plt.xlabel("Holiday (Boolean)")
-    plot_svg =  os.path.join(dirs_plots, "Holiday_VS_Consumption.png")
-    plot_emf =  os.path.join(dirs_plots, "Holiday_VS_Consumption.emf")
     plt.legend()
+    plot_svg =  os.path.join(dirs_plots, "Holiday_VS_Consumption.png") 
 if save_plots:
     plt.savefig(plot_svg)
-    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    #os.remove(plot_svg)
 plt.show()
 
 for year in years:
@@ -596,12 +499,10 @@ for year in years:
     plt.legend()
     plt.ylabel("Consumption (KW)")
     plt.xlabel("Temperature (°C)")
+    plt.legend()
     plot_svg =  os.path.join(dirs_plots, "Temp_VS_Consumption.png")
-    plot_emf =  os.path.join(dirs_plots, "Temp_VS_Consumption.emf")
 if save_plots:
     plt.savefig(plot_svg)
-    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    #os.remove(plot_svg)
 plt.show()
 
 for year in years:
@@ -612,12 +513,10 @@ for year in years:
     plt.legend()
     plt.ylabel("Consumption (KW)")
     plt.xlabel("Dew Point Temperature (°C)")
+    plt.legend()
     plot_svg =  os.path.join(dirs_plots, "Dew_Point_Temp_VS_Consumption.png")
-    plot_emf =  os.path.join(dirs_plots, "Dew_Point_Temp_VS_Consumption.emf")
 if save_plots:
     plt.savefig(plot_svg)
-    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    #os.remove(plot_svg)
 plt.show()
 
 for year in years:
@@ -628,12 +527,10 @@ for year in years:
     plt.legend()
     plt.ylabel("Consumption (KW)")
     plt.xlabel("Relative Humidity (%)")
+    plt.legend()
     plot_svg =  os.path.join(dirs_plots, "Relative_Humidity_VS_Consumption.png")
-    plot_emf =  os.path.join(dirs_plots, "Relative_Humidity_VS_Consumption.emf")
 if save_plots:
     plt.savefig(plot_svg)
-    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    #os.remove(plot_svg)
 plt.show()
 
 for year in years:
@@ -644,12 +541,10 @@ for year in years:
     plt.legend()
     plt.ylabel("Consumption (KW)")
     plt.xlabel("Wind Speed (km/h)")
+    plt.legend()
     plot_svg =  os.path.join(dirs_plots, "Wind_Speed_VS_Consumption.png")
-    plot_emf =  os.path.join(dirs_plots, "Wind_Speed_VS_Consumption.emf")
 if save_plots:
     plt.savefig(plot_svg)
-    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    #os.remove(plot_svg)
 plt.show()
 
 for year in years:
@@ -660,14 +555,74 @@ for year in years:
     plt.legend()
     plt.ylabel("Consumption (KW)")
     plt.xlabel("Wind Speed (°C)")
+    plt.legend()
     plot_svg =  os.path.join(dirs_plots, "Wind_Chill_VS_Consumption.png")
-    plot_emf =  os.path.join(dirs_plots, "Wind_Chill_VS_Consumption.emf")
 if save_plots:
     plt.savefig(plot_svg)
-    #save_svg_as_emf(plot_svg, plot_emf, verbose=True, inkscape_exe = inkspace_path)
-    #os.remove(plot_svg)
 plt.show()
 
+#%% MAY DELETE LATER Plot Power Consumption and Temperature over time period
+# year_plot = "2018"
+# month_plot =  "02"
+# day_plot = "03"
+
+# # First day
+# hourly_data_month_day = hourly_consumption_data_dic_by_month[fsa][year_plot][month_plot]
+# hourly_data_month_day = hourly_data_month_day[hourly_data_month_day['DAY'] == int(day_plot)]
+
+# plot = plt.subplot(1, 3, 1)
+# plot = plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-')
+
+# plt.title("HOURLY THREE DAY CONSUMPTION STARTING " + year_plot + "/" + month_plot + "/" + day_plot)
+# plt.xlabel("HOUR")
+# plt.ylabel("CONSUMPTION in KW")
+
+
+# # Second day
+# hourly_data_month_day = hourly_consumption_data_dic_by_month[fsa][year_plot][month_plot]
+# hourly_data_month_day = hourly_data_month_day[hourly_data_month_day['DAY'] == int(day_plot)+1]
+
+# plot = plt.subplot(1, 3, 2)
+# plot = plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-')
+
+# # Third day
+# hourly_data_month_day = hourly_consumption_data_dic_by_month[fsa][year_plot][month_plot]
+# hourly_data_month_day = hourly_data_month_day[hourly_data_month_day['DAY'] == int(day_plot)+2]
+
+# plot = plt.subplot(1, 3, 3)
+# plot = plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-')
+
+
+# plt.show()
+
+# # TRY TO PLOT WEATHER WITH X = HOUR, Y = TEMP
+# # Plot weather data with X = HOUR, Y = TEMP
+
+# # First day
+# hourly_weather_month_day = hourly_weather_data_dic_by_month[fsa][year_plot][month_plot]
+# hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DAY'] == int(day_plot)]
+
+# plot = plt.subplot(1, 3, 1)
+# plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
+
+# plt.title("HOURLY THREE DAY TEMPERATURE STARTING " + year_plot + "/" + month_plot + "/" + day_plot)
+# plt.xlabel("HOUR")
+# plt.ylabel("TEMPERATURE in °C")
+
+# # Second day
+# hourly_weather_month_day = hourly_weather_data_dic_by_month[fsa][year_plot][month_plot]
+# hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DAY'] == int(day_plot)+1]
+
+# plot = plt.subplot(1, 3, 2)
+# plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
+
+# # Third day
+# hourly_weather_month_day = hourly_weather_data_dic_by_month[fsa][year_plot][month_plot]
+# hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DAY'] == int(day_plot)+2]
+
+# plot = plt.subplot(1, 3, 3)
+# plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
+# plt.show()
 
 
 
