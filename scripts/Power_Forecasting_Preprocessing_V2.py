@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """
 Spyder Editor
@@ -14,6 +13,7 @@ import matplotlib.pyplot as plt
 import os
 import math
 import numpy as np
+import canada_holiday
 
 #%% Student directory
 hanad_run = ["./data", 1]
@@ -115,7 +115,7 @@ for fsa in fsa_list:
             hourly_data_res_fsa = hourly_data_res.loc[hourly_data_res['FSA'] == fsa].reset_index(drop=True)
             
             # Take the sum if fsa has more than 1 date (this is because there are different pay codes in residential loads)
-            hourly_data_hour_sum = hourly_data_res_fsa.groupby(["FSA", "CUSTOMER_TYPE", "YEAR", "MONTH", "DAY", "HOUR"]).TOTAL_CONSUMPTION.sum().reset_index()
+            hourly_data_hour_sum = hourly_data_res_fsa.groupby(["FSA", "CUSTOMER_TYPE", "YEAR", "MONTH", "DAY", "HOUR", "DATE"]).TOTAL_CONSUMPTION.sum().reset_index()
             
             
             hourly_consumption_data_dic_by_month[fsa][year][month] = hourly_data_hour_sum
@@ -169,20 +169,65 @@ for fsa in fsa_list:
             hourly_data_fix_date['MONTH'] = hourly_data_fix_date['DATE'].dt.month
             hourly_data_fix_date['DAY'] = hourly_data_fix_date['DATE'].dt.day
             hourly_data_fix_date['HOUR'] = hourly_data_fix_date['DATE'].dt.hour
-            hourly_data_fix_date['HOUR'] = hourly_data_fix_date['HOUR']+1   
-            
+            hourly_data_fix_date['HOUR'] = hourly_data_fix_date['HOUR']+1  
+    
             # Manual Calculation for WindChill
             hourly_data_fix_date['WIND CHILL CALCULATION'] = 13.12 + hourly_data_fix_date['Temp (°C)']*0.6125 - 11.37 * hourly_data_fix_date['Wind Spd (km/h)']**0.16 + 0.3965 * hourly_data_fix_date['Temp (°C)'] * hourly_data_fix_date['Wind Spd (km/h)']**0.16
+            
+            # Change Temperature column names so it does not have symbols anymore
+            hourly_data_fix_date.rename(columns = {'Temp (°C)':'Temp (C)', 'Dew Point Temp (°C)':'Dew Point Temp (C)'}, inplace = True)
             
             hourly_weather_data_dic_by_month[fsa][year][month] = hourly_data_fix_date
             
             print(weather_data_string)
 
-
 ###############################################################################
 # Calendar Variables
 ###############################################################################
 
+# Add weekdays to hourly consumption dataframe
+# Monday = 0 
+# Tuesday = 1
+# Wednesday = 2
+# Thursday = 3
+# Friday = 4 
+# Saturday = 5
+# Sunday = 6
+
+# Add season to hourly consumption dataframe
+# As per OEB:
+# Winter(1) = November (Including) to April (Including)
+# Summer(0) = May (Including) to October (Including)
+for year in years:        
+    for month in months:
+        # Get day of week and check if it is a weekend or weekday
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DAY_OF_WEEK"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DATE"].dt.weekday
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKEND"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DAY_OF_WEEK"]>4
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKDAY"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["DAY_OF_WEEK"]<5
+        
+        # Convert boolean of weekend or weekday to integer numbers (1-True, 0-False)
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKEND"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKEND"].astype(int)
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKDAY"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["WEEKDAY"].astype(int)
+        
+        # Get Season and check if it is winter or summer
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"] = (hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["MONTH"]<5) | (hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["MONTH"]>10)
+        
+        # Convert boolean of weekend or weekday to integer numbers (1-Winter, 0-Summer)
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"] = hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["SEASON"].astype(int)
+        
+        # Pad the holiday column with zeros to initialize it
+        hourly_consumption_data_dic_by_month[fsa_chosen][year][month]["HOLIDAY"] = 0
+        
+        for index, row in  hourly_consumption_data_dic_by_month[fsa_chosen][year][month].iterrows():
+            date_temp = date(row["YEAR"], row["MONTH"], row["DAY"])
+            if (row["HOUR"] == 1):
+                if canada_holiday.is_holiday(date_temp, "Ontario"):
+                    hourly_consumption_data_dic_by_month[fsa_chosen][year][month].loc[index, "HOLIDAY"] = 1
+                    temp_value = 1
+                else:
+                    temp_value = 0
+            else:
+                hourly_consumption_data_dic_by_month[fsa_chosen][year][month].loc[index, "HOLIDAY"] = temp_value
 
 ###############################################################################
 # X and Y Dataframes
@@ -194,23 +239,20 @@ Y_df = pd.DataFrame()
 for year in years:        
     for month in months:
         # Extract the monthly hourly data for x variables
-        hourly_data_consumption_by_month_X = hourly_consumption_data_dic_by_month[fsa_chosen][year][month].drop(["FSA", "CUSTOMER_TYPE", "TOTAL_CONSUMPTION"], axis=1)
-        hourly_data_weather_by_month_X = hourly_weather_data_dic_by_month[fsa_chosen][year][month].drop(['Climate ID', 'Date/Time (LST)', 'Wind Dir (10s deg)', 'Visibility (km)', 'Stn Press (kPa)', 'Weather', 'YEAR', 'MONTH', 'DAY', 'HOUR'], axis=1)
+        hourly_data_consumption_by_month_X = hourly_consumption_data_dic_by_month[fsa_chosen][year][month].drop(["FSA", "CUSTOMER_TYPE", "TOTAL_CONSUMPTION", "DATE"], axis=1)
+        hourly_data_weather_by_month_X = hourly_weather_data_dic_by_month[fsa_chosen][year][month].drop(['Climate ID', 'Date/Time (LST)', 'Wind Dir (10s deg)', 'Visibility (km)', 'Stn Press (kPa)', 'Weather', 'DATE', 'YEAR', 'MONTH', 'DAY', 'HOUR'], axis=1)
         
         
         # Combine all hourly data for x variables
         hourly_data_by_month_X = pd.concat([hourly_data_consumption_by_month_X, hourly_data_weather_by_month_X], axis = 1)
         
         # Extract the monthly hourly data for y variables
-        #hourly_data_by_month_Y = hourly_consumption_data_dic_by_month[fsa_chosen][year][month].drop(["FSA", "CUSTOMER_TYPE", "YEAR", "MONTH", "DAY", "HOUR"], axis=1)
-        hourly_data_by_month_Y = hourly_consumption_data_dic_by_month[fsa_chosen][year][month].drop(["FSA", "CUSTOMER_TYPE"], axis=1)
-
+        hourly_data_by_month_Y = hourly_consumption_data_dic_by_month[fsa_chosen][year][month].drop(["FSA", "CUSTOMER_TYPE", "YEAR", "MONTH", "DAY", "HOUR", "DAY_OF_WEEK", "WEEKEND", "WEEKDAY", "SEASON", "HOLIDAY"], axis=1)
+        
         
         
         X_df = pd.concat([X_df, hourly_data_by_month_X], ignore_index=True)
         Y_df = pd.concat([Y_df, hourly_data_by_month_Y], ignore_index=True)
-
-
 
 ###############################################################################
 # Cleaning up X_df dataframe
@@ -238,8 +280,8 @@ for column in X_columns:
             counter_adjacent_nan -= 1
             continue
         # Check if value for current index and column is missing
-        if row[column] != row[column]:
-        #if math.isnan(row[column]):
+        #if row[column] != row[column]:
+        if math.isnan(row[column]):
             #print("MISSING DATA FOUND AT Index: " , str(index) , " | Column: " + column + " | Value: " + str(row[column]))
             
             # If found, take need to take linear interpolation between last actual value and next actual value (need to interpolate any consectutively missing data points too!)
@@ -277,26 +319,30 @@ for column in X_columns:
                 counter_adjacent_nan += 1
 X_df_cleaned = X_without_bad_windchill
 
+# Add Date back into X_df_cleaned variable
+X_df_cleaned["DATE"] = 0
+for index, row in  X_df_cleaned.iterrows():
+    X_df_cleaned.loc[index, "DATE"] = date(int(row["YEAR"]),int(row["MONTH"]),int(row["DAY"]))
+
+
+
+
+
 # Storing data in CSVs for later use
 data_dir = "./data"
 df_directory = os.path.join(data_dir, "Data_Frames")
 
 # Train model - Extract only January from X dataframe
-X_df_cleaned.to_csv(os.path.join(df_directory,'X_all_with_date.csv'), index=False) 
-Y_df.to_csv(os.path.join(df_directory,'Y_all.csv'), index=False) 
-
-
-
+X_df_cleaned.to_csv(os.path.join(df_directory,'X_all_V2.csv'), index=False) 
+Y_df.to_csv(os.path.join(df_directory,'Y_all_V2.csv'), index=False) 
 
 #%% Regression Model
 # HANAD FILLS IN CODE HERE ON A NEW BRANCH
 
 
 
-
 #%% SVR Model
 # CLOVER FILLS IN CODE HERE ON A NEW BRANCH
-
 
 
 #%% KNN Model
@@ -320,65 +366,65 @@ Y_df.to_csv(os.path.join(df_directory,'Y_all.csv'), index=False)
 
 
 #%% Plot Input Data
-year_plot = "2018"
-month_plot =  "02"
-day_plot = "03"
+# year_plot = "2018"
+# month_plot =  "02"
+# day_plot = "03"
 
-# First day
-hourly_data_month_day = hourly_consumption_data_dic_by_month[fsa][year_plot][month_plot]
-hourly_data_month_day = hourly_data_month_day[hourly_data_month_day['DAY'] == int(day_plot)]
+# # First day
+# hourly_data_month_day = hourly_consumption_data_dic_by_month[fsa][year_plot][month_plot]
+# hourly_data_month_day = hourly_data_month_day[hourly_data_month_day['DAY'] == int(day_plot)]
 
-plot = plt.subplot(1, 3, 1)
-plot = plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-')
+# plot = plt.subplot(1, 3, 1)
+# plot = plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-')
 
-plt.title("HOURLY THREE DAY CONSUMPTION STARTING " + year_plot + "/" + month_plot + "/" + day_plot)
-plt.xlabel("HOUR")
-plt.ylabel("CONSUMPTION in KW")
-
-
-# Second day
-hourly_data_month_day = hourly_consumption_data_dic_by_month[fsa][year_plot][month_plot]
-hourly_data_month_day = hourly_data_month_day[hourly_data_month_day['DAY'] == int(day_plot)+1]
-
-plot = plt.subplot(1, 3, 2)
-plot = plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-')
-
-# Third day
-hourly_data_month_day = hourly_consumption_data_dic_by_month[fsa][year_plot][month_plot]
-hourly_data_month_day = hourly_data_month_day[hourly_data_month_day['DAY'] == int(day_plot)+2]
-
-plot = plt.subplot(1, 3, 3)
-plot = plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-')
+# plt.title("HOURLY THREE DAY CONSUMPTION STARTING " + year_plot + "/" + month_plot + "/" + day_plot)
+# plt.xlabel("HOUR")
+# plt.ylabel("CONSUMPTION in KW")
 
 
-plt.show()
+# # Second day
+# hourly_data_month_day = hourly_consumption_data_dic_by_month[fsa][year_plot][month_plot]
+# hourly_data_month_day = hourly_data_month_day[hourly_data_month_day['DAY'] == int(day_plot)+1]
 
-# TRY TO PLOT WEATHER WITH X = HOUR, Y = TEMP
-# Plot weather data with X = HOUR, Y = TEMP
+# plot = plt.subplot(1, 3, 2)
+# plot = plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-')
 
-# First day
-hourly_weather_month_day = hourly_weather_data_dic_by_month[fsa][year_plot][month_plot]
-hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DAY'] == int(day_plot)]
+# # Third day
+# hourly_data_month_day = hourly_consumption_data_dic_by_month[fsa][year_plot][month_plot]
+# hourly_data_month_day = hourly_data_month_day[hourly_data_month_day['DAY'] == int(day_plot)+2]
 
-plot = plt.subplot(1, 3, 1)
-plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
+# plot = plt.subplot(1, 3, 3)
+# plot = plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-')
 
-plt.title("HOURLY THREE DAY TEMPERATURE STARTING " + year_plot + "/" + month_plot + "/" + day_plot)
-plt.xlabel("HOUR")
-plt.ylabel("TEMPERATURE in °C")
 
-# Second day
-hourly_weather_month_day = hourly_weather_data_dic_by_month[fsa][year_plot][month_plot]
-hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DAY'] == int(day_plot)+1]
+# plt.show()
 
-plot = plt.subplot(1, 3, 2)
-plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
+# # TRY TO PLOT WEATHER WITH X = HOUR, Y = TEMP
+# # Plot weather data with X = HOUR, Y = TEMP
 
-# Third day
-hourly_weather_month_day = hourly_weather_data_dic_by_month[fsa][year_plot][month_plot]
-hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DAY'] == int(day_plot)+2]
+# # First day
+# hourly_weather_month_day = hourly_weather_data_dic_by_month[fsa][year_plot][month_plot]
+# hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DAY'] == int(day_plot)]
 
-plot = plt.subplot(1, 3, 3)
-plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
+# plot = plt.subplot(1, 3, 1)
+# plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
 
-plt.show()
+# plt.title("HOURLY THREE DAY TEMPERATURE STARTING " + year_plot + "/" + month_plot + "/" + day_plot)
+# plt.xlabel("HOUR")
+# plt.ylabel("TEMPERATURE in °C")
+
+# # Second day
+# hourly_weather_month_day = hourly_weather_data_dic_by_month[fsa][year_plot][month_plot]
+# hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DAY'] == int(day_plot)+1]
+
+# plot = plt.subplot(1, 3, 2)
+# plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
+
+# # Third day
+# hourly_weather_month_day = hourly_weather_data_dic_by_month[fsa][year_plot][month_plot]
+# hourly_weather_month_day = hourly_weather_month_day[hourly_weather_month_day['DAY'] == int(day_plot)+2]
+
+# plot = plt.subplot(1, 3, 3)
+# plot = plt.plot(hourly_weather_month_day["HOUR"], hourly_weather_month_day[hourly_weather_month_day.columns[2]], 'o-')
+
+# plt.show()

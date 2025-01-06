@@ -1,4 +1,4 @@
-### First Regression Model using Linear Regression from Scikit Learn with Splines ###
+### First Regression Model using Linear Regression from Scikit Learn with Splines and Jo's L9G DATA ###
 
 import os
 import pandas as pd
@@ -16,11 +16,9 @@ from sklearn.preprocessing import SplineTransformer
 ## Import saved CSV into script as dataframes
 data_dir = "./data"
 temp_dir = "./temp"
-#data_dir = "C://Users//hanad//capstone_github//power-forecasting-capstone//data"
-#dtemp_dir = "C://Users//hanad//capstone_github//power-forecasting-capstone//temp"
 df_directory = os.path.join(data_dir, "Data_Frames")
-X = pd.read_csv(os.path.join(df_directory, "X_all.csv"))
-Y = pd.read_csv(os.path.join(df_directory, "Y_all.csv"))
+X = pd.read_csv(os.path.join(df_directory, "X_df_L9G.csv")).drop(["Rel Hum (%)", "Wind Spd (km/h)", "DATE"],axis=1)
+Y = pd.read_csv(os.path.join(df_directory, "Y_df_L9G.csv"))
 
 # Create pipeline containing linear regression model and standard scalar
 pipe = make_pipeline(SplineTransformer(n_knots=5, degree=2), linear_model.LinearRegression())
