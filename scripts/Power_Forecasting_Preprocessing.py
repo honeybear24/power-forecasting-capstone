@@ -16,13 +16,13 @@ import numpy as np
 import canada_holiday
 
 
-from pyhelpers.store import save_fig, save_svg_as_emf
-import subprocess
-import  aspose.cells 
-from aspose.cells import Workbook
+# from pyhelpers.store import save_fig, save_svg_as_emf
+# import subprocess
+# import  aspose.cells 
+# from aspose.cells import Workbook
 
 #%% Student directory
-hanad_run = ["./data", 1]
+hanad_run = ["c:/Users/hanad/capstone_github/power-forecasting-capstone/data", 1]
 clover_run = ["./data", 2]
 joseph_laptop_run = ["C:\\Users\\sposa\\Documents\\GitHub\\power-forecasting-capstone\\data", 3]
 joseph_pc_run = ["D:\\Users\\Joseph\\Documents\\GitHub\\power-forecasting-capstone\\data", 3]
@@ -32,7 +32,7 @@ janna_run = ["./data", 4]
 ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
 ###############################################################################
 # Paste student name_run for whoever is running the code
-run_student = joseph_pc_run
+run_student = hanad_run
 if (run_student[1] == joseph_laptop_run[1]):
     print("JOSEPH IS RUNNING!")
 elif (run_student[1] == hanad_run[1]):
@@ -393,173 +393,173 @@ Y_df["TOTAL_CONSUMPTION"].to_csv(Y_df_output_string, index=False)
 #%% Neural Network Model
 # JANNA FILLS IN CODE HERE ON A NEW BRANCH
 
-#%% Plot All Input Variables Over Power Consumption
+# #%% Plot All Input Variables Over Power Consumption
  
 
-dirs_plots = os.path.join(dirs_inputs, "Input_Plots")
-save_plots = True
+# dirs_plots = os.path.join(dirs_inputs, "Input_Plots")
+# save_plots = True
 
 
-for year in years:
-    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
-    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)] 
-    plt.scatter(X_year["YEAR"], Y_year["TOTAL_CONSUMPTION"], label = year, rasterized=True)
-    plt.title("Year Versus Consumption.")
-    plt.ylabel("Consumption (KW)")
-    plt.xlabel("Year")
-    plt.legend() 
-    plot_svg =  os.path.join(dirs_plots, "Year_VS_Consumption.png")
-if save_plots:
-    plt.savefig(plot_svg)
-plt.show()
+# for year in years:
+#     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+#     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)] 
+#     plt.scatter(X_year["YEAR"], Y_year["TOTAL_CONSUMPTION"], label = year, rasterized=True)
+#     plt.title("Year Versus Consumption.")
+#     plt.ylabel("Consumption (KW)")
+#     plt.xlabel("Year")
+#     plt.legend() 
+#     plot_svg =  os.path.join(dirs_plots, "Year_VS_Consumption.png")
+# if save_plots:
+#     plt.savefig(plot_svg)
+# plt.show()
 
-for year in years:
-    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
-    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
-    plt.scatter(X_year["MONTH"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Month Versus Consumption.")
-    plt.ylabel("Consumption (KW)")
-    plt.xlabel("Month")
-    plt.legend()
-    plot_svg =  os.path.join(dirs_plots, "Month_VS_Consumption.png")
-if save_plots:
-    plt.savefig(plot_svg)
-plt.show()
+# for year in years:
+#     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+#     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
+#     plt.scatter(X_year["MONTH"], Y_year["TOTAL_CONSUMPTION"], label = year)
+#     plt.title("Month Versus Consumption.")
+#     plt.ylabel("Consumption (KW)")
+#     plt.xlabel("Month")
+#     plt.legend()
+#     plot_svg =  os.path.join(dirs_plots, "Month_VS_Consumption.png")
+# if save_plots:
+#     plt.savefig(plot_svg)
+# plt.show()
 
-for year in years:
-    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
-    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
-    plt.scatter(X_year["DAY_OF_WEEK"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Day of Week Versus Consumption.")
-    plt.ylabel("Consumption (KW)")
-    plt.xlabel("Day of Week")
-    plt.legend()
-    plot_svg =  os.path.join(dirs_plots, "DOW_VS_Consumption.png")
-if save_plots:
-    plt.savefig(plot_svg)
-plt.show()
+# for year in years:
+#     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+#     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
+#     plt.scatter(X_year["DAY_OF_WEEK"], Y_year["TOTAL_CONSUMPTION"], label = year)
+#     plt.title("Day of Week Versus Consumption.")
+#     plt.ylabel("Consumption (KW)")
+#     plt.xlabel("Day of Week")
+#     plt.legend()
+#     plot_svg =  os.path.join(dirs_plots, "DOW_VS_Consumption.png")
+# if save_plots:
+#     plt.savefig(plot_svg)
+# plt.show()
 
-for year in years:
-    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
-    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
-    plt.scatter(X_year["SEASON"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Season Versus Consumption.")
-    plt.ylabel("Consumption (KW)")
-    plt.xlabel("Season (1-Winter, 0-Summer)")
-    plt.legend()
-    plot_svg =  os.path.join(dirs_plots, "Season_VS_Consumption.png")
-if save_plots:
-    plt.savefig(plot_svg)
-plt.show()
+# for year in years:
+#     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+#     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
+#     plt.scatter(X_year["SEASON"], Y_year["TOTAL_CONSUMPTION"], label = year)
+#     plt.title("Season Versus Consumption.")
+#     plt.ylabel("Consumption (KW)")
+#     plt.xlabel("Season (1-Winter, 0-Summer)")
+#     plt.legend()
+#     plot_svg =  os.path.join(dirs_plots, "Season_VS_Consumption.png")
+# if save_plots:
+#     plt.savefig(plot_svg)
+# plt.show()
 
-for year in years:
-    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
-    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
-    plt.scatter(X_year["HOUR"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Hour Versus Consumption.")
-    plt.ylabel("Consumption (KW)")
-    plt.xlabel("Hour")
-    plt.legend()
-    plot_svg =  os.path.join(dirs_plots, "Hour_VS_Consumption.png")
-if save_plots:
-    plt.savefig(plot_svg)
-plt.show()
+# for year in years:
+#     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+#     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
+#     plt.scatter(X_year["HOUR"], Y_year["TOTAL_CONSUMPTION"], label = year)
+#     plt.title("Hour Versus Consumption.")
+#     plt.ylabel("Consumption (KW)")
+#     plt.xlabel("Hour")
+#     plt.legend()
+#     plot_svg =  os.path.join(dirs_plots, "Hour_VS_Consumption.png")
+# if save_plots:
+#     plt.savefig(plot_svg)
+# plt.show()
 
-for year in years:
-    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
-    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
-    plt.scatter(X_year["WEEKEND"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Weekend Versus Consumption.")
-    plt.ylabel("Consumption (KW)")
-    plt.xlabel("Weekend (Boolean)")
-    plt.legend()
-    plot_svg =  os.path.join(dirs_plots, "Weekend_VS_Consumption.png")
-if save_plots:
-    plt.savefig(plot_svg)
-plt.show()
+# for year in years:
+#     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+#     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
+#     plt.scatter(X_year["WEEKEND"], Y_year["TOTAL_CONSUMPTION"], label = year)
+#     plt.title("Weekend Versus Consumption.")
+#     plt.ylabel("Consumption (KW)")
+#     plt.xlabel("Weekend (Boolean)")
+#     plt.legend()
+#     plot_svg =  os.path.join(dirs_plots, "Weekend_VS_Consumption.png")
+# if save_plots:
+#     plt.savefig(plot_svg)
+# plt.show()
 
-for year in years:
-    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
-    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
-    plt.scatter(X_year["HOLIDAY"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Holiday Versus Consumption.")
-    plt.ylabel("Consumption (KW)")
-    plt.xlabel("Holiday (Boolean)")
-    plt.legend()
-    plot_svg =  os.path.join(dirs_plots, "Holiday_VS_Consumption.png") 
-if save_plots:
-    plt.savefig(plot_svg)
-plt.show()
+# for year in years:
+#     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+#     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
+#     plt.scatter(X_year["HOLIDAY"], Y_year["TOTAL_CONSUMPTION"], label = year)
+#     plt.title("Holiday Versus Consumption.")
+#     plt.ylabel("Consumption (KW)")
+#     plt.xlabel("Holiday (Boolean)")
+#     plt.legend()
+#     plot_svg =  os.path.join(dirs_plots, "Holiday_VS_Consumption.png") 
+# if save_plots:
+#     plt.savefig(plot_svg)
+# plt.show()
 
-for year in years:
-    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
-    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
-    plt.scatter(X_year["Temp (C)"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Temperature Versus Consumption.")
-    plt.legend()
-    plt.ylabel("Consumption (KW)")
-    plt.xlabel("Temperature (°C)")
-    plt.legend()
-    plot_svg =  os.path.join(dirs_plots, "Temp_VS_Consumption.png")
-if save_plots:
-    plt.savefig(plot_svg)
-plt.show()
+# for year in years:
+#     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+#     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
+#     plt.scatter(X_year["Temp (C)"], Y_year["TOTAL_CONSUMPTION"], label = year)
+#     plt.title("Temperature Versus Consumption.")
+#     plt.legend()
+#     plt.ylabel("Consumption (KW)")
+#     plt.xlabel("Temperature (°C)")
+#     plt.legend()
+#     plot_svg =  os.path.join(dirs_plots, "Temp_VS_Consumption.png")
+# if save_plots:
+#     plt.savefig(plot_svg)
+# plt.show()
 
-for year in years:
-    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
-    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
-    plt.scatter(X_year["Dew Point Temp (C)"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Dew Point Temperature Versus Consumption.")
-    plt.legend()
-    plt.ylabel("Consumption (KW)")
-    plt.xlabel("Dew Point Temperature (°C)")
-    plt.legend()
-    plot_svg =  os.path.join(dirs_plots, "Dew_Point_Temp_VS_Consumption.png")
-if save_plots:
-    plt.savefig(plot_svg)
-plt.show()
+# for year in years:
+#     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+#     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
+#     plt.scatter(X_year["Dew Point Temp (C)"], Y_year["TOTAL_CONSUMPTION"], label = year)
+#     plt.title("Dew Point Temperature Versus Consumption.")
+#     plt.legend()
+#     plt.ylabel("Consumption (KW)")
+#     plt.xlabel("Dew Point Temperature (°C)")
+#     plt.legend()
+#     plot_svg =  os.path.join(dirs_plots, "Dew_Point_Temp_VS_Consumption.png")
+# if save_plots:
+#     plt.savefig(plot_svg)
+# plt.show()
 
-for year in years:
-    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
-    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
-    plt.scatter(X_year["Rel Hum (%)"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Relative Humidity Versus Consumption.")
-    plt.legend()
-    plt.ylabel("Consumption (KW)")
-    plt.xlabel("Relative Humidity (%)")
-    plt.legend()
-    plot_svg =  os.path.join(dirs_plots, "Relative_Humidity_VS_Consumption.png")
-if save_plots:
-    plt.savefig(plot_svg)
-plt.show()
+# for year in years:
+#     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+#     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
+#     plt.scatter(X_year["Rel Hum (%)"], Y_year["TOTAL_CONSUMPTION"], label = year)
+#     plt.title("Relative Humidity Versus Consumption.")
+#     plt.legend()
+#     plt.ylabel("Consumption (KW)")
+#     plt.xlabel("Relative Humidity (%)")
+#     plt.legend()
+#     plot_svg =  os.path.join(dirs_plots, "Relative_Humidity_VS_Consumption.png")
+# if save_plots:
+#     plt.savefig(plot_svg)
+# plt.show()
 
-for year in years:
-    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
-    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
-    plt.scatter(X_year["Wind Spd (km/h)"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Wind Speed Versus Consumption.")
-    plt.legend()
-    plt.ylabel("Consumption (KW)")
-    plt.xlabel("Wind Speed (km/h)")
-    plt.legend()
-    plot_svg =  os.path.join(dirs_plots, "Wind_Speed_VS_Consumption.png")
-if save_plots:
-    plt.savefig(plot_svg)
-plt.show()
+# for year in years:
+#     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+#     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]     
+#     plt.scatter(X_year["Wind Spd (km/h)"], Y_year["TOTAL_CONSUMPTION"], label = year)
+#     plt.title("Wind Speed Versus Consumption.")
+#     plt.legend()
+#     plt.ylabel("Consumption (KW)")
+#     plt.xlabel("Wind Speed (km/h)")
+#     plt.legend()
+#     plot_svg =  os.path.join(dirs_plots, "Wind_Speed_VS_Consumption.png")
+# if save_plots:
+#     plt.savefig(plot_svg)
+# plt.show()
 
-for year in years:
-    X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
-    Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
-    plt.scatter(X_year["WIND CHILL CALCULATION"], Y_year["TOTAL_CONSUMPTION"], label = year)
-    plt.title("Wind Chill Versus Consumption.")
-    plt.legend()
-    plt.ylabel("Consumption (KW)")
-    plt.xlabel("Wind Speed (°C)")
-    plt.legend()
-    plot_svg =  os.path.join(dirs_plots, "Wind_Chill_VS_Consumption.png")
-if save_plots:
-    plt.savefig(plot_svg)
-plt.show()
+# for year in years:
+#     X_year = X_df_cleaned.loc[X_df_cleaned['YEAR'] == int(year)]
+#     Y_year = Y_df.loc[Y_df['YEAR'] == int(year)]   
+#     plt.scatter(X_year["WIND CHILL CALCULATION"], Y_year["TOTAL_CONSUMPTION"], label = year)
+#     plt.title("Wind Chill Versus Consumption.")
+#     plt.legend()
+#     plt.ylabel("Consumption (KW)")
+#     plt.xlabel("Wind Speed (°C)")
+#     plt.legend()
+#     plot_svg =  os.path.join(dirs_plots, "Wind_Chill_VS_Consumption.png")
+# if save_plots:
+#     plt.savefig(plot_svg)
+# plt.show()
 
 #%% MAY DELETE LATER Plot Power Consumption and Temperature over time period
 # year_plot = "2018"
