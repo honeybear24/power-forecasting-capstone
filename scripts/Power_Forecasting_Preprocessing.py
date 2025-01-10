@@ -395,7 +395,7 @@ Y_df["TOTAL_CONSUMPTION"].to_csv(Y_df_output_string, index=False)
 
 #%% Plot All Input Variables Over Power Consumption
  
-
+"""
 dirs_plots = os.path.join(dirs_inputs, "Input_Plots")
 save_plots = True
 
@@ -629,3 +629,4 @@ plt.show()
 
 
 
+"""
