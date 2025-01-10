@@ -24,134 +24,165 @@ import os
 from PIL import Image
 
 
-class ScrollableCheckBoxFrame(customtkinter.CTkScrollableFrame):
-    def __init__(self, master, item_list, command=None, **kwargs):
-        super().__init__(master, **kwargs)
-
-        self.command = command
-        self.checkbox_list = []
-        for i, item in enumerate(item_list):
-            self.add_item(item)
-
-    def add_item(self, item):
-        checkbox = customtkinter.CTkCheckBox(self, text=item)
-        if self.command is not None:
-            checkbox.configure(command=self.command)
-        checkbox.grid(row=len(self.checkbox_list), column=0, pady=(0, 10))
-        self.checkbox_list.append(checkbox)
-
-    def remove_item(self, item):
-        for checkbox in self.checkbox_list:
-            if item == checkbox.cget("text"):
-                checkbox.destroy()
-                self.checkbox_list.remove(checkbox)
-                return
-
-    def get_checked_items(self):
-        return [checkbox.cget("text") for checkbox in self.checkbox_list if checkbox.get() == 1]
-
-
-class ScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
-    def __init__(self, master, item_list, command=None, **kwargs):
-        super().__init__(master, **kwargs)
-
-        self.command = command
-        self.radiobutton_variable = customtkinter.StringVar()
-        self.radiobutton_list = []
-        for i, item in enumerate(item_list):
-            self.add_item(item)
-
-    def add_item(self, item):
-        radiobutton = customtkinter.CTkRadioButton(self, text=item, value=item, variable=self.radiobutton_variable)
-        if self.command is not None:
-            radiobutton.configure(command=self.command)
-        radiobutton.grid(row=len(self.radiobutton_list), column=0, pady=(0, 10))
-        self.radiobutton_list.append(radiobutton)
-
-    def remove_item(self, item):
-        for radiobutton in self.radiobutton_list:
-            if item == radiobutton.cget("text"):
-                radiobutton.destroy()
-                self.radiobutton_list.remove(radiobutton)
-                return
-
-    def get_checked_item(self):
-        return self.radiobutton_variable.get()
-
-
-class ScrollableLabelButtonFrame(customtkinter.CTkScrollableFrame):
-    def __init__(self, master, command=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.grid_columnconfigure(0, weight=1)
-
-        self.command = command
-        self.radiobutton_variable = customtkinter.StringVar()
-        self.label_list = []
-        self.button_list = []
-
-    def add_item(self, item, image=None):
-        label = customtkinter.CTkLabel(self, text=item, image=image, compound="left", padx=5, anchor="w")
-        button = customtkinter.CTkButton(self, text="Command", width=100, height=24)
-        if self.command is not None:
-            button.configure(command=lambda: self.command(item))
-        label.grid(row=len(self.label_list), column=0, pady=(0, 10), sticky="w")
-        button.grid(row=len(self.button_list), column=1, pady=(0, 10), padx=5)
-        self.label_list.append(label)
-        self.button_list.append(button)
-
-    def remove_item(self, item):
-        for label, button in zip(self.label_list, self.button_list):
-            if item == label.cget("text"):
-                label.destroy()
-                button.destroy()
-                self.label_list.remove(label)
-                self.button_list.remove(button)
-                return
-
-
-
-
 class App(customtkinter.CTk):
-    def __init__(self):
+    def __init__(self):  
+        #%% Student directory
+        hanad_run = ["./data", 1]
+        clover_run = ["./data", 2]
+        joseph_laptop_run = ["C:\\Users\\sposa\\Documents\\GitHub\\power-forecasting-capstone\\data", 3]
+        joseph_pc_run = ["D:\\Users\\Joseph\\Documents\\GitHub\\power-forecasting-capstone\\data", 3]
+        janna_run = ["./data", 4]
+
+        ###############################################################################
+        ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
+        ###############################################################################
+        # Paste student name_run for whoever is running the code
+        run_student = joseph_laptop_run
+        if (run_student[1] == joseph_laptop_run[1]):
+            print("JOSEPH IS RUNNING!")
+        elif (run_student[1] == hanad_run[1]):
+            print("HANAD IS RUNNING!")
+        elif (run_student[1] == janna_run[1]):
+            print("JANNA IS RUNNING!")
+        elif (run_student[1] == clover_run[1]):
+            print("CLOVER IS RUNNING!")
+        else:
+            print("ERROR!! NO ELIGIBLE STUDENT!")
+            
+        dirs_inputs = run_student[0]
+        
+        image_path = os.path.join(dirs_inputs, "Model_Plots")    
+            
         super().__init__()
 
-        self.title("Power System Forecasting")
+        self.title("Power System Forecasting.py")
+        self.geometry("700x450")
+
+        # set grid layout 1x2
         self.grid_rowconfigure(0, weight=1)
-        self.columnconfigure(2, weight=1)
+        self.grid_columnconfigure(1, weight=1)
 
-        # create scrollable checkbox frame
-        self.scrollable_checkbox_frame = ScrollableCheckBoxFrame(master=self, width=200, command=self.checkbox_frame_event,
-                                                                 item_list=[f"item {i}" for i in range(50)])
-        self.scrollable_checkbox_frame.grid(row=0, column=0, padx=15, pady=15, sticky="ns")
-        self.scrollable_checkbox_frame.add_item("new item")
+        # create navigation frame
+        self.navigation_frame = customtkinter.CTkFrame(self, corner_radius=0)
+        self.navigation_frame.grid(row=0, column=0, sticky="nsew")
+        self.navigation_frame.grid_rowconfigure(6, weight=1)
 
-        # create scrollable radiobutton frame
-        self.scrollable_radiobutton_frame = ScrollableRadiobuttonFrame(master=self, width=500, command=self.radiobutton_frame_event,
-                                                                       item_list=[f"item {i}" for i in range(100)],
-                                                                       label_text="ScrollableRadiobuttonFrame")
-        self.scrollable_radiobutton_frame.grid(row=0, column=1, padx=15, pady=15, sticky="ns")
-        self.scrollable_radiobutton_frame.configure(width=200)
-        self.scrollable_radiobutton_frame.remove_item("item 3")
+        self.navigation_frame_label = customtkinter.CTkLabel(self.navigation_frame, text="Power Forecasting", 
+                                                             compound="left", font=customtkinter.CTkFont(size=15, weight="bold"))
+        self.navigation_frame_label.grid(row=0, column=0, padx=20, pady=20)
 
-        # create scrollable label and button frame
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        self.scrollable_label_button_frame = ScrollableLabelButtonFrame(master=self, width=300, command=self.label_button_frame_event, corner_radius=0)
-        self.scrollable_label_button_frame.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
-        #for i in range(20):  # add items with images
-            #self.scrollable_label_button_frame.add_item(f"image and item {i}", image=customtkinter.CTkImage(Image.open(os.path.join(current_dir, "test_images", "chat_light.png"))))
+        self.home_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Home",
+                                                   fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
+                                                    anchor="w", command=self.home_button_event)
+        self.home_button.grid(row=1, column=0, sticky="ew")
 
-    def checkbox_frame_event(self):
-        print(f"checkbox frame modified: {self.scrollable_checkbox_frame.get_checked_items()}")
+        self.model_1_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Model 1",
+                                                      fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
+                                                       anchor="w", command=self.model_1_button_event)
+        self.model_1_button.grid(row=2, column=0, sticky="ew")
 
-    def radiobutton_frame_event(self):
-        print(f"radiobutton frame modified: {self.scrollable_radiobutton_frame.get_checked_item()}")
+        self.model_2_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Model 2",
+                                                      fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
+                                                      anchor="w", command=self.model_2_button_event)
+        self.model_2_button.grid(row=3, column=0, sticky="ew")
+        
+        self.model_3_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Model 3",
+                                                      fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
+                                                       anchor="w", command=self.model_3_button_event)
+        self.model_3_button.grid(row=4, column=0, sticky="ew")
 
-    def label_button_frame_event(self, item):
-        print(f"label button frame clicked: {item}")
+        self.model_4_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Model 4",
+                                                      fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
+                                                      anchor="w", command=self.model_4_button_event)
+        self.model_4_button.grid(row=5, column=0, sticky="ew")
+
+
+        self.appearance_mode_menu = customtkinter.CTkOptionMenu(self.navigation_frame, values=["Light", "Dark", "System"],
+                                                                command=self.change_appearance_mode_event)
+        self.appearance_mode_menu.grid(row=6, column=0, padx=20, pady=20, sticky="s")
+##############################################
+        # create home frame
+        self.home_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
+        self.home_frame.grid_columnconfigure(0, weight=1)
+        
+        
+        self.home_frame_Label = customtkinter.CTkLabel(self.home_frame, text="WELCOME TO POWER FORECASTING\nPlease Select:\n -Postal Code\n-Start Date\n-End Date")
+        self.home_frame_Label.grid(row=0, column=0, padx=20, pady=20)
+###############################################        
+        # create second frame (Model 1)
+        self.model_1_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
+        
+        self.model_1_image = customtkinter.CTkImage(Image.open(os.path.join(image_path, "Model1.png")), size=(400, 400))
+        
+        self.model_1_frame_image_label = customtkinter.CTkLabel(self.model_1_frame, text="", image=self.model_1_image)
+        self.model_1_frame_image_label.grid(row=0, column=0, padx=20, pady=10)
+
+##############################################
+        # create third frame (Model 2)
+        self.model_2_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
+       
+        
+##############################################
+        # create fourth frame (Model 3)
+        self.model_3_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
+        
+        
+##############################################
+        # create fifth frame (Model 4)
+        self.model_4_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
+
+        # select default frame
+        self.select_frame_by_name("Home")
+
+    def select_frame_by_name(self, name):
+        # set button color for selected button
+        self.home_button.configure(fg_color=("gray75", "gray25") if name == "Home" else "transparent")
+        self.model_1_button.configure(fg_color=("gray75", "gray25") if name == "Model 1" else "transparent")
+        self.model_2_button.configure(fg_color=("gray75", "gray25") if name == "Model 2" else "transparent")
+        self.model_3_button.configure(fg_color=("gray75", "gray25") if name == "Model 3" else "transparent")
+        self.model_4_button.configure(fg_color=("gray75", "gray25") if name == "Model 4" else "transparent")
+
+        # show selected frame
+        if name == "Home":
+            self.home_frame.grid(row=0, column=1, sticky="nsew")
+        else:
+            self.home_frame.grid_forget()
+        if name == "Model 1":
+            self.model_1_frame.grid(row=0, column=1, sticky="nsew")
+        else:
+            self.model_1_frame.grid_forget()
+        if name == "Model 2":
+            self.model_2_frame.grid(row=0, column=1, sticky="nsew")
+        else:
+            self.model_2_frame.grid_forget()
+        if name == "Model 3":
+            self.model_3_frame.grid(row=0, column=1, sticky="nsew")
+        else:
+            self.model_3_frame.grid_forget()
+        if name == "Model 4":
+            self.model_4_frame.grid(row=0, column=1, sticky="nsew")
+        else:
+            self.model_4_frame.grid_forget()
+
+    def home_button_event(self):
+        self.select_frame_by_name("Home")
+
+    def model_1_button_event(self):
+        self.select_frame_by_name("Model 1")
+
+    def model_2_button_event(self):
+        self.select_frame_by_name("Model 2")
+        
+    def model_3_button_event(self):
+        self.select_frame_by_name("Model 3")
+
+    def model_4_button_event(self):
+        self.select_frame_by_name("Model 4")
+
+    def change_appearance_mode_event(self, new_appearance_mode):
+        customtkinter.set_appearance_mode(new_appearance_mode)
 
 
 if __name__ == "__main__":
-    customtkinter.set_appearance_mode("dark")
-    customtkinter.set_default_color_theme("green")  # Themes: "blue" (standard), "green", "dark-blue"
     app = App()
     app.mainloop()
