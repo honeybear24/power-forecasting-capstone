@@ -6,12 +6,15 @@ import pandas as pd
 import numpy as np
 from sklearn import datasets, linear_model
 from sklearn.pipeline import make_pipeline
-from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error, r2_score
+from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error, r2_score, mean_squared_error, root_mean_squared_error
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import SplineTransformer
+from tensorflow import keras
+from keras import models
+import pickle, joblib
 
 
 ## Import saved CSV into script as dataframes
@@ -28,18 +31,30 @@ pipe = make_pipeline(SplineTransformer(n_knots=6, degree=3, knots='quantile'), l
 
 # Train model - Extract only January from X dataframe
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y['TOTAL_CONSUMPTION'], test_size=1/(5), shuffle=False)
-X_train.to_csv(os.path.join(temp_dir,'X_train.csv'), index=False) 
-Y_train.to_csv(os.path.join(temp_dir,'Y_train.csv'), index=False) 
-X_test.to_csv(os.path.join(temp_dir,'X_test.csv'), index=False) 
-Y_test.to_csv(os.path.join(temp_dir,'Y_test.csv'), index=False) 
+# X_train.to_csv(os.path.join(temp_dir,'X_train.csv'), index=False) 
+# Y_train.to_csv(os.path.join(temp_dir,'Y_train.csv'), index=False) 
+# X_test.to_csv(os.path.join(temp_dir,'X_test.csv'), index=False) 
+# Y_test.to_csv(os.path.join(temp_dir,'Y_test.csv'), index=False) 
 pipe.fit(X_train, Y_train)
+
+# Save model
+joblib.dump(pipe, "model.pkl") 
+saved_model = joblib.load("model.pkl")
 
 # Fit model
 Y_pred = pipe.predict(X_test)
+Y_saved = saved_model.predict(X_test)
 
 # Modify Y dataframes
+Y_saved_df = pd.DataFrame(Y_saved, columns=['TOTAL_CONSUMPTION'], index = Y_test.index)
 Y_pred_df = pd.DataFrame(Y_pred, columns=['TOTAL_CONSUMPTION'], index = Y_test.index)
 Y_test_df = pd.DataFrame(Y_test, columns=['TOTAL_CONSUMPTION'])
+
+# Adding dates to Output Prediction Dataframe
+Y_saved_df['YEAR'] = X_test['YEAR']
+Y_saved_df['MONTH'] = X_test['MONTH']
+Y_saved_df['DAY'] = X_test['DAY']
+Y_saved_df['HOUR'] = X_test['HOUR']
 
 # Adding dates to Output Prediction Dataframe
 Y_pred_df['YEAR'] = X_test['YEAR']
@@ -58,14 +73,30 @@ Y_test_df['HOUR'] = X_test['HOUR']
 mape = mean_absolute_percentage_error(Y_test, Y_pred)
 mae = mean_absolute_error(Y_test, Y_pred)
 r2 = r2_score(Y_test, Y_pred)
+mse = mean_squared_error(Y_test, Y_pred)
+rmse = root_mean_squared_error(Y_test, Y_pred)
+
+mape2 = mean_absolute_percentage_error(Y_test, Y_saved)
+mae2 = mean_absolute_error(Y_test, Y_saved)
+r22 = r2_score(Y_test, Y_saved)
+mse2 = mean_squared_error(Y_test, Y_pred)
+rmse2 = root_mean_squared_error(Y_test, Y_pred)
 
 # Print out result to STDOUT
 print("## Model Evaluation ##")
 print("MAPE: ", str(mape))
 print("MAE: " , str(mae))
 print("R^2 ", str(r2))
+print("MSE: ", str(mse))
+print("RMSE: " , str(rmse))
 
-
+# Print out result to STDOUT
+print("## Saved Model Evaluation ##")
+print("MAPE: ", str(mape2))
+print("MAE: " , str(mae2))
+print("R^2 ", str(r22))
+print("MSE: ", str(mse2))
+print("RMSE: " , str(rmse2))
 
 # Plotting
 year_plot = 2023
