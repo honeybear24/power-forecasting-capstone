@@ -21,7 +21,8 @@ import pickle, joblib
 data_dir = "c:/Users/hanad/capstone_github/power-forecasting-capstone/data"
 temp_dir = "./temp"
 df_directory = os.path.join(data_dir, "Data_Frames")
-X = pd.read_csv(os.path.join(df_directory, "X_df_L9G.csv")).drop(["Rel Hum (%)", "Wind Spd (km/h)", "DATE"],axis=1)
+X = pd.read_csv(os.path.join(df_directory, "Transformed_Features_Normalized.csv"))
+X_cal = pd.read_csv(os.path.join(df_directory, "X_df_L9G_onehot.csv")).drop(["Temp (C)", "Dew Point Temp (C)", "Rel Hum (%)", "Wind Spd (km/h)", "DATE"],axis=1)
 Y = pd.read_csv(os.path.join(df_directory, "Y_df_L9G.csv"))
 
 # Create pipeline containing linear regression model and standard scalar
@@ -37,13 +38,13 @@ X_train, X_test, Y_train, Y_test = train_test_split(X, Y['TOTAL_CONSUMPTION'], t
 # Y_test.to_csv(os.path.join(temp_dir,'Y_test.csv'), index=False) 
 pipe.fit(X_train, Y_train)
 
-# Save model
-joblib.dump(pipe, "model.pkl") 
-saved_model = joblib.load("model.pkl")
+# # Save model
+# joblib.dump(pipe, "model.pkl") 
+# saved_model = joblib.load("model.pkl")
 
 # Fit model
 Y_pred = pipe.predict(X_test)
-Y_saved = saved_model.predict(X_test)
+# Y_saved = saved_model.predict(X_test)
 
 # Modify Y dataframes
 Y_saved_df = pd.DataFrame(Y_saved, columns=['TOTAL_CONSUMPTION'], index = Y_test.index)
