@@ -5,13 +5,64 @@ import sys
 import os
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import requests
 import asyncio  # Import asyncio library for async operations
 import aiohttp # Import aiohttp library for making HTTP requests
 import nest_asyncio # Allows for asyncio to be nested
+import canada_holiday # Import library to get Canadian Holidays
 
 ### Functions ###
+
+# calculate_windchill - Calculate windchill given temperature and wind speed
+def calculate_windchill(weather_data: pd.DataFrame):
+
+    # Calculate Windchill + Retunr Dataframe
+    weather_data['Windchill'] = 13.12 + 0.6215 * weather_data['Temperature'] - 11.37 * np.power(weather_data['Wind_Speed'], 0.16) + 0.3965 * weather_data['Temperature'] * np.power(weather_data['Wind_Speed'], 0.16)    
+
+    return weather_data
+
+# fill_missing_data - Fill missing data in given dataframe  
+def fill_missing_data(data: pd.DataFrame):
+
+    # Fill missing data with forward fill and back fill
+    data = data.ffill()
+    data = data.bfill()
+
+    return data
+
+# add_calendar_columns - Add Weekends, Holidays, and Seasons calendar columns to dataframe
+def add_calendar_columns(data: pd.DataFrame):
+
+    # Add temporary DATE coliumn to dataframe to perform operations
+    data['DATE'] = pd.to_datetime(data['Date/Time (LST)'])
+
+    # Add Weekend Column to dataframe (0 = Weekday, 1 = Weekend) - // = Floor Division (returns integer and drops remainder)
+    data['Weekend'] = data['DATE'].dt.dayofweek // 5  # Wekdays = 0 - 4, Weekends = 5 - 6
+
+    # Add Season Column to dataframe (1 = Winter, 2 = Spring, 3 = Summer, 4 = Fall)
+    data['Season'] = (data['Month'] % 12 + 3) // 3 
+
+    # # Add Holiday Column
+    # data['Holiday'] = '' # Initialize Holiday Column
+    # temp_value = 0 # Temporary value to store holiday value for the day
+    # for index, row in  data.iterrows(): # Loop through all rows in dataframe
+    #     date_temp = date(row['Year'], row['Month'], row['Day'])
+    #     if (row["Hour"] == 0):
+    #         if canada_holiday.is_holiday(date_temp, "Ontario"): # Check if date is a holiday
+    #             temp_value = 1
+    #             data[index, 'Holiday'] = temp_value
+    #         else:
+    #             temp_value = 0
+    #         #print(" -> " + str(date_temp) + ", " + str(row['Hour']) + ", " + str(temp_value))
+    #     else:
+    #         data[index, 'Holiday'] = temp_value # Fill in holdiay column for rest of day
+    #         #print(" -> " + str(date_temp) + ", " + str(temp_value))
+
+    # Drop temporary DATE column   
+    data = data.drop(columns=['DATE'])
+
+    return data
 
 # get_weather_data - For a given day and FSA (through the lat and long), get the weather data for that day
 async def get_weather_data(session: aiohttp.ClientSession, current_date: datetime, next_date: datetime, lat: float, lon: float):
@@ -90,7 +141,7 @@ def get_power_data(data_path, start_date: datetime, end_date: datetime, fsa):
     monthly_power_data_df = pd.concat(monthly_power_data)
     filtered_power_data_df = monthly_power_data_df.groupby(["FSA", "CUSTOMER_TYPE", "HOUR", "DATE"]).sum().reset_index()
 
-    # Modify Calander Columns
+    # Modify Calander Columns - Add Year, Month, Day to Power Dataframe
     filtered_power_data_df['DATE'] = pd.to_datetime(filtered_power_data_df['DATE'])
     filtered_power_data_df['YEAR'] = filtered_power_data_df['DATE'].dt.year
     filtered_power_data_df['MONTH'] = filtered_power_data_df['DATE'].dt.month
@@ -128,8 +179,16 @@ async def get_data_for_time_range(data_path, start_date: datetime, end_date: dat
         weather_data_list = [data for data in retuned_data if not data.empty] # Get all data that is not empty
         weather_data = pd.concat(weather_data_list) if weather_data_list else pd.DataFrame() # Concatenate all dataframes into one dataframe
 
+    # Fill missing data in weather data + Calculate Windchill + Add Calendar Columns (Weekend, Season, Holiday)
+    weather_data = fill_missing_data(weather_data)
+    weather_data = calculate_windchill(weather_data)
+    weather_data = add_calendar_columns(weather_data)
+
     # Collect Power Data - Pick up data from saved CSV from IESO
     power_data = get_power_data(data_path, start_date, end_date, fsa)
+
+    # Fill missing data in power data
+    power_data = fill_missing_data(power_data)
 
     return weather_data, power_data
 
@@ -201,5 +260,5 @@ end_date = datetime(end_year, end_month, end_day, end_hour,0,0)
 weather_data, power_data = asyncio.run(get_data_for_time_range(data_path, start_date, end_date, fsa, lat, lon))
 
 # Save data to CSV
-weather_data.to_csv(f'{target_dir}/weather_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_V4.csv', index=False)
-power_data.to_csv(f'{target_dir}/power_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_V5.csv', index=False)
+weather_data.to_csv(f'{target_dir}/weather_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_V7.csv', index=False)
+power_data.to_csv(f'{target_dir}/power_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_V7.csv', index=False)
