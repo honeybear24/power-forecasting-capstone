@@ -16,7 +16,7 @@ from sklearn.preprocessing import SplineTransformer
 
 ## Import saved CSV into script as dataframes
 data_dir = "c:/Users/hanad/capstone_github/power-forecasting-capstone/data"
-temp_dir = "./temp"
+temp_dir = "c:/Users/hanad/capstone_github/power-forecasting-capstone/temp"
 df_directory = os.path.join(data_dir, "Data_Frames")
 X = pd.read_csv(os.path.join(df_directory, "X_df_L9G.csv")).drop(["Rel Hum (%)", "Wind Spd (km/h)", "DATE"],axis=1)
 Y = pd.read_csv(os.path.join(df_directory, "Y_df_L9G.csv"))
