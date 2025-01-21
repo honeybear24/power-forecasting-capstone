@@ -15,23 +15,24 @@ from sklearn.preprocessing import SplineTransformer
 
 
 ## Import saved CSV into script as dataframes
-data_dir = "c:/Users/hanad/capstone_github/power-forecasting-capstone/data"
-temp_dir = "./temp"
+data_dir = "c:/Users/hanad/capstone_github/power-forecasting-capstone/data/"
+temp_dir = "c:/Users/hanad/capstone_github/power-forecasting-capstone/temp/"
 df_directory = os.path.join(data_dir, "raw_data")
-X = pd.read_csv(os.path.join(df_directory, "weather_data_L9G_20180101_20181231_V7.csv")).drop(["Date/Time (LST)"],axis=1)
-Y = pd.read_csv(os.path.join(df_directory, "power_data_L9G_20180101_20181231_V7.csv"))
+X = pd.read_csv(os.path.join(df_directory, "weather_data_L9G_20180101_20231231_V11_24lags.csv")).drop(["Date/Time (LST)"],axis=1)
+Y = pd.read_csv(os.path.join(df_directory, "power_data_L9G_20180101_20231231_V11_24lags.csv"))
+# df_directory = os.path.join(data_dir, "X_Y_Inputs")
+# X = pd.read_csv(os.path.join(df_directory, "X_df_L9G_orig.csv")).drop(["Rel Hum (%)", "Wind Spd (km/h)", "DATE"],axis=1)
+# Y = pd.read_csv(os.path.join(df_directory, "Y_df_L9G_orig.csv"))
 
 # Create pipeline containing linear regression model and standard scalar
-pipe = make_pipeline(SplineTransformer(n_knots=10, degree=3, knots='quantile'), linear_model.Ridge(alpha=1.0))
-#pipe = make_pipeline(linear_model.Ridge(alpha=5.0))
-#mod = linear_model.LinearRegression()
+pipe = make_pipeline(SplineTransformer(n_knots=6, degree=3, knots='quantile'), linear_model.Ridge(alpha=2.7755102040816326))
 
 # Train model - Extract only January from X dataframe
-X_train, X_test, Y_train, Y_test = train_test_split(X, Y['TOTAL_CONSUMPTION'], test_size=1/(12), shuffle=False)
-# X_train.to_csv(os.path.join(temp_dir,'X_train.csv'), index=False) 
-# Y_train.to_csv(os.path.join(temp_dir,'Y_train.csv'), index=False) 
-# X_test.to_csv(os.path.join(temp_dir,'X_test.csv'), index=False) 
-# Y_test.to_csv(os.path.join(temp_dir,'Y_test.csv'), index=False) 
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y['TOTAL_CONSUMPTION'], test_size=1/(5), shuffle=False)
+X_train.to_csv(os.path.join(temp_dir,'X_train.csv'), index=False) 
+Y_train.to_csv(os.path.join(temp_dir,'Y_train.csv'), index=False) 
+X_test.to_csv(os.path.join(temp_dir,'X_test.csv'), index=False) 
+Y_test.to_csv(os.path.join(temp_dir,'Y_test.csv'), index=False) 
 pipe.fit(X_train, Y_train)
 
 # Fit model
@@ -39,6 +40,7 @@ Y_pred = pipe.predict(X_test)
 
 # Modify Y dataframes
 Y_pred_df = pd.DataFrame(Y_pred, columns=['TOTAL_CONSUMPTION'], index = Y_test.index)
+Y_pred_df.to_csv(os.path.join(temp_dir,'Y_pred.csv'), index=False) 
 Y_test_df = pd.DataFrame(Y_test, columns=['TOTAL_CONSUMPTION'])
 
 # Adding dates to Output Prediction Dataframe
@@ -72,9 +74,9 @@ print("RMSE: " , str(rmse))
 
 
 # Plotting
-year_plot = 2018
-month_plot = 12
-day_plot = 6
+year_plot = 2023
+month_plot = 4
+day_plot = 19
 
 Y_pred_df = pd.DataFrame(Y_pred, columns=['TOTAL_CONSUMPTION'], index = Y_test.index)
 Y_test_df = pd.DataFrame(Y_test, columns=['TOTAL_CONSUMPTION'])
@@ -115,15 +117,15 @@ plt.xticks(())
 plt.yticks(())
 plt.show()
 
-# # Ploting comparison for a whole month 
-# fig2 = plt.figure("Figure 2")
-# plt.plot(X_test.index, Y_test_df['TOTAL_CONSUMPTION'], color="black",  label='Actual')
-# plt.plot(X_test.index, Y_pred_df['TOTAL_CONSUMPTION'], color="blue",  label='Prediction')
-# plt.title("Comparison between Actual and Predicted Power Consumption for entire Test Set")
-# plt.xlabel("Index")
-# plt.ylabel("Power Consumption [kW]")
-# plt.legend()
-# plt.axes([0, 53000, min(min(Y_test_df['TOTAL_CONSUMPTION']),min(Y_pred_df['TOTAL_CONSUMPTION'])), max(max(Y_test_df['TOTAL_CONSUMPTION']),max(Y_pred_df['TOTAL_CONSUMPTION']))])
-# plt.xticks(())
-# plt.yticks(())
-# plt.show()
+# Ploting comparison for a whole month 
+fig2 = plt.figure("Figure 2")
+plt.plot(X_test.index, Y_test_df['TOTAL_CONSUMPTION'], color="black",  label='Actual')
+plt.plot(X_test.index, Y_pred_df['TOTAL_CONSUMPTION'], color="blue",  label='Prediction')
+plt.title("Comparison between Actual and Predicted Power Consumption for entire Test Set")
+plt.xlabel("Index")
+plt.ylabel("Power Consumption [kW]")
+plt.legend()
+plt.axes([0, 53000, min(min(Y_test_df['TOTAL_CONSUMPTION']),min(Y_pred_df['TOTAL_CONSUMPTION'])), max(max(Y_test_df['TOTAL_CONSUMPTION']),max(Y_pred_df['TOTAL_CONSUMPTION']))])
+plt.xticks(())
+plt.yticks(())
+plt.show()

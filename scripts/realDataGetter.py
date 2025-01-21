@@ -40,7 +40,7 @@ def add_calendar_columns(data: pd.DataFrame):
     # Add Weekend Column to dataframe (0 = Weekday, 1 = Weekend) - // = Floor Division (returns integer and drops remainder)
     data['Weekend'] = data['DATE'].dt.dayofweek // 5  # Wekdays = 0 - 4, Weekends = 5 - 6
 
-    # Add Season Column to dataframe (1 = Winter, 2 = Spring, 3 = Summer, 4 = Fall)
+    # Add Season Column to dataframe (1 = Winter, 2 = Spring, 3 = Summer, 4 = Fall) - NO MAKE 0 OR 1 
     data['Season'] = (data['Month'] % 12 + 3) // 3 
 
     # # Add Holiday Column
@@ -61,6 +61,24 @@ def add_calendar_columns(data: pd.DataFrame):
 
     # Drop temporary DATE column   
     data = data.drop(columns=['DATE'])
+
+    return data
+
+# add_lags_to_weather_data - Add lagged columns to weather   
+def add_lags_to_weather_data(data: pd.DataFrame, lag: int):
+    
+    # Add lag columns to weather dataframe
+    for i in range(1, lag + 1):
+        data[f'Hour_{i}'] = data['Hour'].shift(i)
+        data[f'Temperature_Lag_{i}'] = data['Temperature'].shift(i)
+        data[f'Dew Point Temperature_Lag_{i}'] = data['Dew Point Temperature'].shift(i)
+        data[f'Wind_Speed_Lag_{i}'] = data['Wind_Speed'].shift(i)
+        data[f'Station Pressure_Lag_{i}'] = data['Station Pressure'].shift(i)
+        data[f'Humidity_Lag_{i}'] = data['Humidity'].shift(i)
+        data[f'Windchill_Lag_{i}'] = data['Windchill'].shift(i)
+
+    # Using bfill to fill in missing data in lag columns - QUICK AND DIRTY
+    data = data.bfill()
 
     return data
 
@@ -112,7 +130,7 @@ async def get_weather_data(session: aiohttp.ClientSession, current_date: datetim
     return weather_data_df  # Return weather data for the day
 
 # get_power_data - Get power data for a given date range and FSA by picking up data from saved CSVs
-def get_power_data(data_path, start_date: datetime, end_date: datetime, fsa):
+def get_power_data(data_path, start_date: datetime, end_date: datetime, fsa: str):
     
     # Set up
     target_dir = data_path + "/Hourly_Demand_Data"
@@ -134,18 +152,22 @@ def get_power_data(data_path, start_date: datetime, end_date: datetime, fsa):
                 except ValueError: # skiprows=x does not match the "normal sequence" of 3. For example, 2023 08 data had a different skip_row value
                     power_data = pd.read_csv(file_path, skiprows=7, header = 0, usecols= ['FSA', 'DATE', 'HOUR', 'CUSTOMER_TYPE', 'TOTAL_CONSUMPTION'])
 
-                # Filter power data for residential power and for terget FSA
-                monthly_power_data.append(power_data[(power_data['FSA'] == fsa) & (power_data['CUSTOMER_TYPE'] == 'Residential')])
+                # # Filter power data for residential power and for terget FSA
+                monthly_power_data.append(power_data)
                 
     # Concatenate all monthly power data into one dataframe
     monthly_power_data_df = pd.concat(monthly_power_data)
-    filtered_power_data_df = monthly_power_data_df.groupby(["FSA", "CUSTOMER_TYPE", "HOUR", "DATE"]).sum().reset_index()
 
     # Modify Calander Columns - Add Year, Month, Day to Power Dataframe
-    filtered_power_data_df['DATE'] = pd.to_datetime(filtered_power_data_df['DATE'])
-    filtered_power_data_df['YEAR'] = filtered_power_data_df['DATE'].dt.year
-    filtered_power_data_df['MONTH'] = filtered_power_data_df['DATE'].dt.month
-    filtered_power_data_df['DAY'] = filtered_power_data_df['DATE'].dt.day
+    monthly_power_data_df['DATE'] = pd.to_datetime(monthly_power_data_df['DATE'])
+    monthly_power_data_df['YEAR'] = monthly_power_data_df['DATE'].dt.year
+    monthly_power_data_df['MONTH'] = monthly_power_data_df['DATE'].dt.month
+    monthly_power_data_df['DAY'] = monthly_power_data_df['DATE'].dt.day
+
+    # Filter power data for residential power and for target FSA
+    monthly_power_data_df = monthly_power_data_df.loc[monthly_power_data_df['CUSTOMER_TYPE'] == "Residential"] # Filter for Residential Data
+    monthly_power_data_df = monthly_power_data_df.loc[monthly_power_data_df['FSA'] == fsa] # Filter for FSA Data
+    filtered_power_data_df = monthly_power_data_df.groupby(["FSA", "CUSTOMER_TYPE", "DATE","YEAR", "MONTH", "DAY", "HOUR"]).TOTAL_CONSUMPTION.sum().reset_index()
     
     return filtered_power_data_df
 
@@ -183,6 +205,7 @@ async def get_data_for_time_range(data_path, start_date: datetime, end_date: dat
     weather_data = fill_missing_data(weather_data)
     weather_data = calculate_windchill(weather_data)
     weather_data = add_calendar_columns(weather_data)
+    weather_data = add_lags_to_weather_data(weather_data, 24) # Add lagged columns to weather data - TESTING 
 
     # Collect Power Data - Pick up data from saved CSV from IESO
     power_data = get_power_data(data_path, start_date, end_date, fsa)
@@ -247,7 +270,7 @@ start_month = 1
 start_day = 1
 start_hour = 0
 
-end_year = 2018
+end_year = 2023
 end_month = 12
 end_day = 31
 end_hour = 23
@@ -260,5 +283,5 @@ end_date = datetime(end_year, end_month, end_day, end_hour,0,0)
 weather_data, power_data = asyncio.run(get_data_for_time_range(data_path, start_date, end_date, fsa, lat, lon))
 
 # Save data to CSV
-weather_data.to_csv(f'{target_dir}/weather_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_V7.csv', index=False)
-power_data.to_csv(f'{target_dir}/power_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_V7.csv', index=False)
+weather_data.to_csv(f'{target_dir}/weather_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_V11_24lags.csv', index=False)
+power_data.to_csv(f'{target_dir}/power_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_V11_24lags.csv', index=False)
