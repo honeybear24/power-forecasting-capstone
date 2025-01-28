@@ -27,29 +27,29 @@ Y = pd.read_csv(os.path.join(df_directory, "Y_df_normalized.csv"))
 pipe = make_pipeline(SplineTransformer(n_knots=6, degree=3, knots='quantile'), linear_model.Ridge(alpha=2.7755102040816326))
 
 # Printing to STDOUT
-print("MAPE, MAE, R^2, MSE, RMSE, Columsn Used")
+print("MAPE, MAE, R^2, MSE, RMSE, Columns Used")
 
-for num_of_cols in range(1,len(X.columns)+1):
+for num_of_cols in range(13,len(X.columns)+1):
 
     # Getting list of all possible combinations X dataframe
     columns = list(combinations(X.columns,num_of_cols))
-    print(columns)
+    #print(columns)
 
     for cols in columns:
 
         # Get subset pof X dataframe with selected number of columns
-        print(cols)
+        #print(cols)
         first, *cols_list = cols
         cols_list.append(first)
-        print(cols_list)
-        X_fil = pd.concat(X[c] for c in cols_list)  
+        #print(cols_list)
+        X_fil = X[cols_list]  
 
         # Train model - Extract only January from X dataframe
         X_train, X_test, Y_train, Y_test = train_test_split(X_fil, Y['TOTAL_CONSUMPTION'], test_size=1/(5), shuffle=False)
-        X_train.to_csv(os.path.join(temp_dir,'X_train.csv'), index=False) 
-        Y_train.to_csv(os.path.join(temp_dir,'Y_train.csv'), index=False) 
-        X_test.to_csv(os.path.join(temp_dir,'X_test.csv'), index=False) 
-        Y_test.to_csv(os.path.join(temp_dir,'Y_test.csv'), index=False) 
+        # X_train.to_csv(os.path.join(temp_dir,'X_train.csv'), index=False) 
+        # Y_train.to_csv(os.path.join(temp_dir,'Y_train.csv'), index=False) 
+        # X_test.to_csv(os.path.join(temp_dir,'X_test.csv'), index=False) 
+        # Y_test.to_csv(os.path.join(temp_dir,'Y_test.csv'), index=False) 
         pipe.fit(X_train, Y_train)
 
         # Fit model
