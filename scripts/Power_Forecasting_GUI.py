@@ -35,6 +35,9 @@ import math
 import numpy as np
 import canada_holiday
 
+import joblib
+
+
 
 class App(customtkinter.CTk):
     def __init__(self):  
@@ -47,10 +50,13 @@ class App(customtkinter.CTk):
         
         days = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']
         
+        # All file paths
+        # Paths for all the graphs that will be shown
+        global image_path, background_images_path, model_path, x_y_input_path
+        image_path = os.path.join(dirs_inputs, "Model_Plots") 
+        model_path = os.path.join(dirs_inputs, "Saved_Models")    
+        x_y_input_path = os.path.join(dirs_inputs, "X_Y_Inputs")   
         
-        # Path for all the graphs that will be shown
-        global image_path, background_images_path
-        image_path = os.path.join(dirs_inputs, "Model_Plots")    
         
         year_chosen_option_menu = ""
         month_chosen_option_menu = ""
@@ -440,7 +446,42 @@ class App(customtkinter.CTk):
             day = "01"
 
         dirs_hourly_consumption_demand = os.path.join(dirs_inputs, "Hourly_Demand_Data")
-
+        
+        ###############################################################################
+        # Import Models
+        ###############################################################################
+        # Import saved CSV into script as dataframes
+        X_test = pd.read_csv(os.path.join(x_y_input_path, "X_transformed_with_origCalVariables.csv"))
+        X_test = X_test[X_test["Year"] == int(year)]
+        X_test = X_test[X_test["Month"] == int(month)]
+        X_test = X_test[X_test["Day"] == int(day)]
+        
+        
+      
+        
+        
+        
+        # Load model from gui_pickup folder using joblib
+        pipe_saved = joblib.load(os.path.join(model_path, "ridge_regression_model.pkl"))
+        
+        # Predict using loaded model
+        Y_pred_saved = pipe_saved.predict(X_test)
+        
+        # Ensure Y_pred and Y_test are reshaped correctly
+        Y_pred_saved = Y_pred_saved.reshape(-1, 1)
+        
+        # Denormalize Y_pred and Y_test with min_max_scaler_y.pkl using joblib
+        scaler_path = os.path.join(model_path, "min_max_scaler_y.pkl")
+        if not os.path.exists(scaler_path):
+            raise FileNotFoundError(f"Scaler file not found: {scaler_path}")
+        scaler = joblib.load(scaler_path)
+        
+        # Denormalize Y_pred_saved and Y_test with min_max_scaler.pkl
+        Y_pred_denorm_saved = scaler.inverse_transform(Y_pred_saved)
+        Y_pred_denorm_saved_df = pd.DataFrame(Y_pred_denorm_saved, columns=['TOTAL_CONSUMPTION'])
+        
+        
+        
         ###############################################################################
         # Dictionary for reading in hourly consumption by FSA
         ###############################################################################
@@ -488,15 +529,15 @@ class App(customtkinter.CTk):
         # Plot Day
         hourly_data_month_day = hourly_consumption_data_dic_by_month[hourly_consumption_data_dic_by_month['DAY'] == int(day)]
 
-        plot = plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-')
-
+        plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-', label = "Actual Consumption")
+        plt.plot(hourly_data_month_day["HOUR"], Y_pred_denorm_saved_df["TOTAL_CONSUMPTION"], 'o-', label = "Predicted Consumption")
         plt.title(year + "/" + month + "/" + day)
         plt.xlabel("HOUR")
         plt.ylabel("CONSUMPTION in KW")
+        plt.legend()
         plot_svg =  os.path.join(image_path, year + "_" + month + "_" + day + "_Actual_Graph.png")
         plt.savefig(plot_svg)
-
-        plt.show()
+        #plt.close()
         
         # Positining of Figure
         self.model_1_image = customtkinter.CTkImage(Image.open(os.path.join(image_path, year + "_" + month + "_" + day + "_Actual_Graph.png")), size=(400, 400))
@@ -583,7 +624,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_pc_run
+    run_student = joseph_laptop_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):
