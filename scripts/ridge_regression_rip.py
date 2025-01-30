@@ -18,8 +18,8 @@ from sklearn.preprocessing import SplineTransformer
 data_dir = "c:/Users/hanad/capstone_github/power-forecasting-capstone/data/"
 temp_dir = "c:/Users/hanad/capstone_github/power-forecasting-capstone/temp/"
 df_directory = os.path.join(data_dir, "raw_data")
-X = pd.read_csv(os.path.join(df_directory, "weather_data_L9G_20180101_20231231_V11_24lags.csv")).drop(["Date/Time (LST)"],axis=1)
-Y = pd.read_csv(os.path.join(df_directory, "power_data_L9G_20180101_20231231_V11_24lags.csv"))
+X = pd.read_csv(os.path.join(df_directory, "weather_data_L7G_20180101_20231231_V19s.csv")).drop(["Date/Time (LST)"],axis=1)
+Y = pd.read_csv(os.path.join(df_directory, "power_data_L7G_20180101_20231231_V19.csv"))
 # df_directory = os.path.join(data_dir, "X_Y_Inputs")
 # X = pd.read_csv(os.path.join(df_directory, "X_df_L9G_orig.csv")).drop(["Rel Hum (%)", "Wind Spd (km/h)", "DATE"],axis=1)
 # Y = pd.read_csv(os.path.join(df_directory, "Y_df_L9G_orig.csv"))
