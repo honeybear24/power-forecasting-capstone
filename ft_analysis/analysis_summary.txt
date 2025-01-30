@@ -1,0 +1,11 @@
+Summary of Feature Transformation Analysis
+    - Found that common transformations ('Square', 'Cube', 'Sine', 'Cosine', 'Tangent', 'Logarithm', 'Square Root', 'Inverse') had an negligible impact on model forecasting ability
+    - After doing analysis on impact of each feature individually, only saw a max improvement of 0.01% to MAPE of linear regression model (model that would be impact the most by these changes)
+    - Combining all "helpful" feature and only the top helpful feature from each weather variable still had a marginal improvement of 0.01% of MAPE
+
+Conclusion
+Found that adding these transformations are not helpful to model forecasting ability and will only serve to increase the fitting/predicting run time of the models. 
+Should persue other avenues/ways of improving model forecasting accuracy. Such as:
+- Lags to input data
+- Having previous power demand (power with 1 year lag) in X data frame
+    - Further variations of this (previous month, week, etc.) 
