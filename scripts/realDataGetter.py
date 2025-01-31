@@ -43,28 +43,26 @@ def add_calendar_columns(data: pd.DataFrame):
     # Add Season Column to dataframe (1 = Winter, 2 = Spring, 3 = Summer, 4 = Fall) - NO MAKE 0 OR 1 
     data['Season'] = (data['Month'] % 12 + 3) // 3 
 
-    # Add Holiday Column
-    data['Holiday'] = 0 # Initialize Holiday Column
-    temp_value = 0 # Temporary value to store holiday value for the day
-    for index, row in  data.iterrows(): # Loop through all rows in dataframe
-        date_temp = date(row['Year'], row['Month'], row['Day'])
-        if (row["Hour"] == 0):
-            if canada_holiday.is_holiday(date_temp, "Ontario"): # Check if date is a holiday
-                temp_value = 1
-                data.loc[index, 'Holiday'] = temp_value
-                print("################### HOLIDAY ###################")
-                print(" -> " + str(date_temp) + ", " + str(row['Hour']) + ", " + str(temp_value))
-            else:
-                temp_value = 0
-                print(" -> " + str(date_temp) + ", " + str(row['Hour']) + ", " + str(temp_value))
-        else:
-            data.loc[index, 'Holiday'] = temp_value # Fill in holdiay column for rest of day
-            print(" -> " + str(date_temp)  + ", " + str(row['Hour']) + ", " + str(temp_value))
+    # # Add Holiday Column
+    # data['Holiday'] = 0 # Initialize Holiday Column
+    # temp_value = 0 # Temporary value to store holiday value for the day
+    # for index, row in  data.iterrows(): # Loop through all rows in dataframe
+    #     date_temp = date(row['Year'], row['Month'], row['Day'])
+    #     if (row["Hour"] == 0):
+    #         if canada_holiday.is_holiday(date_temp, "Ontario"): # Check if date is a holiday
+    #             temp_value = 1
+    #             data.loc[index, 'Holiday'] = temp_value
+    #             print("################### HOLIDAY ###################")
+    #             print(" -> " + str(date_temp) + ", " + str(row['Hour']) + ", " + str(temp_value))
+    #         else:
+    #             temp_value = 0
+    #             print(" -> " + str(date_temp) + ", " + str(row['Hour']) + ", " + str(temp_value))
+    #     else:
+    #         data.loc[index, 'Holiday'] = temp_value # Fill in holdiay column for rest of day
+    #         print(" -> " + str(date_temp)  + ", " + str(row['Hour']) + ", " + str(temp_value))
 
     # Drop temporary DATE column   
     data = data.drop(columns=['DATE'])
-
-    data.loc[6, 'Holiday'] = 19 # Testing to see if holiday column is being filled correctly
 
     return data
 
@@ -209,7 +207,7 @@ async def get_data_for_time_range(data_path, start_date: datetime, end_date: dat
     weather_data = fill_missing_data(weather_data)
     weather_data = calculate_windchill(weather_data)
     weather_data = add_calendar_columns(weather_data)
-    #weather_data = add_lags_to_weather_data(weather_data, 24) # Add lagged columns to weather data - TESTING 
+    weather_data = add_lags_to_weather_data(weather_data, 1) # Add lagged columns to weather data - TESTING 
 
     # Collect Power Data - Pick up data from saved CSV from IESO
     power_data = get_power_data(data_path, start_date, end_date, fsa)
@@ -265,7 +263,7 @@ fsa_map = {
 
 ### Calling Data ###
 # Choose FSA for data collection + Get latitude and longitude of chosen fsa
-fsa = "L7G"
+fsa = "L9G"
 lat = fsa_map[fsa]["lat"]
 lon = fsa_map[fsa]["lon"]
 
@@ -288,5 +286,5 @@ end_date = datetime(end_year, end_month, end_day, end_hour,0,0)
 weather_data, power_data = asyncio.run(get_data_for_time_range(data_path, start_date, end_date, fsa, lat, lon))
 
 # Save data to CSV
-weather_data.to_csv(f'{target_dir}/weather_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_V19s.csv', index=False)
-power_data.to_csv(f'{target_dir}/power_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_V19.csv', index=False)
+weather_data.to_csv(f'{target_dir}/weather_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_lagAnal_lag1.csv', index=False)
+power_data.to_csv(f'{target_dir}/power_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_lagAnal_lag1.csv', index=False)

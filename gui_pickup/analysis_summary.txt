@@ -1,0 +1,7 @@
+Summary of Feature Transformation Analysis
+    - After creating multiple X dataframes with a varying range of lags (from 0 to 24), it was found that adding more lags was able to improve the forecasting accuracy of the linear regression model.
+        -> Model was improved by lowing ALL performance metrics. Key metric was MAPE.
+    - It was also noticed that as more lags was added, the benefit received from adding this new data decreased. 
+
+Conclusion
+While there are diminishing returns for the lags added to the input data set, the forecasting accuracy was still improved. For the sake of accuracy, 24 lags will be added to the input datasets at the cost of execution time. If this were to become a problem in the future, the number of lags will be decreased. 
