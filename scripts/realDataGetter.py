@@ -207,7 +207,7 @@ async def get_data_for_time_range(data_path, start_date: datetime, end_date: dat
     weather_data = fill_missing_data(weather_data)
     weather_data = calculate_windchill(weather_data)
     weather_data = add_calendar_columns(weather_data)
-    weather_data = add_lags_to_weather_data(weather_data, 1) # Add lagged columns to weather data - TESTING 
+    #weather_data = add_lags_to_weather_data(weather_data, 1) # Add lagged columns to weather data - TESTING 
 
     # Collect Power Data - Pick up data from saved CSV from IESO
     power_data = get_power_data(data_path, start_date, end_date, fsa)
@@ -254,6 +254,8 @@ fsa_map = {
     "L7G": {"lat": 43.27, "lon": -79.95}, # Ancaster
     "M9M": {"lat": 43.74, "lon": -79.54}, # Jane and Finch
     "L9H": {"lat": 43.32, "lon": -79.98}, # Dundas
+    "K0K": {"lat": 44.18, "lon": -77.38}, # Belleville
+    "M2M": {"lat": 43.79, "lon": -79.41}, # Willowdale
 }
 
 
@@ -263,7 +265,7 @@ fsa_map = {
 
 ### Calling Data ###
 # Choose FSA for data collection + Get latitude and longitude of chosen fsa
-fsa = "L9G"
+fsa = "M2M"
 lat = fsa_map[fsa]["lat"]
 lon = fsa_map[fsa]["lon"]
 
@@ -286,5 +288,5 @@ end_date = datetime(end_year, end_month, end_day, end_hour,0,0)
 weather_data, power_data = asyncio.run(get_data_for_time_range(data_path, start_date, end_date, fsa, lat, lon))
 
 # Save data to CSV
-weather_data.to_csv(f'{target_dir}/weather_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_lagAnal_lag1.csv', index=False)
-power_data.to_csv(f'{target_dir}/power_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_lagAnal_lag1.csv', index=False)
+weather_data.to_csv(f'{target_dir}/weather_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_prevPowerAnal.csv', index=False)
+power_data.to_csv(f'{target_dir}/power_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_prevPowerAnal.csv', index=False)
