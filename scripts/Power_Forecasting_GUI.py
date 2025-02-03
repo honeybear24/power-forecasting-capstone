@@ -38,26 +38,51 @@ import canada_holiday
 
 import joblib
 
+class ScrollableCheckBoxFrame(customtkinter.CTkScrollableFrame):
+    #%% Code for Initalization of scollable frame
+    def __init__(self, master, item_list, command=None, **kwargs):
+        super().__init__(master, **kwargs)
+
+        self.command = command
+        self.checkbox_list = []
+        for i, item in enumerate(item_list):
+            self.add_item(item)
+
+    def add_item(self, item):
+        
+        checkbox = customtkinter.CTkCheckBox(self, text=item, variable = customtkinter.IntVar(value = 0), onvalue = 1, offvalue = 0)
+        if self.command is not None:
+            checkbox.configure(command=self.command)
+        checkbox.grid(row=len(self.checkbox_list), column=0, pady=(0, 10), sticky = "w")
+        self.checkbox_list.append(checkbox)
+
+    def remove_item(self, item):
+        for checkbox in self.checkbox_list:
+            if item == checkbox.cget("text"):
+                checkbox.destroy()
+                self.checkbox_list.remove(checkbox)
+                return
+
+    def get_checked_items(self):
+        return [checkbox.cget("text") for checkbox in self.checkbox_list if checkbox.get() == 1]
+
+
 
 
 class App(customtkinter.CTk):  
     def __init__(self):  
         #%% Code for Initalization of GUI application
         
-        # Set months and days
-        months_name = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-        
-        months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-        
-        days = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']
-        
+        ###############################################################################
         # All file paths
+        ###############################################################################
+        
         # Paths for all the graphs that will be shown
         global image_path, background_images_path, model_path, x_y_input_path
         image_path = os.path.join(dirs_inputs, "Model_Plots") 
         model_path = os.path.join(dirs_inputs, "Saved_Models")    
         x_y_input_path = os.path.join(dirs_inputs, "X_Y_Inputs")   
-        
+        background_images_path = os.path.join(dirs_inputs, "GUI_Background_Images") 
         
         year_chosen_option_menu = ""
         month_chosen_option_menu = ""
@@ -77,7 +102,6 @@ class App(customtkinter.CTk):
         self.grid_columnconfigure(1, weight=1)
         
         # Path for all the background images
-        background_images_path = os.path.join(dirs_inputs, "GUI_Background_Images") 
         start_menu_image_path = os.path.join(background_images_path, "Start_Menu_Page.png")
         
         # Create background image
@@ -268,7 +292,7 @@ class App(customtkinter.CTk):
         
 
         
-        
+
         # Create drop down menus
         # FSA
         self.home_frame_fsa_option_menu = customtkinter.CTkOptionMenu(self.home_frame, values=["L9G", "L7G", "L8G", "L6G"], command = self.fsa_option_menu_event)
@@ -280,7 +304,13 @@ class App(customtkinter.CTk):
         self.calendar_frame = customtkinter.CTkFrame(self.home_frame, corner_radius=0,fg_color='#140034')
         self.calendar_frame.grid(row=3, column=1, padx=20, pady=(0, 20), sticky="w")
 
-        self.calendar = Calendar(self.calendar_frame, selectmode='day', year=2024, month=1, day=1)
+        # Set minimum date
+        min_date = date(2023, 1, 1)
+        
+        # Set maximum date
+        max_date = date(2023, 3, 31)
+        
+        self.calendar = Calendar(self.calendar_frame, selectmode='day', year=2023, month=1, day=1, mindate = min_date, maxdate = max_date)
         self.calendar.pack(pady=20, padx=20)
         #self.calendar.bind("<<CalendarSelected>>", self.print_calendar_size)
         
@@ -296,9 +326,30 @@ class App(customtkinter.CTk):
                                                       anchor="w", command=self.generate_models_button_event)
         self.generate_models_button.grid(row=4, column=1, sticky="ew")
         
+        # Create search bar for FSA
+        self.fsa_search_bar = customtkinter.CTkEntry(self.home_frame, placeholder_text ="Please enter first three digits of postal code.")
+        
+        self.fsa_search_bar.grid(row=5, column=0, pady=20, padx=20, sticky="nsew")
+
+        # Create scrollable check box of features
+        column_names = pd.read_csv(os.path.join(x_y_input_path, "X_transformed_with_origCalVariables.csv"), nrows = 0)
+        self.scrollable_features_checkbox_frame = ScrollableCheckBoxFrame(self.home_frame, width=200, command=self.features_checkbox_event,
+                                                         item_list=column_names)
+        self.scrollable_features_checkbox_frame.grid(row=5, column=1, pady=20, padx=20, sticky="ew")
+        
+        
+        # Create Train button
+        self.train_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Train Models",
+                                                      text_color=("gray10", "gray90"),
+                                                      anchor="w", command=self.train_models_button_event)
+        self.train_models_button.grid(row=5, column=2, sticky="ew")
+        
         # Add hamburger menu button
         self.hamburger_button = customtkinter.CTkButton(self.home_frame, text="☰", width=40, height=40, command=self.toggle_navigation)
         self.hamburger_button.place(x=10, y=10)  # Adjust position as needed
+        
+        
+        
         
         
         
@@ -422,28 +473,38 @@ class App(customtkinter.CTk):
     def generate_models_button_event(self):
 
         
-        
-        def plot_figures_model_1(self, year, month, day, hourly_data_month_day, Y_pred_denorm_saved_df, title, col):
-            plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-', label = "Actual Consumption")
-            plt.plot(hourly_data_month_day["HOUR"], Y_pred_denorm_saved_df["TOTAL_CONSUMPTION"], 'o-', label = "Predicted Consumption")
-            plt.title(title + ": " + year + "/" + month + "/" + day)
+        # Function to plot the model figures
+        def plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df_saved, hourly_data_month_day_error, model_frame):
+            
+            # Plot models on same graph
+            fig, ax = plt.subplots(figsize = (15, 5))
+            
+            plt.plot(hourly_data_month_day_saved["HOUR_NEW"], hourly_data_month_day_saved["TOTAL_CONSUMPTION"], 'o-', label = "Actual Consumption", color = "pink")
+            plt.plot(hourly_data_month_day_saved["HOUR_NEW"], Y_pred_denorm_saved_df_saved["TOTAL_CONSUMPTION"], 'o-', label = "Predicted Consumption", color = "purple")
+            plt.title(title)       
             plt.xlabel("HOUR")
             plt.ylabel("CONSUMPTION in KW")
-            plt.legend()
-            plot_svg =  os.path.join(image_path, year + "_" + month + "_" + day + "_Actual_Graph.png")
+            plt.legend(loc = "upper left")
+
+            hourly_data_month_day_saved_table = hourly_data_month_day_error.round(decimals = 1)
+            hourly_data_month_day_saved_table_tp = hourly_data_month_day_saved_table.transpose()
+            plt.subplots_adjust(bottom=0.1)
+            
+            # Plot Error Table below figure
+            ax.table(cellText = hourly_data_month_day_saved_table_tp.values, rowLabels = hourly_data_month_day_saved_table.columns, loc='bottom')
+            plot_svg =  os.path.join(image_path, "Predicted_Actual_Graph.png")
             plt.savefig(plot_svg)
             plt.close()
             
             # Positining of Figure
-            self.model_1_image = customtkinter.CTkImage(Image.open(os.path.join(image_path, year + "_" + month + "_" + day + "_Actual_Graph.png")), size=(400, 400))
+            self.model_image = customtkinter.CTkImage(Image.open(os.path.join(image_path, "Predicted_Actual_Graph.png")), size=(1200, 400))
             
-            self.model_1_frame_image_label = customtkinter.CTkLabel(self.model_1_frame, text="", image=self.model_1_image)
-            self.model_1_frame_image_label.grid(row=0, column=col, padx=20, pady=10)
+            self.model_frame_image_label = customtkinter.CTkLabel(model_frame, text="", image=self.model_image)
+            self.model_frame_image_label.grid(row=0, column=0, padx=20, pady=20, sticky = "ew")
+            
+            os.remove(plot_svg)
             
             
-        
-        months_name = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-        
         months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
         
         
@@ -484,6 +545,8 @@ class App(customtkinter.CTk):
         
         hourly_data_month_day_saved = pd.DataFrame(columns = ['HOUR', 'TOTAL_CONSUMPTION'])
         Y_pred_denorm_saved_df_saved = pd.DataFrame(columns = ['TOTAL_CONSUMPTION'])
+        hourly_data_month_day_error = pd.DataFrame()
+        
         
         for day_num in range (num_of_days):
             
@@ -536,7 +599,6 @@ class App(customtkinter.CTk):
             hourly_consumption_data_dic_by_month = pd.DataFrame()
             
             # Initialize dataframes to be used
-            hourly_data_date = pd.DataFrame()
             hourly_data_res = pd.DataFrame()
             hourly_data_res_fsa = pd.DataFrame()
             hourly_data_hour_sum = pd.DataFrame()
@@ -570,56 +632,39 @@ class App(customtkinter.CTk):
             
             hourly_consumption_data_dic_by_month = hourly_data_hour_sum
             hourly_data_month_day = hourly_consumption_data_dic_by_month[hourly_consumption_data_dic_by_month['DAY'] == int(day)]
-            #title = "Day " + str(day_num+1)
-            title = ""
-            col = day_num
+
+
             
             
-            plot_figures_model_1(self, year, month, day, hourly_data_month_day, Y_pred_denorm_saved_df, title, col)
-            
-            
-            
-            
-            ## TRY SECOND PLOT
-            if (col == 0):
+            # Append next day to another dataframe to plot on same figure
+            if (day_num == 0):
+                title = "Hourly Power Consumption Beginning: " + year + "/" + month + "/" + day
                 hourly_data_month_day_saved = hourly_data_month_day[["HOUR", "TOTAL_CONSUMPTION"]].copy()
                 Y_pred_denorm_saved_df_saved = Y_pred_denorm_saved_df.copy()
+                hourly_data_month_day_error["HOUR_NEW"] = hourly_data_month_day.index + 1
             else:
                 hourly_data_month_day_saved = pd.concat([hourly_data_month_day_saved, hourly_data_month_day], axis=0, ignore_index=True)
                 Y_pred_denorm_saved_df_saved = pd.concat([Y_pred_denorm_saved_df_saved, Y_pred_denorm_saved_df], axis=0, ignore_index=True)
-                
-
-
-        
+            
+            
+            # Find Error
+            hourly_data_month_day_error["Error Day " + str(day_num) + " (KW)"] = abs(hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True) -  Y_pred_denorm_saved_df["TOTAL_CONSUMPTION"].reset_index(drop = True))
             
             
             
-            print(hourly_data_string)
-        
+            
         hourly_data_month_day_saved["HOUR_NEW"] = hourly_data_month_day_saved.index + 1
         hourly_data_month_day_saved["HOUR_NEW"] = hourly_data_month_day_saved["HOUR_NEW"].astype(int)
+        
 
-        plt.plot(hourly_data_month_day_saved["HOUR_NEW"], hourly_data_month_day_saved["TOTAL_CONSUMPTION"], 'o-', label = "Actual Consumption")
-        plt.plot(hourly_data_month_day_saved["HOUR_NEW"], Y_pred_denorm_saved_df_saved["TOTAL_CONSUMPTION"], 'o-', label = "Predicted Consumption")
-        plt.title(title + ": " + year + "/" + month + "/" + day)
-        plt.xlabel("HOUR")
-        plt.ylabel("CONSUMPTION in KW")
-        plt.legend()
-        plot_svg =  os.path.join(image_path, year + "_" + month + "_" + day + "_Actual_Graph.png")
-        plt.savefig(plot_svg)
-        plt.close()
+        plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df_saved, hourly_data_month_day_error, self.model_1_frame)
+    
         
-        # Positining of Figure
-        self.model_1_image = customtkinter.CTkImage(Image.open(os.path.join(image_path, year + "_" + month + "_" + day + "_Actual_Graph.png")), size=(400, 400))
+    def train_models_button_event(self):
+        fsa_typed = self.fsa_search_bar.get()
         
-        self.model_1_frame_image_label = customtkinter.CTkLabel(self.model_2_frame, text="", image=self.model_1_image)
-        self.model_1_frame_image_label.grid(row=0, column=0, padx=20, pady=10)
-        
-        # files = glob.glob(image_path + "\*")
-        # for f in files:
-        #     os.remove(f)
-
-        
+        print(fsa_typed)
+        print("checkbox frame modified: ", selected_features)
         
     ###############################################################################
     # Functions when using dropdown menus
@@ -627,27 +672,33 @@ class App(customtkinter.CTk):
     def fsa_option_menu_event(self, choice):
         global fsa_chosen_option_menu
         fsa_chosen_option_menu = choice
-        print("optionmenu dropdown clicked:", choice)
+        #print("optionmenu dropdown clicked:", choice)
         
     def year_option_menu_event(self, choice):
         global year_chosen_option_menu
         year_chosen_option_menu = choice
-        print("optionmenu dropdown clicked:", choice)
+        #print("optionmenu dropdown clicked:", choice)
         
     def month_option_menu_event(self, choice):
         global month_chosen_option_menu
         month_chosen_option_menu = choice
-        print("optionmenu dropdown clicked:", choice)
+        #print("optionmenu dropdown clicked:", choice)
 
     def day_option_menu_event(self, choice):
         global day_chosen_option_menu
         day_chosen_option_menu = choice
-        print("optionmenu dropdown clicked:", choice)
+        #print("optionmenu dropdown clicked:", choice)
         
     def number_of_days_option_menu_event(self, choice):
         global number_of_days_chosen_option_menu
         number_of_days_chosen_option_menu = choice
-        print("optionmenu dropdown clicked:", choice)
+        #print("optionmenu dropdown clicked:", choice)
+    
+    def features_checkbox_event(self):
+        global selected_features
+        selected_features = self.scrollable_features_checkbox_frame.get_checked_items()
+        #print("checkbox frame modified: ", selected_features)
+    
     
     ###############################################################################
     # Function to animate text
@@ -697,7 +748,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_laptop_run
+    run_student = joseph_pc_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):
