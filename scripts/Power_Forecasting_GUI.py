@@ -23,6 +23,7 @@ import customtkinter
 import tkinter as Tk
 from tkcalendar import Calendar
 import os
+import glob
 import PIL
 from PIL import Image
 
@@ -39,7 +40,7 @@ import joblib
 
 
 
-class App(customtkinter.CTk):
+class App(customtkinter.CTk):  
     def __init__(self):  
         #%% Code for Initalization of GUI application
         
@@ -284,7 +285,7 @@ class App(customtkinter.CTk):
         #self.calendar.bind("<<CalendarSelected>>", self.print_calendar_size)
         
         # Number of Days
-        self.home_frame_number_of_days_option_menu = customtkinter.CTkOptionMenu(self.home_frame, values=["1", "2", "3", "4", "5", "6"], command = self.number_of_days_option_menu_event)
+        self.home_frame_number_of_days_option_menu = customtkinter.CTkOptionMenu(self.home_frame, values=["1", "2", "3"], command = self.number_of_days_option_menu_event)
         self.home_frame_number_of_days_option_menu.set("1")
         self.home_frame_number_of_days_option_menu.grid(row=3, column=2, padx=20, pady=(0, 20), sticky="w")
         
@@ -348,6 +349,9 @@ class App(customtkinter.CTk):
 
 
 
+        
+
+
 
     ###############################################################################
     # Function to select different frames
@@ -409,8 +413,34 @@ class App(customtkinter.CTk):
 
     def model_4_button_event(self):
         self.select_frame_by_name("Model 4")
+       
         
+       
+       
+        
+       
     def generate_models_button_event(self):
+
+        
+        
+        def plot_figures_model_1(self, year, month, day, hourly_data_month_day, Y_pred_denorm_saved_df, title, col):
+            plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-', label = "Actual Consumption")
+            plt.plot(hourly_data_month_day["HOUR"], Y_pred_denorm_saved_df["TOTAL_CONSUMPTION"], 'o-', label = "Predicted Consumption")
+            plt.title(title + ": " + year + "/" + month + "/" + day)
+            plt.xlabel("HOUR")
+            plt.ylabel("CONSUMPTION in KW")
+            plt.legend()
+            plot_svg =  os.path.join(image_path, year + "_" + month + "_" + day + "_Actual_Graph.png")
+            plt.savefig(plot_svg)
+            plt.close()
+            
+            # Positining of Figure
+            self.model_1_image = customtkinter.CTkImage(Image.open(os.path.join(image_path, year + "_" + month + "_" + day + "_Actual_Graph.png")), size=(400, 400))
+            
+            self.model_1_frame_image_label = customtkinter.CTkLabel(self.model_1_frame, text="", image=self.model_1_image)
+            self.model_1_frame_image_label.grid(row=0, column=col, padx=20, pady=10)
+            
+            
         
         months_name = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
         
@@ -421,6 +451,12 @@ class App(customtkinter.CTk):
 
         selected_date_datetime = datetime.strptime(selected_date, '%m/%d/%y')
         
+        for widget in self.model_1_frame.winfo_children():
+            if (widget.winfo_exists()):
+                widget.destroy()  # deleting widget
+        
+        
+        
         print(selected_date_datetime.year)
         print(selected_date_datetime.month)
         print(selected_date_datetime.day)
@@ -429,124 +465,160 @@ class App(customtkinter.CTk):
             fsa_chosen = fsa_chosen_option_menu
         except NameError:
             fsa_chosen = "L9G"
-            
+        
         try:
-            year = str(selected_date_datetime.year)
+            num_of_days = int(number_of_days_chosen_option_menu)
         except NameError:
-            year = "2024"
-            
-        try:
-            month = months[(selected_date_datetime.month-1)]
-        except NameError:
-            month = "01"
-            
-        try:
-            day = str(selected_date_datetime.day)
-        except NameError:
-            day = "01"
+            num_of_days = 1
 
         dirs_hourly_consumption_demand = os.path.join(dirs_inputs, "Hourly_Demand_Data")
         
         ###############################################################################
         # Import Models
         ###############################################################################
-        # Import saved CSV into script as dataframes
-        X_test = pd.read_csv(os.path.join(x_y_input_path, "X_transformed_with_origCalVariables.csv"))
-        X_test = X_test[X_test["Year"] == int(year)]
-        X_test = X_test[X_test["Month"] == int(month)]
-        X_test = X_test[X_test["Day"] == int(day)]
-        
-        
-      
-        
-        
-        
+
         # Load model from gui_pickup folder using joblib
         pipe_saved = joblib.load(os.path.join(model_path, "ridge_regression_model.pkl"))
         
-        # Predict using loaded model
-        Y_pred_saved = pipe_saved.predict(X_test)
-        
-        # Ensure Y_pred and Y_test are reshaped correctly
-        Y_pred_saved = Y_pred_saved.reshape(-1, 1)
-        
-        # Denormalize Y_pred and Y_test with min_max_scaler_y.pkl using joblib
-        scaler_path = os.path.join(model_path, "min_max_scaler_y.pkl")
-        if not os.path.exists(scaler_path):
-            raise FileNotFoundError(f"Scaler file not found: {scaler_path}")
-        scaler = joblib.load(scaler_path)
-        
-        # Denormalize Y_pred_saved and Y_test with min_max_scaler.pkl
-        Y_pred_denorm_saved = scaler.inverse_transform(Y_pred_saved)
-        Y_pred_denorm_saved_df = pd.DataFrame(Y_pred_denorm_saved, columns=['TOTAL_CONSUMPTION'])
-        
-        
-        
-        ###############################################################################
-        # Dictionary for reading in hourly consumption by FSA
-        ###############################################################################
-        # FSA -> Year -> Month -> Value
-        hourly_consumption_data_dic_by_month = pd.DataFrame()
-        
-        # Initialize dataframes to be used
-        hourly_data_date = pd.DataFrame()
-        hourly_data_res = pd.DataFrame()
-        hourly_data_res_fsa = pd.DataFrame()
-        hourly_data_hour_sum = pd.DataFrame()
-        
-        hourly_data_string = "PUB_HourlyConsumptionByFSA_"+year+month+"_v1.csv"
-        
-        # Use try and catch if problems reading input data
-        try:
-            # Not cooked yet, we are going to let it COOK below
-            file_path = os.path.join(dirs_hourly_consumption_demand, hourly_data_string)
-            hourly_data_raw = pd.read_csv(file_path, skiprows=3, header = 0, usecols= ['FSA', 'DATE', 'HOUR', 'CUSTOMER_TYPE', 'TOTAL_CONSUMPTION'])
-        except ValueError: # skiprows=x does not match the "normal sequence" of 3. For example, 2023 08 data had a different skip_row value
-            hourly_data_raw = pd.read_csv(file_path, skiprows=7, header = 0, usecols= ['FSA', 'DATE', 'HOUR', 'CUSTOMER_TYPE', 'TOTAL_CONSUMPTION'])
-       
-        # Convert Date into year, month, day
-        hourly_data_fix_date = hourly_data_raw
-        hourly_data_fix_date['DATE'] = pd.to_datetime(hourly_data_raw['DATE'])
-        hourly_data_fix_date['YEAR'] = hourly_data_fix_date['DATE'].dt.year
-        hourly_data_fix_date['MONTH'] = hourly_data_fix_date['DATE'].dt.month
-        hourly_data_fix_date['DAY'] = hourly_data_fix_date['DATE'].dt.day
-        
-        # Filter out only residential data
-        hourly_data_res = hourly_data_fix_date.loc[hourly_data_fix_date['CUSTOMER_TYPE'] == "Residential"].reset_index(drop=True)
-        
-        # Then filter out by the fsa
-        hourly_data_res_fsa = hourly_data_res.loc[hourly_data_res['FSA'] == fsa_chosen].reset_index(drop=True)
-        
-        # Take the sum if fsa has more than 1 date (this is because there are different pay codes in residential loads)
-        hourly_data_hour_sum = hourly_data_res_fsa.groupby(["FSA", "CUSTOMER_TYPE", "YEAR", "MONTH", "DAY", "HOUR", "DATE"]).TOTAL_CONSUMPTION.sum().reset_index()
-        
-        
-        hourly_consumption_data_dic_by_month = hourly_data_hour_sum
-        
-        
-        print(hourly_data_string)
-        
-        # Plot Day
-        hourly_data_month_day = hourly_consumption_data_dic_by_month[hourly_consumption_data_dic_by_month['DAY'] == int(day)]
 
-        plt.plot(hourly_data_month_day["HOUR"], hourly_data_month_day["TOTAL_CONSUMPTION"], 'o-', label = "Actual Consumption")
-        plt.plot(hourly_data_month_day["HOUR"], Y_pred_denorm_saved_df["TOTAL_CONSUMPTION"], 'o-', label = "Predicted Consumption")
-        plt.title(year + "/" + month + "/" + day)
+        
+        hourly_data_month_day_saved = pd.DataFrame(columns = ['HOUR', 'TOTAL_CONSUMPTION'])
+        Y_pred_denorm_saved_df_saved = pd.DataFrame(columns = ['TOTAL_CONSUMPTION'])
+        
+        for day_num in range (num_of_days):
+            
+            # new date
+            new_date = selected_date_datetime + timedelta(days=day_num) 
+            print(new_date) 
+            try:
+                year = str(new_date.year)
+            except NameError:
+                year = "2024"
+                
+            try:
+                month = months[(new_date.month-1)]
+            except NameError:
+                month = "01"
+                
+            try:
+                day = str(new_date.day)
+            except NameError:
+                day = "01"
+            
+            # Import saved CSV into script as dataframes
+            X_test = pd.read_csv(os.path.join(x_y_input_path, "X_transformed_with_origCalVariables.csv"))
+            X_test = X_test[X_test["Year"] == int(year)]
+            X_test = X_test[X_test["Month"] == int(month)]
+            X_test = X_test[X_test["Day"] == int(day)]
+            
+            # Predict using loaded model
+            Y_pred_saved = pipe_saved.predict(X_test)
+            
+            # Ensure Y_pred and Y_test are reshaped correctly
+            Y_pred_saved = Y_pred_saved.reshape(-1, 1)
+            
+            # Denormalize Y_pred and Y_test with min_max_scaler_y.pkl using joblib
+            scaler_path = os.path.join(model_path, "min_max_scaler_y.pkl")
+            if not os.path.exists(scaler_path):
+                raise FileNotFoundError(f"Scaler file not found: {scaler_path}")
+            scaler = joblib.load(scaler_path)
+            
+            # Denormalize Y_pred_saved and Y_test with min_max_scaler.pkl
+            Y_pred_denorm_saved = scaler.inverse_transform(Y_pred_saved)
+            Y_pred_denorm_saved_df = pd.DataFrame(Y_pred_denorm_saved, columns=['TOTAL_CONSUMPTION'])
+            
+            
+            
+            ###############################################################################
+            # Dictionary for reading in hourly consumption by FSA
+            ###############################################################################
+            # FSA -> Year -> Month -> Value
+            hourly_consumption_data_dic_by_month = pd.DataFrame()
+            
+            # Initialize dataframes to be used
+            hourly_data_date = pd.DataFrame()
+            hourly_data_res = pd.DataFrame()
+            hourly_data_res_fsa = pd.DataFrame()
+            hourly_data_hour_sum = pd.DataFrame()
+            
+            hourly_data_string = "PUB_HourlyConsumptionByFSA_"+year+month+"_v1.csv"
+            
+            # Use try and catch if problems reading input data
+            try:
+                # Not cooked yet, we are going to let it COOK below
+                file_path = os.path.join(dirs_hourly_consumption_demand, hourly_data_string)
+                hourly_data_raw = pd.read_csv(file_path, skiprows=3, header = 0, usecols= ['FSA', 'DATE', 'HOUR', 'CUSTOMER_TYPE', 'TOTAL_CONSUMPTION'])
+            except ValueError: # skiprows=x does not match the "normal sequence" of 3. For example, 2023 08 data had a different skip_row value
+                hourly_data_raw = pd.read_csv(file_path, skiprows=7, header = 0, usecols= ['FSA', 'DATE', 'HOUR', 'CUSTOMER_TYPE', 'TOTAL_CONSUMPTION'])
+           
+            # Convert Date into year, month, day
+            hourly_data_fix_date = hourly_data_raw
+            hourly_data_fix_date['DATE'] = pd.to_datetime(hourly_data_raw['DATE'])
+            hourly_data_fix_date['YEAR'] = hourly_data_fix_date['DATE'].dt.year
+            hourly_data_fix_date['MONTH'] = hourly_data_fix_date['DATE'].dt.month
+            hourly_data_fix_date['DAY'] = hourly_data_fix_date['DATE'].dt.day
+            
+            # Filter out only residential data
+            hourly_data_res = hourly_data_fix_date.loc[hourly_data_fix_date['CUSTOMER_TYPE'] == "Residential"].reset_index(drop=True)
+            
+            # Then filter out by the fsa
+            hourly_data_res_fsa = hourly_data_res.loc[hourly_data_res['FSA'] == fsa_chosen].reset_index(drop=True)
+            
+            # Take the sum if fsa has more than 1 date (this is because there are different pay codes in residential loads)
+            hourly_data_hour_sum = hourly_data_res_fsa.groupby(["FSA", "CUSTOMER_TYPE", "YEAR", "MONTH", "DAY", "HOUR", "DATE"]).TOTAL_CONSUMPTION.sum().reset_index()
+            
+            
+            hourly_consumption_data_dic_by_month = hourly_data_hour_sum
+            hourly_data_month_day = hourly_consumption_data_dic_by_month[hourly_consumption_data_dic_by_month['DAY'] == int(day)]
+            #title = "Day " + str(day_num+1)
+            title = ""
+            col = day_num
+            
+            
+            plot_figures_model_1(self, year, month, day, hourly_data_month_day, Y_pred_denorm_saved_df, title, col)
+            
+            
+            
+            
+            ## TRY SECOND PLOT
+            if (col == 0):
+                hourly_data_month_day_saved = hourly_data_month_day[["HOUR", "TOTAL_CONSUMPTION"]].copy()
+                Y_pred_denorm_saved_df_saved = Y_pred_denorm_saved_df.copy()
+            else:
+                hourly_data_month_day_saved = pd.concat([hourly_data_month_day_saved, hourly_data_month_day], axis=0, ignore_index=True)
+                Y_pred_denorm_saved_df_saved = pd.concat([Y_pred_denorm_saved_df_saved, Y_pred_denorm_saved_df], axis=0, ignore_index=True)
+                
+
+
+        
+            
+            
+            
+            print(hourly_data_string)
+        
+        hourly_data_month_day_saved["HOUR_NEW"] = hourly_data_month_day_saved.index + 1
+        hourly_data_month_day_saved["HOUR_NEW"] = hourly_data_month_day_saved["HOUR_NEW"].astype(int)
+
+        plt.plot(hourly_data_month_day_saved["HOUR_NEW"], hourly_data_month_day_saved["TOTAL_CONSUMPTION"], 'o-', label = "Actual Consumption")
+        plt.plot(hourly_data_month_day_saved["HOUR_NEW"], Y_pred_denorm_saved_df_saved["TOTAL_CONSUMPTION"], 'o-', label = "Predicted Consumption")
+        plt.title(title + ": " + year + "/" + month + "/" + day)
         plt.xlabel("HOUR")
         plt.ylabel("CONSUMPTION in KW")
         plt.legend()
         plot_svg =  os.path.join(image_path, year + "_" + month + "_" + day + "_Actual_Graph.png")
         plt.savefig(plot_svg)
-        #plt.close()
+        plt.close()
         
         # Positining of Figure
         self.model_1_image = customtkinter.CTkImage(Image.open(os.path.join(image_path, year + "_" + month + "_" + day + "_Actual_Graph.png")), size=(400, 400))
         
-        self.model_1_frame_image_label = customtkinter.CTkLabel(self.model_1_frame, text="", image=self.model_1_image)
+        self.model_1_frame_image_label = customtkinter.CTkLabel(self.model_2_frame, text="", image=self.model_1_image)
         self.model_1_frame_image_label.grid(row=0, column=0, padx=20, pady=10)
         
-        os.remove(plot_svg)
-        
+        # files = glob.glob(image_path + "\*")
+        # for f in files:
+        #     os.remove(f)
+
         
         
     ###############################################################################
@@ -594,6 +666,7 @@ class App(customtkinter.CTk):
                 self.fading_in = True
                 self.start_frame.after(100, self.animate_fade)  # Wait 1 second before fading in again
                 return
+            
     def print_calendar_size(self, event=None):
         bbox = self.calendar.bbox("1.0")
         width = bbox[2] - bbox[0]
