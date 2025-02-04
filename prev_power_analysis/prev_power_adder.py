@@ -33,14 +33,15 @@ def add_lagged_power(weather_data: pd.DataFrame, power_data: pd.DataFrame):
 data_dir = "c:/Users/hanad/capstone_github/power-forecasting-capstone/data/"
 anal_dir = "c:/Users/hanad/capstone_github/power-forecasting-capstone/prev_power_analysis"
 df_directory = os.path.join(data_dir, "raw_data")
+fsa = "M2M"
 
 # Open target weather and power data frames
-weather_data = pd.read_csv(os.path.join(df_directory, "weather_data_K0K_20180101_20231231_prevPowerAnal.csv"))
-power_data = pd.read_csv(os.path.join(df_directory, "power_data_K0K_20180101_20231231_prevPowerAnal.csv"))
+weather_data = pd.read_csv(os.path.join(df_directory, f'weather_data_{fsa}_20180101_20231231_prevPowerAnal.csv'))
+power_data = pd.read_csv(os.path.join(df_directory, f'power_data_{fsa}_20180101_20231231_prevPowerAnal.csv'))
 
 weather_data, power_data = add_lagged_power(weather_data, power_data)
-weather_data.to_csv(f'{anal_dir}/weather_M2M.csv', index=False)
-power_data.to_csv(f'{anal_dir}/power_M2M.csv', index=False)
+weather_data.to_csv(f'{anal_dir}/weather_{fsa}.csv', index=False)
+power_data.to_csv(f'{anal_dir}/power_{fsa}.csv', index=False)
 
 
 

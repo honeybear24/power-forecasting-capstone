@@ -10,6 +10,7 @@ import requests
 import asyncio  # Import asyncio library for async operations
 import aiohttp # Import aiohttp library for making HTTP requests
 import nest_asyncio # Allows for asyncio to be nested
+nest_asyncio.apply() # Apply nest_asyncio to allow for nested asyncio operations
 import canada_holiday # Import library to get Canadian Holidays
 
 ### Functions ###
@@ -89,7 +90,7 @@ async def get_weather_data(session: aiohttp.ClientSession, current_date: datetim
 
     # Set Up
     weather_data = []   # List to store weather data 
-    bbox_limit = 0.1   # Bounding box limit for data collection
+    bbox_limit = 0.2   # Bounding box limit for data collection
 
     while True: # Loop to get data until enough data is collected (need at least 24 data points for day)
         bbox = f'{lon-bbox_limit},{lat-bbox_limit},{lon+bbox_limit},{lat+bbox_limit}' # Bounding box for data collection
@@ -265,7 +266,7 @@ fsa_map = {
 
 ### Calling Data ###
 # Choose FSA for data collection + Get latitude and longitude of chosen fsa
-fsa = "M2M"
+fsa = "L9G"
 lat = fsa_map[fsa]["lat"]
 lon = fsa_map[fsa]["lon"]
 
@@ -288,5 +289,5 @@ end_date = datetime(end_year, end_month, end_day, end_hour,0,0)
 weather_data, power_data = asyncio.run(get_data_for_time_range(data_path, start_date, end_date, fsa, lat, lon))
 
 # Save data to CSV
-weather_data.to_csv(f'{target_dir}/weather_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_prevPowerAnal.csv', index=False)
-power_data.to_csv(f'{target_dir}/power_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_prevPowerAnal.csv', index=False)
+weather_data.to_csv(f'{target_dir}/weather_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_Anal.csv', index=False)
+power_data.to_csv(f'{target_dir}/power_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_Anal.csv', index=False)

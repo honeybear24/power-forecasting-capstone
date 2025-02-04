@@ -1,0 +1,5 @@
+Summary of Rolling Stats Analysis
+- Add roling stats for all weather variables for different window sizes were marginally helpful.
+- Larger window provided a better boost but still has problem diminishing returns. 
+
+Need to discuss with group if this is even worth adding to data set
