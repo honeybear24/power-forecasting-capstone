@@ -485,16 +485,13 @@ class App(customtkinter.CTk):
             plt.xlabel("HOUR")
             plt.ylabel("CONSUMPTION in KW")
             plt.legend(loc = "upper left")
-
-            hourly_data_month_day_saved_table = hourly_data_month_day_error.round(decimals = 1)
-            hourly_data_month_day_saved_table_tp = hourly_data_month_day_saved_table.transpose()
-            plt.subplots_adjust(bottom=0.1)
-            
-            # Plot Error Table below figure
-            ax.table(cellText = hourly_data_month_day_saved_table_tp.values, rowLabels = hourly_data_month_day_saved_table.columns, loc='bottom')
             plot_svg =  os.path.join(image_path, "Predicted_Actual_Graph.png")
             plt.savefig(plot_svg)
             plt.close()
+            
+            #hourly_data_month_day_saved_table = hourly_data_month_day_error.round(decimals = 1)
+            #hourly_data_month_day_saved_table_tp = hourly_data_month_day_saved_table.transpose()
+            #plt.subplots_adjust(bottom=0.1)
             
             # Positining of Figure
             self.model_image = customtkinter.CTkImage(Image.open(os.path.join(image_path, "Predicted_Actual_Graph.png")), size=(1200, 400))
@@ -502,7 +499,32 @@ class App(customtkinter.CTk):
             self.model_frame_image_label = customtkinter.CTkLabel(model_frame, text="", image=self.model_image)
             self.model_frame_image_label.grid(row=0, column=0, padx=20, pady=20, sticky = "ew")
             
-            os.remove(plot_svg)
+            # Plot models on same graph
+            fig, ax = plt.subplots(figsize = (15, 5))
+            fig.patch.set_visible(False)
+            ax.axis('off')
+            hourly_data_month_day_saved_table = hourly_data_month_day_error.round(decimals = 1)
+            hourly_data_month_day_saved_table_tp = hourly_data_month_day_saved_table.transpose()
+            plt.subplots_adjust(bottom=0.1)
+            
+            # Plot Error Table below figure
+            ax.table(cellText = hourly_data_month_day_saved_table_tp.values, rowLabels = hourly_data_month_day_saved_table.columns, loc='top')
+            plot_svg =  os.path.join(image_path, "Predicted_Actual_Table.png")
+            plt.savefig(plot_svg)
+            plt.close()
+            
+            # Positining of Figure
+            self.model_table = customtkinter.CTkImage(Image.open(os.path.join(image_path, "Predicted_Actual_Table.png")), size=(1200, 400))
+            
+            self.model_frame_image_label = customtkinter.CTkLabel(model_frame, text="", image=self.model_table)
+            self.model_frame_image_label.grid(row=1, column=0, padx=20, pady=20, sticky = "ew")
+            
+            
+            
+            
+            
+            
+            #os.remove(plot_svg)
             
             
         months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
@@ -748,7 +770,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_pc_run
+    run_student = joseph_laptop_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):
