@@ -19,6 +19,11 @@ Created on Wed Jan  8 14:18:11 2025
 
 # root.mainloop()
 
+import realDataGetter
+import asyncio  # Import asyncio library for async operations
+import aiohttp # Import aiohttp library for making HTTP requests
+import nest_asyncio # Allows for asyncio to be nested
+
 import customtkinter
 import tkinter as Tk
 from tkcalendar import Calendar
@@ -78,11 +83,12 @@ class App(customtkinter.CTk):
         ###############################################################################
         
         # Paths for all the graphs that will be shown
-        global image_path, background_images_path, model_path, x_y_input_path
+        global image_path, background_images_path, model_path, x_y_input_path, hourly_demand 
         image_path = os.path.join(dirs_inputs, "Model_Plots") 
         model_path = os.path.join(dirs_inputs, "Saved_Models")    
         x_y_input_path = os.path.join(dirs_inputs, "X_Y_Inputs")   
         background_images_path = os.path.join(dirs_inputs, "GUI_Background_Images") 
+        hourly_demand = os.path.join(dirs_inputs, "raw_data")
         
         year_chosen_option_menu = ""
         month_chosen_option_menu = ""
@@ -336,7 +342,7 @@ class App(customtkinter.CTk):
         self.scrollable_features_checkbox_frame = ScrollableCheckBoxFrame(self.home_frame, width=200, command=self.features_checkbox_event,
                                                          item_list=column_names)
         self.scrollable_features_checkbox_frame.grid(row=5, column=1, pady=20, padx=20, sticky="ew")
-        
+        self.scrollable_features_checkbox_frame.set([])
         
         # Create Train button
         self.train_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Train Models",
@@ -683,10 +689,53 @@ class App(customtkinter.CTk):
     
         
     def train_models_button_event(self):
+        nest_asyncio.apply() # Apply nest_asyncio to allow for nested asyncio operations
+        
         fsa_typed = self.fsa_search_bar.get()
         
         print(fsa_typed)
         print("checkbox frame modified: ", selected_features)
+        
+        
+        # Set Up data direcotry path for data collection
+        data_path = run_student[0]
+        target_dir = data_path + "/raw_data"
+        
+
+        ### Calling Data ###
+        # Choose FSA for data collection + Get latitude and longitude of chosen fsa
+        fsa = "M2M"
+        lat = realDataGetter.fsa_map[fsa_typed]["lat"]
+        lon = realDataGetter.fsa_map[fsa_typed]["lon"]
+
+        # Choose date range for data collection
+        start_year = 2018
+        start_month = 1
+        start_day = 1
+        start_hour = 0
+
+        end_year = 2023
+        end_month = 12
+        end_day = 31
+        end_hour = 23
+
+        # Making datetime objects for start and end dates
+        start_date = datetime(start_year, start_month, start_day, start_hour,0,0)
+        end_date = datetime(end_year, end_month, end_day, end_hour,0,0)
+
+        # Collect data - Using asynchronous functions
+        weather_data, power_data = asyncio.run(realDataGetter.get_data_for_time_range(dirs_inputs, start_date, end_date, fsa_typed, lat, lon))
+
+        weather_data.to_csv(f'{hourly_demand}/weather_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_prevPowerAnal.csv', index=False)
+        power_data.to_csv(f'{hourly_demand}/power_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_prevPowerAnal.csv', index=False)
+
+        
+        
+        
+                
+        
+        
+        
         
     ###############################################################################
     # Functions when using dropdown menus
