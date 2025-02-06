@@ -25,6 +25,7 @@ import aiohttp # Import aiohttp library for making HTTP requests
 import nest_asyncio # Allows for asyncio to be nested
 
 import customtkinter
+from CTkTable import *
 import tkinter as Tk
 from tkcalendar import Calendar
 import os
@@ -342,7 +343,7 @@ class App(customtkinter.CTk):
         self.scrollable_features_checkbox_frame = ScrollableCheckBoxFrame(self.home_frame, width=200, command=self.features_checkbox_event,
                                                          item_list=column_names)
         self.scrollable_features_checkbox_frame.grid(row=5, column=1, pady=20, padx=20, sticky="ew")
-        self.scrollable_features_checkbox_frame.set([])
+        
         
         # Create Train button
         self.train_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Train Models",
@@ -495,37 +496,19 @@ class App(customtkinter.CTk):
             plt.savefig(plot_svg)
             plt.close()
             
-            #hourly_data_month_day_saved_table = hourly_data_month_day_error.round(decimals = 1)
-            #hourly_data_month_day_saved_table_tp = hourly_data_month_day_saved_table.transpose()
-            #plt.subplots_adjust(bottom=0.1)
-            
             # Positining of Figure
             self.model_image = customtkinter.CTkImage(Image.open(os.path.join(image_path, "Predicted_Actual_Graph.png")), size=(1200, 400))
             
             self.model_frame_image_label = customtkinter.CTkLabel(model_frame, text="", image=self.model_image)
             self.model_frame_image_label.grid(row=0, column=0, padx=20, pady=20, sticky = "ew")
             
-            # Plot models on same graph
-            fig, ax = plt.subplots(figsize = (15, 5))
-            fig.patch.set_visible(False)
-            ax.axis('off')
-            hourly_data_month_day_saved_table = hourly_data_month_day_error.round(decimals = 1)
-            hourly_data_month_day_saved_table_tp = hourly_data_month_day_saved_table.transpose()
-            plt.subplots_adjust(bottom=0.1)
+            # Display Table of Error
+            hourly_data_month_day_saved_table_tp = hourly_data_month_day_error.transpose()
             
-            # Plot Error Table below figure
-            ax.table(cellText = hourly_data_month_day_saved_table_tp.values, rowLabels = hourly_data_month_day_saved_table.columns, loc='top')
-            plot_svg =  os.path.join(image_path, "Predicted_Actual_Table.png")
-            plt.savefig(plot_svg)
-            plt.close()
             
             # Positining of Figure
-            self.model_table = customtkinter.CTkImage(Image.open(os.path.join(image_path, "Predicted_Actual_Table.png")), size=(1200, 400))
-            
-            self.model_frame_image_label = customtkinter.CTkLabel(model_frame, text="", image=self.model_table)
-            self.model_frame_image_label.grid(row=1, column=0, padx=20, pady=20, sticky = "ew")
-            
-            
+            self.model_table = CTkTable(model_frame, width=1, height=1, values=hourly_data_month_day_saved_table_tp.values.tolist(), anchor="w", font = customtkinter.CTkFont(family="Roboto Flex", size=10))
+            self.model_table.grid(row=1, column=0, padx=20, pady=20, sticky = "ew")
             
             
             
@@ -670,17 +653,23 @@ class App(customtkinter.CTk):
                 hourly_data_month_day_saved = hourly_data_month_day[["HOUR", "TOTAL_CONSUMPTION"]].copy()
                 Y_pred_denorm_saved_df_saved = Y_pred_denorm_saved_df.copy()
                 hourly_data_month_day_error["HOUR_NEW"] = hourly_data_month_day.index + 1
+                hourly_data_month_day_error = hourly_data_month_day_error.rename(columns={"HOUR_NEW": "Hour"})
             else:
                 hourly_data_month_day_saved = pd.concat([hourly_data_month_day_saved, hourly_data_month_day], axis=0, ignore_index=True)
                 Y_pred_denorm_saved_df_saved = pd.concat([Y_pred_denorm_saved_df_saved, Y_pred_denorm_saved_df], axis=0, ignore_index=True)
             
             
             # Find Error
-            hourly_data_month_day_error["Error Day " + str(day_num) + " (KW)"] = abs(hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True) -  Y_pred_denorm_saved_df["TOTAL_CONSUMPTION"].reset_index(drop = True))
+            hourly_data_month_day_error["Actual Consumption: Day " + str(day_num+1) + " (KW)"] = hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
+            hourly_data_month_day_error["Predicted Consumption: Day " + str(day_num+1) + " (KW)"] = Y_pred_denorm_saved_df["TOTAL_CONSUMPTION"].reset_index(drop = True)
+            hourly_data_month_day_error["Error: Day " + str(day_num+1) + " (KW)"] = abs(hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True) -  Y_pred_denorm_saved_df["TOTAL_CONSUMPTION"].reset_index(drop = True))
+            hourly_data_month_day_error = hourly_data_month_day_error.round(decimals = 1)
             
             
-            
-            
+       
+        hourly_data_month_day_error_columns = pd.DataFrame([hourly_data_month_day_error.columns], columns = hourly_data_month_day_error.columns)
+        hourly_data_month_day_error = pd.concat([hourly_data_month_day_error_columns, hourly_data_month_day_error.iloc[0:]]).reset_index(drop=True)
+
         hourly_data_month_day_saved["HOUR_NEW"] = hourly_data_month_day_saved.index + 1
         hourly_data_month_day_saved["HOUR_NEW"] = hourly_data_month_day_saved["HOUR_NEW"].astype(int)
         
