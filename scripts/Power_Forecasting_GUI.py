@@ -206,10 +206,7 @@ class App(customtkinter.CTk):
         self.model_4_button.grid(row=5, column=0, sticky="ew")
             
         
-        # Add hamburger menu button    
-        self.hamburger_button_nf = customtkinter.CTkButton(self.navigation_frame, text="☰", width=40, height=40, command=self.toggle_navigation)
-        self.hamburger_button_nf.place(x=10, y=10)  # Adjust position as needed
-
+        
 
         self.navigation_visible = False  # Track the visibility of the navigation frame
 
@@ -217,43 +214,7 @@ class App(customtkinter.CTk):
         self.toggle_navigation()
         
         
-        
-        
-        # self.navigation_frame_label = customtkinter.CTkLabel(self.navigation_frame, text="        Power System Forecasting",
-        #                                                      compound="left", font=customtkinter.CTkFont(size=15, weight="bold"))
-        # self.navigation_frame_label.grid(row=0, column=0, padx=20, pady=20)
 
-        # self.start_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Start",
-        #                                             fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
-        #                                             anchor="w", command=self.start_button_event)
-        # self.start_button.grid(row=1, column=0, sticky="ew")
-
-        # self.home_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Home",
-        #                                            fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
-        #                                            anchor="w", command=self.home_button_event)
-        # self.home_button.grid(row=2, column=0, sticky="ew")
-
-        # self.model_1_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Model 1",
-        #                                               fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
-        #                                               anchor="w", command=self.model_1_button_event)
-        # self.model_1_button.grid(row=3, column=0, sticky="ew")
-
-        # self.model_2_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Model 2",
-        #                                               fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
-        #                                               anchor="w", command=self.model_2_button_event)
-        # self.model_2_button.grid(row=4, column=0, sticky="ew")
-
-        # self.model_3_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Model 3",
-        #                                               fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
-        #                                               anchor="w", command=self.model_3_button_event)
-        # self.model_3_button.grid(row=5, column=0, sticky="ew")
-
-        # self.model_4_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Model 4",
-        #                                               fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
-        #                                               anchor="w", command=self.model_4_button_event)
-        # self.model_4_button.grid(row=6, column=0, sticky="ew")
-
-        
         
         
         
@@ -268,7 +229,10 @@ class App(customtkinter.CTk):
         
         # Create frame
         self.home_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
-        
+        self.home_frame.grid_columnconfigure(0, weight=1)
+        self.home_frame.grid_columnconfigure(1, weight=1)
+        self.home_frame.grid_columnconfigure(2, weight=1)
+        self.home_frame.grid_columnconfigure(3, weight=1)
 
 
         
@@ -281,20 +245,17 @@ class App(customtkinter.CTk):
         #Create title and description
         self.home_frame_Label_Title = customtkinter.CTkLabel(self.home_frame, text="Welcome to Power Forecasting!", font=customtkinter.CTkFont(family="Roboto Flex", size=50, slant="italic"), 
                                                              bg_color='#140034', text_color=("white"))
-        self.home_frame_Label_Title.grid(row=0, column=0, padx = 20, pady = 20, columnspan=4, sticky = "ew")
+        self.home_frame_Label_Title.grid(row=0, column=0, padx = 100, pady = 20, columnspan=4, sticky = "ew")
         
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Please Select the corresponding features below", font=customtkinter.CTkFont(family="Roboto Flex", size=40),
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 1: Predictions using saved models.", font=customtkinter.CTkFont(family="Roboto Flex", size=30),
             bg_color='#140034', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=1, column=0, padx = 20, pady = 20, columnspan=4, sticky = "ew")
+        self.home_frame_Label_Selection.grid(row=1, column=0, padx = 50, pady = (10, 40), columnspan=4, sticky = "w")
         
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Postal Code", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#140034', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=2, column=0, padx = 20, pady = 20, sticky = "ew")
-        
-        # self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Start Date", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#140034', text_color=("white"))
-        # self.home_frame_Label_Selection.grid(row=2, column=1, padx = 20, pady = 20, sticky = "ew")
-        
+        self.home_frame_Label_Selection.grid(row=2, column=0, padx = 50, pady = (0,10), sticky = "ew")
+
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Number of Days", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#140034', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=2, column=2, padx = 20,  pady = 20, sticky = "ew")
+        self.home_frame_Label_Selection.grid(row=2, column=2, padx = 50,  pady = (0,10), sticky = "ew")
         
         
         
@@ -305,12 +266,12 @@ class App(customtkinter.CTk):
         # FSA
         self.home_frame_fsa_option_menu = customtkinter.CTkOptionMenu(self.home_frame, values=["L9G", "L7G", "L8G", "L6G"], command = self.fsa_option_menu_event)
         self.home_frame_fsa_option_menu.set("L9G")
-        self.home_frame_fsa_option_menu.grid(row=3, column=0, padx = 20, sticky = "new")
+        self.home_frame_fsa_option_menu.grid(row=3, column=0, padx = 50, sticky = "new")
         
         # Start date
         # Add calendar frame for Date
         self.calendar_frame = customtkinter.CTkFrame(self.home_frame, corner_radius=0,fg_color='#140034')
-        self.calendar_frame.grid(row=3, column=1, padx = 20, sticky = "new")
+        self.calendar_frame.grid(row=2, column=1, padx = 50, sticky = "ew", rowspan = 2)
 
         # Set minimum date
         min_date = date(2019, 1, 1)
@@ -324,7 +285,7 @@ class App(customtkinter.CTk):
         # Number of Days
         self.home_frame_number_of_days_option_menu = customtkinter.CTkOptionMenu(self.home_frame, values=["1", "2", "3"], command = self.number_of_days_option_menu_event)
         self.home_frame_number_of_days_option_menu.set("1")
-        self.home_frame_number_of_days_option_menu.grid(row=3, column=2, padx = 20, sticky = "new")
+        self.home_frame_number_of_days_option_menu.grid(row=3, column=2, padx = 50, sticky = "new")
         
         # Create Generate Models Button
         # Generate Models
@@ -332,41 +293,35 @@ class App(customtkinter.CTk):
         self.generate_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Generate Models",
                                                       text_color=("gray10", "gray90"),
                                                       anchor="w", command=self.generate_models_button_event)
-        self.generate_models_button.grid(row=3, column=3, padx = 20, sticky = "new")
+        self.generate_models_button.grid(row=2, column=3, padx = 50, sticky = "ew", rowspan = 2)
+        
+        # Create Section 2 Label
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 2: Train the models with ANY postal code in Ontario.", font=customtkinter.CTkFont(family="Roboto Flex", size=30),
+            bg_color='#140034', text_color=("white"))
+        self.home_frame_Label_Selection.grid(row=4, column=0, padx = 50, pady = (40, 20), columnspan=4, sticky = "w")
+        
+        
+        
         
         # Create search bar for FSA
         self.fsa_search_bar = customtkinter.CTkEntry(self.home_frame, placeholder_text ="Please enter first three digits of postal code.")
         
-        self.fsa_search_bar.grid(row=4, column=0, padx = 20, pady = 20, columnspan=2, sticky = "ew")
+        self.fsa_search_bar.grid(row=5, column=0, padx = 50, pady = 30, columnspan=2, sticky = "new")
 
         # Create scrollable check box of features
         column_names = pd.read_csv(os.path.join(x_y_input_path, "X_transformed_with_origCalVariables.csv"), nrows = 0)
         self.scrollable_features_checkbox_frame = ScrollableCheckBoxFrame(self.home_frame, width=200, command=self.features_checkbox_event,
                                                          item_list=column_names)
-        self.scrollable_features_checkbox_frame.grid(row=4, column=2, padx = 20, pady = 20, sticky = "ew")
+        self.scrollable_features_checkbox_frame.grid(row=5, column=2, padx = 50, pady = 30, sticky = "new")
         
         
         # Create Train button
         self.train_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Train Models",
                                                       text_color=("gray10", "gray90"),
                                                       anchor="w", command=self.train_models_button_event)
-        self.train_models_button.grid(row=4, column=3, padx = 20, pady = 20, sticky = "ew")
+        self.train_models_button.grid(row=5, column=3, padx = 50, pady = 30, sticky = "new")
         
        
-        
-        
-        
-        
-        
-        
-        #CLOVER###################
-
-        # THIS IS CLOVER'S METHOD FOR POSITIONING
-        # FSA
-        # self.home_frame_fsa_option_menu.place(relx=0.28, rely=0.60, anchor='center')
-        
-        
-        ##########################
         
 
 
@@ -377,8 +332,8 @@ class App(customtkinter.CTk):
         # Create second frame (Model 1) (all code for desired frame is in here)
         ###############################################################################
         self.model_1_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
-        # Create frame
-        self.model_1_frame.grid_columnconfigure((0), weight=1)
+        self.model_1_frame.grid_columnconfigure(0, weight=1)
+        self.model_1_frame.grid_columnconfigure(1, weight=1)
         
         self.background_label = customtkinter.CTkLabel(self.model_1_frame,
                                                      image=background_image_home,
@@ -391,7 +346,8 @@ class App(customtkinter.CTk):
         # Create third frame (Model 2) (all code for desired frame is in here)
         ###############################################################################
         self.model_2_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
-        self.model_2_frame.grid_columnconfigure((0), weight=1)
+        self.model_2_frame.grid_columnconfigure(0, weight=1)
+        self.model_2_frame.grid_columnconfigure(1, weight=1)
         
         self.background_label = customtkinter.CTkLabel(self.model_2_frame,
                                                      image=background_image_home,
@@ -404,7 +360,9 @@ class App(customtkinter.CTk):
         # Create fourth frame (Model 3) (all code for desired frame is in here)
         ###############################################################################
         self.model_3_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
-        self.model_3_frame.grid_columnconfigure((0), weight=1)
+        self.model_3_frame.grid_columnconfigure(0, weight=1)
+        self.model_3_frame.grid_columnconfigure(1, weight=1)
+        
         self.background_label = customtkinter.CTkLabel(self.model_3_frame,
                                                      image=background_image_home,
                                                      text="")  # Empty text
@@ -415,7 +373,9 @@ class App(customtkinter.CTk):
         # Create fifth frame (Model 4) (all code for desired frame is in here)
         ###############################################################################
         self.model_4_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
-        self.model_4_frame.grid_columnconfigure((0), weight=1)
+        self.model_4_frame.grid_columnconfigure(0, weight=1)
+        self.model_4_frame.grid_columnconfigure(1, weight=1)
+        
         self.background_label = customtkinter.CTkLabel(self.model_4_frame,
                                                      image=background_image_home,
                                                      text="")  # Empty text
@@ -477,6 +437,9 @@ class App(customtkinter.CTk):
     # Function when selecting buttons
     ###############################################################################
     def start_button_event(self):
+        self.hamburger_button = customtkinter.CTkButton(self, text="☰", width=40, height=40, command=self.toggle_navigation)
+        self.hamburger_button.place(x=10, y=10)  # Adjust position as needed
+        self.hamburger_button.saved = self.hamburger_button.place_info()
         self.select_frame_by_name("Home")
     
     def home_button_event(self):
@@ -518,7 +481,7 @@ class App(customtkinter.CTk):
             self.model_frame_Label_Title.grid(row=0, column=0, padx=20, pady=(20, 10), columnspan=2)  
 
             self.next_button = customtkinter.CTkButton(model_frame, text="→", command=model_event_next, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40,bg_color='#140034',fg_color="#4B0082")
-            self.next_button.grid(row=3, column=1, padx=20, pady=(300, 0),  sticky = "se")  
+            self.next_button.grid(row=3, column=1, padx=20, pady=(200, 0),  sticky = "se")  
             
             
             
@@ -526,7 +489,7 @@ class App(customtkinter.CTk):
             
             if (model_frame != self.model_1_frame):
                 self.next_button = customtkinter.CTkButton(model_frame, text="←", command=model_event_back, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40,bg_color='#140034',fg_color="#4B0082")
-                self.next_button.grid(row=3, column=0, padx=20, pady=(300, 0),  sticky = "sw") 
+                self.next_button.grid(row=3, column=0, padx=20, pady=(200, 0),  sticky = "sw") 
             
             
             # Plot models on same graph
@@ -836,7 +799,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_pc_run
+    run_student = joseph_laptop_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):
