@@ -493,20 +493,21 @@ class App(customtkinter.CTk):
             
             
             # Plot models on same graph
-            fig, ax = plt.subplots(figsize = (15, 5))
+            fig, ax = plt.subplots(figsize = (24, 8))
             
-            plt.plot(hourly_data_month_day_saved["HOUR_NEW"], hourly_data_month_day_saved["TOTAL_CONSUMPTION"], 'o-', label = "Actual Consumption", color = "pink")
-            plt.plot(hourly_data_month_day_saved["HOUR_NEW"], Y_pred_denorm_saved_df_saved["TOTAL_CONSUMPTION"], 'o-', label = "Predicted Consumption", color = "purple")
+            plt.plot(hourly_data_month_day_saved["DATE_TIME"], hourly_data_month_day_saved["TOTAL_CONSUMPTION"], 'o-', label = "Actual Consumption", color = "pink")
+            plt.plot(hourly_data_month_day_saved["DATE_TIME"], Y_pred_denorm_saved_df_saved["TOTAL_CONSUMPTION"], 'o-', label = "Predicted Consumption", color = "purple")
             plt.title(title)       
             plt.xlabel("HOUR")
             plt.ylabel("CONSUMPTION in KW")
             plt.legend(loc = "upper left")
+            plt.xticks(hourly_data_month_day_saved["DATE_TIME"],hourly_data_month_day_saved["DATE_TIME"], rotation = 30) 
             plot_svg =  os.path.join(image_path, "Predicted_Actual_Graph.png")
             plt.savefig(plot_svg)
             plt.close()
             
             # Positining of Figure
-            self.model_image = customtkinter.CTkImage(Image.open(os.path.join(image_path, "Predicted_Actual_Graph.png")), size=(1200, 400))
+            self.model_image = customtkinter.CTkImage(Image.open(os.path.join(image_path, "Predicted_Actual_Graph.png")), size=(1500, 500))
             
             self.model_frame_image_label = customtkinter.CTkLabel(model_frame, text="", image=self.model_image)
             self.model_frame_image_label.grid(row=1, column=0, padx=20, pady=20, columnspan=2)
@@ -521,7 +522,7 @@ class App(customtkinter.CTk):
             self.model_table = CTkTable(model_frame, width=1, height=1, values=hourly_data_month_day_saved_table_tp.values.tolist(), hover_color=("gray70", "gray30"), anchor="w", font = customtkinter.CTkFont(family="Roboto Flex", size=12))
             self.model_table.grid(row=2, column=0, padx=20, pady=20, columnspan=2)
             
-            os.remove(plot_svg)
+            #os.remove(plot_svg)
             
             
         months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
@@ -610,7 +611,6 @@ class App(customtkinter.CTk):
             Y_pred_denorm_saved_df = pd.DataFrame(Y_pred_denorm_saved, columns=['TOTAL_CONSUMPTION'])
             
             
-            
             ###############################################################################
             # Dictionary for reading in hourly consumption by FSA
             ###############################################################################
@@ -651,14 +651,15 @@ class App(customtkinter.CTk):
             
             hourly_consumption_data_dic_by_month = hourly_data_hour_sum
             hourly_data_month_day = hourly_consumption_data_dic_by_month[hourly_consumption_data_dic_by_month['DAY'] == int(day)]
-
-
             
-            
+            # Add column for date and time
+            hourly_data_month_day["HOUR"] = hourly_data_month_day["HOUR"] - 1
+            hourly_data_month_day["DATE_TIME"] = pd.to_datetime(hourly_data_month_day[["YEAR", "MONTH", "DAY","HOUR"]], format="%Y-%m-%d, %H:%M")
+            print(hourly_data_month_day["DATE_TIME"])
             # Append next day to another dataframe to plot on same figure
             if (day_num == 0):
                 title = "Hourly Power Consumption Beginning: " + year + "/" + month + "/" + day
-                hourly_data_month_day_saved = hourly_data_month_day[["HOUR", "TOTAL_CONSUMPTION"]].copy()
+                hourly_data_month_day_saved = hourly_data_month_day[["YEAR", "MONTH", "DAY", "HOUR", "DATE_TIME", "TOTAL_CONSUMPTION"]].copy()
                 Y_pred_denorm_saved_df_saved = Y_pred_denorm_saved_df.copy()
                 hourly_data_month_day_error["HOUR_NEW"] = (hourly_data_month_day.index%24) + 1
                 hourly_data_month_day_error = hourly_data_month_day_error.rename(columns={"HOUR_NEW": "Hour"})
@@ -674,12 +675,9 @@ class App(customtkinter.CTk):
             hourly_data_month_day_error = hourly_data_month_day_error.round(decimals = 1)
             
             
-       
+            
         hourly_data_month_day_error_columns = pd.DataFrame([hourly_data_month_day_error.columns], columns = hourly_data_month_day_error.columns)
         hourly_data_month_day_error = pd.concat([hourly_data_month_day_error_columns, hourly_data_month_day_error.iloc[0:]]).reset_index(drop=True)
-
-        hourly_data_month_day_saved["HOUR_NEW"] = hourly_data_month_day_saved.index + 1
-        hourly_data_month_day_saved["HOUR_NEW"] = hourly_data_month_day_saved["HOUR_NEW"].astype(int)
         
 
         plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df_saved, hourly_data_month_day_error, self.model_1_frame, self.model_2_button_event, "N/A", "Model 1")
@@ -799,7 +797,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_laptop_run
+    run_student = joseph_pc_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):
