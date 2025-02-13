@@ -27,6 +27,9 @@ import nest_asyncio # Allows for asyncio to be nested
 import customtkinter
 from CTkTable import *
 import tkinter as Tk
+from tkinter import ttk
+from tkinter import filedialog as fd
+from tkinter.messagebox import showinfo
 from tkcalendar import Calendar
 import os
 import glob
@@ -37,7 +40,9 @@ import pandas as pd
 import datetime
 from datetime import datetime, date, timedelta
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import os
+import openpyxl
 import math
 import numpy as np
 import canada_holiday
@@ -56,7 +61,7 @@ class ScrollableCheckBoxFrame(customtkinter.CTkScrollableFrame):
 
     def add_item(self, item):
         
-        checkbox = customtkinter.CTkCheckBox(self, text=item, variable = customtkinter.IntVar(value = 0), onvalue = 1, offvalue = 0)
+        checkbox = customtkinter.CTkCheckBox(self, text=item, variable = customtkinter.IntVar(value = 1), onvalue = 1, offvalue = 0)
         if self.command is not None:
             checkbox.configure(command=self.command)
         checkbox.grid(row=len(self.checkbox_list), column=0, pady=(0, 10), sticky = "w")
@@ -73,8 +78,6 @@ class ScrollableCheckBoxFrame(customtkinter.CTkScrollableFrame):
         return [checkbox.cget("text") for checkbox in self.checkbox_list if checkbox.get() == 1]
 
 
-
-
 class App(customtkinter.CTk):  
     def __init__(self):  
         #%% Code for Initalization of GUI application
@@ -84,12 +87,13 @@ class App(customtkinter.CTk):
         ###############################################################################
         
         # Paths for all the graphs that will be shown
-        global image_path, background_images_path, model_path, x_y_input_path, hourly_demand 
+        global image_path, background_images_path, model_path, x_y_input_path, hourly_demand, input_excel_path
         image_path = os.path.join(dirs_inputs, "Model_Plots") 
         model_path = os.path.join(dirs_inputs, "Saved_Models")    
         x_y_input_path = os.path.join(dirs_inputs, "X_Y_Inputs")   
         background_images_path = os.path.join(dirs_inputs, "GUI_Background_Images") 
         hourly_demand = os.path.join(dirs_inputs, "raw_data")
+        input_excel_path = os.path.join(dirs_inputs, "Input_Data_Excel")
         
         year_chosen_option_menu = ""
         month_chosen_option_menu = ""
@@ -102,7 +106,7 @@ class App(customtkinter.CTk):
 
         
         self.title("Power System Forecasting.py")
-        self.geometry("1024x768")
+        self.geometry("1920x1080")
 
         # Set grid layout 1x2
         self.grid_rowconfigure(0, weight=1)
@@ -121,8 +125,10 @@ class App(customtkinter.CTk):
         # Create Start Frame (all code for desired frame is in here)
         ###############################################################################
         self.start_frame = customtkinter.CTkFrame(self, corner_radius=0)
+        self.start_frame.grid_columnconfigure(0, weight=1)
+        self.start_frame.grid_rowconfigure(0, weight=1)
         
-         # Create background label for start frame
+        # Create background label for start frame
         self.background_label = customtkinter.CTkLabel(self.start_frame, 
                                                      image=background_image,
                                                      text="")  # Empty text
@@ -130,51 +136,20 @@ class App(customtkinter.CTk):
         customtkinter.set_appearance_mode("dark")
         
         
-        self.start_frame.grid(row=0, column=0, sticky="nsew")
-        
-        
-        self.start_frame.grid(row=0, column=0, sticky="nsew")
-        
-        self.start_frame_Label_Title = customtkinter.CTkLabel(self.start_frame, text="Power Forecasting! ", 
-            font=customtkinter.CTkFont(family="Roboto Condensed", size=80, slant="italic"),
-            bg_color='#220549', text_color=("white", "white"))
-        self.start_frame_Label_Title.place(relx=0.55, rely=0.2, anchor='n')
-        
-        # # Start the fade-in animation
-        # self.alpha = 0
-        # self.fading_in = True
-        # self.animate_fade()
-    
-    
-        
-        # # Convert alpha to hex color
-        # color_value = int(self.alpha * 255)
-        # hex_color = f'#{color_value:02x}{color_value:02x}{color_value:02x}'
-        
-        # self.start_frame_Label_Title.configure(text_color=hex_color)
-        # self.start_frame.after(5, self.animate_fade)
-
-        self.start_frame_Label_Text =   customtkinter.CTkLabel(self.start_frame, text="Predicting the power demand of tomorrow ", 
-            font=customtkinter.CTkFont(family="Roboto Flex", size=50, slant="italic"),
-            bg_color='#220549', text_color=("white"))
-        self.start_frame_Label_Text.place(relx=0.55, rely=0.45, anchor='center')
-
         
 
         my_font = customtkinter.CTkFont(family="Roboto", size=40, 
-	weight="bold", slant="italic", underline=False, overstrike=False) #font to be used for titles       
-        self.start_button = customtkinter.CTkButton(self.start_frame, text="Start ", command=self.start_button_event, height=85, width=250, font=my_font, corner_radius=50,bg_color='#220549',fg_color="#4B0082")
-        self.start_button.place(relx=0.60, rely=0.78, anchor='se')
+                                        weight="bold", slant="italic", underline=False, overstrike=False) #font to be used for titles       
+        self.start_button = customtkinter.CTkButton(self.start_frame, text="Start ", command=self.start_button_event, height=85, width=250, font=my_font, corner_radius=50,bg_color='#0f0f39',fg_color="#4B0082")
+        self.start_button.grid(row = 0, column = 0, padx = (700, 700), pady = (0, 175), sticky = "sew")
     
-        
-        # other color290753
         
         
         ###############################################################################
         # Create Navigation Frame (all code for desired frame is in here)
         ###############################################################################
         self.navigation_frame = customtkinter.CTkFrame(self, corner_radius=0)
-        self.navigation_frame.grid_rowconfigure(6, weight=1)
+        self.navigation_frame.grid_rowconfigure(7, weight=1)
         
         self.navigation_frame_label = customtkinter.CTkLabel(self.navigation_frame, text="        Power System Forecasting", 
                                                              compound="left", font=customtkinter.CTkFont(size=15, weight="bold"))
@@ -204,6 +179,11 @@ class App(customtkinter.CTk):
                                                       fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
                                                       anchor="w", command=self.model_4_button_event)
         self.model_4_button.grid(row=5, column=0, sticky="ew")
+        
+        self.summary_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Summary",
+                                                      fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
+                                                      anchor="w", command=self.summary_button_event)
+        self.summary_button.grid(row=6, column=0, sticky="ew")
             
         
         
@@ -242,11 +222,12 @@ class App(customtkinter.CTk):
         self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
         
-        #Create title and description
+        # Create title and description
         self.home_frame_Label_Title = customtkinter.CTkLabel(self.home_frame, text="Welcome to Power Forecasting!", font=customtkinter.CTkFont(family="Roboto Flex", size=50, slant="italic"), 
                                                              bg_color='#140034', text_color=("white"))
         self.home_frame_Label_Title.grid(row=0, column=0, padx = 100, pady = 20, columnspan=4, sticky = "ew")
         
+        # Create Option 1 titles and widgets
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 1: Predictions using saved models.", font=customtkinter.CTkFont(family="Roboto Flex", size=30),
             bg_color='#140034', text_color=("white"))
         self.home_frame_Label_Selection.grid(row=1, column=0, padx = 50, pady = (10, 40), columnspan=4, sticky = "w")
@@ -257,12 +238,6 @@ class App(customtkinter.CTk):
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Number of Days", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#140034', text_color=("white"))
         self.home_frame_Label_Selection.grid(row=2, column=2, padx = 50,  pady = (0,10), sticky = "ew")
         
-        
-        
-
-        
-
-        # Create drop down menus
         # FSA
         self.home_frame_fsa_option_menu = customtkinter.CTkOptionMenu(self.home_frame, values=["L9G", "L7G", "L8G", "L6G"], command = self.fsa_option_menu_event)
         self.home_frame_fsa_option_menu.set("L9G")
@@ -287,41 +262,91 @@ class App(customtkinter.CTk):
         self.home_frame_number_of_days_option_menu.set("1")
         self.home_frame_number_of_days_option_menu.grid(row=3, column=2, padx = 50, sticky = "new")
         
-        # Create Generate Models Button
-        # Generate Models
+        # Create Show Detailed Table Check Box
+        self.detailed_table_checkbox_var = customtkinter.IntVar(value = 1)
+        self.detailed_table_checkbox = customtkinter.CTkCheckBox(self.home_frame, text="Show Detailed Table",
+                                                      text_color=("gray10", "gray90"), variable = self.detailed_table_checkbox_var, onvalue = 1, offvalue = 0, command = self.show_table_checkbox_event)
+        self.detailed_table_checkbox.grid(row=3, column=3, padx = 50, sticky = "new")
         
+        # Create Generate Models Button
         self.generate_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Generate Models",
                                                       text_color=("gray10", "gray90"),
                                                       anchor="w", command=self.generate_models_button_event)
-        self.generate_models_button.grid(row=2, column=3, padx = 50, sticky = "ew", rowspan = 2)
+        self.generate_models_button.grid(row=2, column=3, padx = 50, sticky = "ew")
         
-        # Create Section 2 Label
+        
+        # Create Option 2 titles and widgets
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 2: Train the models with ANY postal code in Ontario.", font=customtkinter.CTkFont(family="Roboto Flex", size=30),
             bg_color='#140034', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=4, column=0, padx = 50, pady = (40, 20), columnspan=4, sticky = "w")
+        self.home_frame_Label_Selection.grid(row=4, column=0, padx = 50, pady = (40, 30), columnspan=4, sticky = "w")
         
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Training Features", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#140034', text_color=("white"))
+        self.home_frame_Label_Selection.grid(row=5, column=1, padx = 50, pady = (0,1), sticky = "ew")
+
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Models to Train", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#140034', text_color=("white"))
+        self.home_frame_Label_Selection.grid(row=5, column=2, padx = 50,  pady = (0,1), sticky = "ew")
         
-        
-        
+
         # Create search bar for FSA
         self.fsa_search_bar = customtkinter.CTkEntry(self.home_frame, placeholder_text ="Please enter first three digits of postal code.")
         
-        self.fsa_search_bar.grid(row=5, column=0, padx = 50, pady = 30, columnspan=2, sticky = "new")
+        self.fsa_search_bar.grid(row=6, column=0, padx = 15, pady = 30, sticky = "new")
 
         # Create scrollable check box of features
         column_names = pd.read_csv(os.path.join(x_y_input_path, "X_transformed_with_origCalVariables.csv"), nrows = 0)
-        self.scrollable_features_checkbox_frame = ScrollableCheckBoxFrame(self.home_frame, width=200, command=self.features_checkbox_event,
+        self.scrollable_features_checkbox_frame_o2 = ScrollableCheckBoxFrame(self.home_frame, height = 100, width=150, command=self.features_checkbox_event_o2,
                                                          item_list=column_names)
-        self.scrollable_features_checkbox_frame.grid(row=5, column=2, padx = 50, pady = 30, sticky = "new")
+        self.scrollable_features_checkbox_frame_o2.grid(row=6, column=1, padx = 80, pady = (15, 0), sticky = "new")
+        self.scrollable_features_checkbox_frame_o2._scrollbar.configure(height=0)
         
+        # Create scrollable check box of models
+        self.scrollable_models_checkbox_frame_o2 = ScrollableCheckBoxFrame(self.home_frame, height = 100, width=150, command=self.models_checkbox_event_o2,
+                                                         item_list=["Linear Regression", "Scalar Vector Regression", "K-Nearest Neighbots", "Convolutional Neural Network"])
+        self.scrollable_models_checkbox_frame_o2.grid(row=6, column=2, padx = 50, pady = (15, 0), sticky = "new")
+        self.scrollable_models_checkbox_frame_o2._scrollbar.configure(height=0)
         
         # Create Train button
         self.train_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Train Models",
                                                       text_color=("gray10", "gray90"),
                                                       anchor="w", command=self.train_models_button_event)
-        self.train_models_button.grid(row=5, column=3, padx = 50, pady = 30, sticky = "new")
+        self.train_models_button.grid(row=6, column=3, padx = 50, pady = 30, sticky = "new")
         
-       
+        
+        # Create Option 3 titles and widgets
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 3: Train the models with ANY input dataset.", font=customtkinter.CTkFont(family="Roboto Flex", size=30),
+            bg_color='#140034', text_color=("white"))
+        self.home_frame_Label_Selection.grid(row=7, column=0, padx = 50, pady = (40, 30), columnspan=4, sticky = "w")
+        
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Training Features", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#140034', text_color=("white"))
+        self.home_frame_Label_Selection.grid(row=8, column=1, padx = 50, pady = (0,1), sticky = "ew")
+ 
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Models to Train", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#140034', text_color=("white"))
+        self.home_frame_Label_Selection.grid(row=8, column=2, padx = 50,  pady = (0,1), sticky = "ew")
+        
+        self.open_file_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Open Input Data Excel File",
+                                                      text_color=("gray10", "gray90"),
+                                                      anchor="w", command=self.open_file_button_event)
+        self.open_file_button.grid(row=9, column=0, padx = 50, pady = 30, sticky = "new")
+        
+        # Create scrollable check box of features
+        column_names = pd.read_csv(os.path.join(x_y_input_path, "X_transformed_with_origCalVariables.csv"), nrows = 0)
+        self.scrollable_features_checkbox_frame_o3 = ScrollableCheckBoxFrame(self.home_frame, height = 100, width=150, command=self.features_checkbox_event_o3,
+                                                         item_list=column_names)
+        self.scrollable_features_checkbox_frame_o3.grid(row=9, column=1, padx = 80, pady = (15, 0), sticky = "new")
+        self.scrollable_features_checkbox_frame_o3._scrollbar.configure(height=0)
+        
+        # Create scrollable check box of models
+        self.scrollable_models_checkbox_frame_o3 = ScrollableCheckBoxFrame(self.home_frame, height = 100, width=150, command=self.models_checkbox_event_o3,
+                                                         item_list=["Linear Regression", "Scalar Vector Regression", "K-Nearest Neighbots", "Convolutional Neural Network"])
+        self.scrollable_models_checkbox_frame_o3.grid(row=9, column=2, padx = 50, pady = (15, 0), sticky = "new")
+        self.scrollable_models_checkbox_frame_o3._scrollbar.configure(height=0)
+        
+        
+        # Create Train button
+        self.train_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Train and Predict Models",
+                                                      text_color=("gray10", "gray90"),
+                                                      anchor="w", command=self.train_predict_models_button_event)
+        self.train_models_button.grid(row=9, column=3, padx = 50, pady = 30, sticky = "new")
         
 
 
@@ -380,13 +405,38 @@ class App(customtkinter.CTk):
                                                      image=background_image_home,
                                                      text="")  # Empty text
         self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
+        
+        ###############################################################################
+        # Create sixth frame (summary) (all code for desired frame is in here)
+        ###############################################################################
+        self.summary_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
+        self.summary_frame.grid_columnconfigure(0, weight=1)
+        self.summary_frame.grid_columnconfigure(1, weight=1)
+        self.summary_frame.grid_rowconfigure(0, weight=1)
+        
+        self.background_label = customtkinter.CTkLabel(self.summary_frame,
+                                                     image=background_image_home,
+                                                     text="")  # Empty text
+        self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
+        
+        self.save_results_button = customtkinter.CTkButton(self.summary_frame, corner_radius=0, height=40, border_spacing=10, text="Save Results (Most Recent Run)",
+                                                      text_color=("gray10", "gray90"),
+                                                      anchor="w", command=self.save_results_button_event)
+        self.save_results_button.grid(row=0, column=0, padx = 100, pady = 30, sticky = "ew")
+        
+        self.restart_program_button = customtkinter.CTkButton(self.summary_frame, corner_radius=0, height=40, border_spacing=10, text="Exit Back to Start Menu",
+                                                      text_color=("gray10", "gray90"),
+                                                      anchor="w", command=self.restart_program_button_event)
+        self.restart_program_button.grid(row=0, column=1, padx = 100, pady = 30, sticky = "ew")
+        
+        
 
        
         ###############################################################################
         # Select default frame
         ###############################################################################
         self.select_frame_by_name("Start")
-
+        
 
 
         
@@ -404,6 +454,7 @@ class App(customtkinter.CTk):
         self.model_2_button.configure(fg_color=("gray75", "gray25") if name == "Model 2" else "transparent")
         self.model_3_button.configure(fg_color=("gray75", "gray25") if name == "Model 3" else "transparent")
         self.model_4_button.configure(fg_color=("gray75", "gray25") if name == "Model 4" else "transparent")
+        self.summary_button.configure(fg_color=("gray75", "gray25") if name == "Summary" else "transparent")
 
         # show selected frame
         if name == "Start":
@@ -432,14 +483,17 @@ class App(customtkinter.CTk):
             self.model_4_frame.grid(row=0, column=1, sticky="nsew")
         else:
             self.model_4_frame.grid_forget()
+        if name == "Summary":
+            self.summary_frame.grid(row=0, column=1, sticky="nsew")
+        else:
+            self.summary_frame.grid_forget()
 
     ###############################################################################
     # Function when selecting buttons
     ###############################################################################
     def start_button_event(self):
         self.hamburger_button = customtkinter.CTkButton(self, text="☰", width=40, height=40, command=self.toggle_navigation)
-        self.hamburger_button.place(x=10, y=10)  # Adjust position as needed
-        self.hamburger_button.saved = self.hamburger_button.place_info()
+        self.hamburger_button.place(x=10, y=10)
         self.select_frame_by_name("Home")
     
     def home_button_event(self):
@@ -456,6 +510,9 @@ class App(customtkinter.CTk):
 
     def model_4_button_event(self):
         self.select_frame_by_name("Model 4")
+        
+    def summary_button_event(self):
+        self.select_frame_by_name("Summary")
        
     def generate_models_button_event(self):
 
@@ -493,15 +550,17 @@ class App(customtkinter.CTk):
             
             
             # Plot models on same graph
-            fig, ax = plt.subplots(figsize = (24, 8))
+            fig, ax = plt.subplots(figsize = (15, 5))
             
-            plt.plot(hourly_data_month_day_saved["DATE_TIME"], hourly_data_month_day_saved["TOTAL_CONSUMPTION"], 'o-', label = "Actual Consumption", color = "pink")
-            plt.plot(hourly_data_month_day_saved["DATE_TIME"], Y_pred_denorm_saved_df_saved["TOTAL_CONSUMPTION"], 'o-', label = "Predicted Consumption", color = "purple")
-            plt.title(title)       
-            plt.xlabel("HOUR")
-            plt.ylabel("CONSUMPTION in KW")
-            plt.legend(loc = "upper left")
-            plt.xticks(hourly_data_month_day_saved["DATE_TIME"],hourly_data_month_day_saved["DATE_TIME"], rotation = 30) 
+            ax.plot(hourly_data_month_day_saved["DATE"], hourly_data_month_day_saved["TOTAL_CONSUMPTION"], 'o-', label = "Actual Consumption", color = "pink")
+            ax.plot(hourly_data_month_day_saved["DATE"], Y_pred_denorm_saved_df_saved["TOTAL_CONSUMPTION"], 'o-', label = "Predicted Consumption", color = "purple")
+            ax.set_title(title)       
+            ax.set_xlabel("HOUR")
+            ax.set_ylabel("CONSUMPTION in kW")
+            ax.legend(loc = "upper left")
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d, %H:%M'))
+            #ax.set_xticks(hourly_data_month_day_saved["DATE"])
+            #plt.setp(ax.get_xticklabels(), rotation = 20) 
             plot_svg =  os.path.join(image_path, "Predicted_Actual_Graph.png")
             plt.savefig(plot_svg)
             plt.close()
@@ -572,7 +631,7 @@ class App(customtkinter.CTk):
             
             # new date
             new_date = selected_date_datetime + timedelta(days=day_num) 
-            print(new_date) 
+
             try:
                 year = str(new_date.year)
             except NameError:
@@ -653,13 +712,13 @@ class App(customtkinter.CTk):
             hourly_data_month_day = hourly_consumption_data_dic_by_month[hourly_consumption_data_dic_by_month['DAY'] == int(day)]
             
             # Add column for date and time
-            hourly_data_month_day["HOUR"] = hourly_data_month_day["HOUR"] - 1
-            hourly_data_month_day["DATE_TIME"] = pd.to_datetime(hourly_data_month_day[["YEAR", "MONTH", "DAY","HOUR"]], format="%Y-%m-%d, %H:%M")
-            print(hourly_data_month_day["DATE_TIME"])
+            hourly_data_month_day.loc[:, "HOUR"] = hourly_data_month_day["HOUR"] - 1
+            hourly_data_month_day.loc[:, "DATE"] = pd.to_datetime(hourly_data_month_day[["YEAR", "MONTH", "DAY","HOUR"]], format="%Y-%m-%d, %H:%M")
+            
             # Append next day to another dataframe to plot on same figure
             if (day_num == 0):
                 title = "Hourly Power Consumption Beginning: " + year + "/" + month + "/" + day
-                hourly_data_month_day_saved = hourly_data_month_day[["YEAR", "MONTH", "DAY", "HOUR", "DATE_TIME", "TOTAL_CONSUMPTION"]].copy()
+                hourly_data_month_day_saved = hourly_data_month_day[["YEAR", "MONTH", "DAY", "HOUR", "DATE", "TOTAL_CONSUMPTION"]].copy()
                 Y_pred_denorm_saved_df_saved = Y_pred_denorm_saved_df.copy()
                 hourly_data_month_day_error["HOUR_NEW"] = (hourly_data_month_day.index%24) + 1
                 hourly_data_month_day_error = hourly_data_month_day_error.rename(columns={"HOUR_NEW": "Hour"})
@@ -669,12 +728,14 @@ class App(customtkinter.CTk):
             
             
             # Find Error
-            hourly_data_month_day_error["Actual Consumption: Day " + str(day_num+1) + " (KW)"] = hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
-            hourly_data_month_day_error["Predicted Consumption: Day " + str(day_num+1) + " (KW)"] = Y_pred_denorm_saved_df["TOTAL_CONSUMPTION"].reset_index(drop = True)
-            hourly_data_month_day_error["Error: Day " + str(day_num+1) + " (KW)"] = abs(hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True) -  Y_pred_denorm_saved_df["TOTAL_CONSUMPTION"].reset_index(drop = True))
-            hourly_data_month_day_error = hourly_data_month_day_error.round(decimals = 1)
+            if (self.detailed_table_checkbox_var.get() == 1):
+                hourly_data_month_day_error["Actual Consumption: Day " + str(day_num+1) + " (kW)"] = hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
+                hourly_data_month_day_error["Predicted Consumption: Day " + str(day_num+1) + " (kW)"] = Y_pred_denorm_saved_df["TOTAL_CONSUMPTION"].reset_index(drop = True)
+            hourly_data_month_day_error["Error: Day " + str(day_num+1) + " (%)"] = 100*abs(Y_pred_denorm_saved_df["TOTAL_CONSUMPTION"].reset_index(drop = True) - hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True))/hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
+            hourly_data_month_day_error = hourly_data_month_day_error.round(decimals = 2)
             
             
+        
             
         hourly_data_month_day_error_columns = pd.DataFrame([hourly_data_month_day_error.columns], columns = hourly_data_month_day_error.columns)
         hourly_data_month_day_error = pd.concat([hourly_data_month_day_error_columns, hourly_data_month_day_error.iloc[0:]]).reset_index(drop=True)
@@ -690,7 +751,7 @@ class App(customtkinter.CTk):
         fsa_typed = self.fsa_search_bar.get()
         
         print(fsa_typed)
-        print("checkbox frame modified: ", selected_features)
+        print("checkbox frame modified: ", selected_features_o2)
         
         
         # Set Up data direcotry path for data collection
@@ -724,17 +785,28 @@ class App(customtkinter.CTk):
 
         weather_data.to_csv(f'{hourly_demand}/weather_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_prevPowerAnal.csv', index=False)
         power_data.to_csv(f'{hourly_demand}/power_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_prevPowerAnal.csv', index=False)
-
+    
+    def open_file_button_event(self):
+        global input_data_filename
+        filetypes = (('excel files', '*.xlsm'), ('All files', '*.*'))  
+        input_data_filename = fd.askopenfilename(title='Input Excel File', initialdir=input_excel_path, filetypes=filetypes)
         
+    def train_predict_models_button_event(self):
+        #print("checkbox frame modified: ", selected_features_o3)
         
+        Y = pd.read_excel(input_data_filename, sheet_name = "Power_Consumption")
+        X = pd.read_excel(input_data_filename, sheet_name = "Power_Consumption")
+        print(X_test)
         
-                
-        
-        
-        
+    def save_results_button_event(self):
+        print("SAVE RESULTS")
+    def restart_program_button_event(self): 
+        global restart_program
+        restart_program = 1
+        self.quit()
         
     ###############################################################################
-    # Functions when using dropdown menus
+    # Functions for home menu non button events
     ###############################################################################
     def fsa_option_menu_event(self, choice):
         global fsa_chosen_option_menu
@@ -761,10 +833,30 @@ class App(customtkinter.CTk):
         number_of_days_chosen_option_menu = choice
         #print("optionmenu dropdown clicked:", choice)
     
-    def features_checkbox_event(self):
-        global selected_features
-        selected_features = self.scrollable_features_checkbox_frame.get_checked_items()
-        #print("checkbox frame modified: ", selected_features)
+    def features_checkbox_event_o2(self):
+        global selected_features_o2
+        selected_features_o2 = self.scrollable_features_checkbox_frame_o2.get_checked_items()
+        print("checkbox frame modified: ", selected_features_o2)
+        
+    def models_checkbox_event_o2(self):
+        global selected_models_o2
+        selected_models_o2 = self.scrollable_models_checkbox_frame_o2.get_checked_items()
+        print("checkbox frame modified: ", selected_models_o2)
+        
+    def features_checkbox_event_o3(self):
+        global selected_features_o3
+        selected_features_o3 = self.scrollable_features_checkbox_frame_o3.get_checked_items()
+        print("checkbox frame modified: ", selected_features_o3)
+        
+    def models_checkbox_event_o3(self):
+        global selected_models_o3
+        selected_models_o3 = self.scrollable_models_checkbox_frame_o3.get_checked_items()
+        print("checkbox frame modified: ", selected_models_o3)
+    
+    def show_table_checkbox_event(self):
+        self.detailed_table_checkbox_var.get()
+        #print("checkbox toggled, current value:", self.detailed_table_checkbox_var.get())
+    
       
     def print_calendar_size(self, event=None):
         bbox = self.calendar.bbox("1.0")
@@ -820,3 +912,7 @@ if __name__ == "__main__":
     #%% Run GUI
     app = App()
     app.mainloop()
+    while restart_program == 1:
+        app.destroy()
+        app = App()
+        app.mainloop()
