@@ -19,7 +19,8 @@ Created on Wed Jan  8 14:18:11 2025
 
 # root.mainloop()
 
-import realDataGetter
+import dataCollectionAndPreprocessingFlow
+import Power_Forecasting_KNN_Saver
 import asyncio  # Import asyncio library for async operations
 import aiohttp # Import aiohttp library for making HTTP requests
 import nest_asyncio # Allows for asyncio to be nested
@@ -87,12 +88,12 @@ class App(customtkinter.CTk):
         ###############################################################################
         
         # Paths for all the graphs that will be shown
-        global image_path, background_images_path, model_path, x_y_input_path, hourly_demand, input_excel_path
+        global image_path, background_images_path, saved_model_path, x_y_input_path, power_weather_data_path, input_excel_path
         image_path = os.path.join(dirs_inputs, "Model_Plots") 
-        model_path = os.path.join(dirs_inputs, "Saved_Models")    
+        saved_model_path = os.path.join(dirs_inputs, "Saved_Models")    
         x_y_input_path = os.path.join(dirs_inputs, "X_Y_Inputs")   
         background_images_path = os.path.join(dirs_inputs, "GUI_Background_Images") 
-        hourly_demand = os.path.join(dirs_inputs, "raw_data")
+        power_weather_data_path = os.path.join(dirs_inputs, "Power_Weather_Data")
         input_excel_path = os.path.join(dirs_inputs, "Input_Data_Excel")
         
         year_chosen_option_menu = ""
@@ -249,12 +250,12 @@ class App(customtkinter.CTk):
         self.calendar_frame.grid(row=2, column=1, padx = 50, sticky = "ew", rowspan = 2)
 
         # Set minimum date
-        min_date = date(2019, 1, 1)
+        min_date = date(2024, 1, 1)
         
         # Set maximum date
-        max_date = date(2023, 3, 31)
+        max_date = date(2024, 3, 31)
         
-        self.calendar = Calendar(self.calendar_frame, selectmode='day', year=2023, month=1, day=1, mindate = min_date, maxdate = max_date)
+        self.calendar = Calendar(self.calendar_frame, selectmode='day', year=2024, month=1, day=1, mindate = min_date, maxdate = max_date)
         self.calendar.pack(pady=0, padx=20)
         
         # Number of Days
@@ -293,7 +294,7 @@ class App(customtkinter.CTk):
         self.fsa_search_bar.grid(row=6, column=0, padx = 15, pady = 30, sticky = "new")
 
         # Create scrollable check box of features
-        column_names = pd.read_csv(os.path.join(x_y_input_path, "X_transformed_with_origCalVariables.csv"), nrows = 0)
+        column_names = pd.read_csv(os.path.join(x_y_input_path, "Features_Column_Template.csv"), nrows = 0)
         self.scrollable_features_checkbox_frame_o2 = ScrollableCheckBoxFrame(self.home_frame, height = 100, width=150, command=self.features_checkbox_event_o2,
                                                          item_list=column_names)
         self.scrollable_features_checkbox_frame_o2.grid(row=6, column=1, padx = 80, pady = (15, 0), sticky = "new")
@@ -329,7 +330,7 @@ class App(customtkinter.CTk):
         self.open_file_button.grid(row=9, column=0, padx = 50, pady = 30, sticky = "new")
         
         # Create scrollable check box of features
-        column_names = pd.read_csv(os.path.join(x_y_input_path, "X_transformed_with_origCalVariables.csv"), nrows = 0)
+        column_names = pd.read_csv(os.path.join(x_y_input_path, "Features_Column_Template.csv"), nrows = 0)
         self.scrollable_features_checkbox_frame_o3 = ScrollableCheckBoxFrame(self.home_frame, height = 100, width=150, command=self.features_checkbox_event_o3,
                                                          item_list=column_names)
         self.scrollable_features_checkbox_frame_o3.grid(row=9, column=1, padx = 80, pady = (15, 0), sticky = "new")
@@ -343,11 +344,16 @@ class App(customtkinter.CTk):
         
         
         # Create Train button
-        self.train_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Train and Predict Models",
+        self.train_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Train Models",
                                                       text_color=("gray10", "gray90"),
-                                                      anchor="w", command=self.train_predict_models_button_event)
-        self.train_models_button.grid(row=9, column=3, padx = 50, pady = 30, sticky = "new")
+                                                      anchor="w", command=self.train_input_excel_models_button_event)
+        self.train_models_button.grid(row=8, column=3, padx = 50, pady = 10, sticky = "sew")
         
+        # Create Predict button
+        self.predict_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Predict Models",
+                                                      text_color=("gray10", "gray90"),
+                                                      anchor="w", command=self.predict_input_excel_models_button_event)
+        self.predict_models_button.grid(row=9, column=3, padx = 50, pady = 10, sticky = "new")
 
 
         
@@ -538,7 +544,7 @@ class App(customtkinter.CTk):
             self.model_frame_Label_Title.grid(row=0, column=0, padx=20, pady=(20, 10), columnspan=2)  
 
             self.next_button = customtkinter.CTkButton(model_frame, text="→", command=model_event_next, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40,bg_color='#140034',fg_color="#4B0082")
-            self.next_button.grid(row=3, column=1, padx=20, pady=(200, 0),  sticky = "se")  
+            self.next_button.grid(row=4, column=1, padx=20, pady=(200, 0),  sticky = "se")  
             
             
             
@@ -546,7 +552,7 @@ class App(customtkinter.CTk):
             
             if (model_frame != self.model_1_frame):
                 self.next_button = customtkinter.CTkButton(model_frame, text="←", command=model_event_back, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40,bg_color='#140034',fg_color="#4B0082")
-                self.next_button.grid(row=3, column=0, padx=20, pady=(200, 0),  sticky = "sw") 
+                self.next_button.grid(row=4, column=0, padx=20, pady=(200, 0),  sticky = "sw") 
             
             
             # Plot models on same graph
@@ -558,9 +564,7 @@ class App(customtkinter.CTk):
             ax.set_xlabel("HOUR")
             ax.set_ylabel("CONSUMPTION in kW")
             ax.legend(loc = "upper left")
-            ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d, %H:%M'))
-            #ax.set_xticks(hourly_data_month_day_saved["DATE"])
-            #plt.setp(ax.get_xticklabels(), rotation = 20) 
+            plt.setp(ax.get_xticklabels(), rotation = 20) 
             plot_svg =  os.path.join(image_path, "Predicted_Actual_Graph.png")
             plt.savefig(plot_svg)
             plt.close()
@@ -580,6 +584,18 @@ class App(customtkinter.CTk):
             # Positining of Figure
             self.model_table = CTkTable(model_frame, width=1, height=1, values=hourly_data_month_day_saved_table_tp.values.tolist(), hover_color=("gray70", "gray30"), anchor="w", font = customtkinter.CTkFont(family="Roboto Flex", size=12))
             self.model_table.grid(row=2, column=0, padx=20, pady=20, columnspan=2)
+            
+            
+            
+            # Import Metrics
+            metrixs_model_path = os.path.join(saved_model_path, "KNN_L9G_Metrics.csv") 
+            metrixcs_values = pd.read_csv(metrixs_model_path, header=None)
+            
+            
+            # Positining of Figure
+            self.metrix_table = CTkTable(model_frame, width=1, height=1, values=metrixcs_values.values.tolist(), hover_color=("gray70", "gray30"), anchor="w", font = customtkinter.CTkFont(family="Roboto Flex", size=12))
+            self.metrix_table.grid(row=3, column=0, padx=20, pady=20, columnspan=2)
+            
             
             #os.remove(plot_svg)
             
@@ -618,7 +634,7 @@ class App(customtkinter.CTk):
         ###############################################################################
 
         # Load model from gui_pickup folder using joblib
-        pipe_saved = joblib.load(os.path.join(model_path, "ridge_regression_model.pkl"))
+        pipe_saved = joblib.load(os.path.join(saved_model_path, "KNN_L9G_Model.pkl"))
         
 
         
@@ -631,7 +647,22 @@ class App(customtkinter.CTk):
             
             # new date
             new_date = selected_date_datetime + timedelta(days=day_num) 
-
+            
+            try:
+                old_year = str(selected_date_datetime.year)
+            except NameError:
+                old_year = "2024"
+                
+            try:
+                old_month = months[(selected_date_datetime.month-1)]
+            except NameError:
+                old_month = "01"
+                
+            try:
+                old_day = str(selected_date_datetime.day)
+            except NameError:
+                old_day = "01"
+                
             try:
                 year = str(new_date.year)
             except NameError:
@@ -647,11 +678,39 @@ class App(customtkinter.CTk):
             except NameError:
                 day = "01"
             
+            ### Calling Data ###
+            # Choose FSA for data collection + Get latitude and longitude of chosen fsa
+            lat = dataCollectionAndPreprocessingFlow.fsa_map[fsa_chosen]["lat"]
+            lon = dataCollectionAndPreprocessingFlow.fsa_map[fsa_chosen]["lon"]
+
+            # Choose date range for data collection
+            start_year = int(old_year)
+            start_month = int(old_month)
+            start_day = int(old_day)
+            start_hour = 0
+
+            end_year = int(year)
+            end_month = int(month)
+            end_day = int(day)
+            end_hour = 23
+
+            # Making datetime objects for start and end dates
+            start_date = datetime(start_year, start_month, start_day, start_hour,0,0)
+            end_date = datetime(end_year, end_month, end_day, end_hour,0,0)
+            print(start_date)
+            print(end_date)
+
+            # # Collect data - Using asynchronous functions
+            # 
+            weather_data, dummy_hourly_data_month_day = asyncio.run(dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date, end_date, fsa_chosen, lat, lon))
+            norm_weather_data, dummy_norm_power_data, dummy_scaler = dataCollectionAndPreprocessingFlow.normalize_data(weather_data, dummy_hourly_data_month_day)
+            
+            weather_data.to_csv(f'{power_weather_data_path}/YYYYweather_data_{fsa_chosen}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
+           
+            
+            
             # Import saved CSV into script as dataframes
-            X_test = pd.read_csv(os.path.join(x_y_input_path, "X_transformed_with_origCalVariables.csv"))
-            X_test = X_test[X_test["Year"] == int(year)]
-            X_test = X_test[X_test["Month"] == int(month)]
-            X_test = X_test[X_test["Day"] == int(day)]
+            X_test = norm_weather_data
             
             # Predict using loaded model
             Y_pred_saved = pipe_saved.predict(X_test)
@@ -660,7 +719,7 @@ class App(customtkinter.CTk):
             Y_pred_saved = Y_pred_saved.reshape(-1, 1)
             
             # Denormalize Y_pred and Y_test with min_max_scaler_y.pkl using joblib
-            scaler_path = os.path.join(model_path, "min_max_scaler_y.pkl")
+            scaler_path = os.path.join(saved_model_path, "power_scaler_L9G.pkl")
             if not os.path.exists(scaler_path):
                 raise FileNotFoundError(f"Scaler file not found: {scaler_path}")
             scaler = joblib.load(scaler_path)
@@ -669,7 +728,7 @@ class App(customtkinter.CTk):
             Y_pred_denorm_saved = scaler.inverse_transform(Y_pred_saved)
             Y_pred_denorm_saved_df = pd.DataFrame(Y_pred_denorm_saved, columns=['TOTAL_CONSUMPTION'])
             
-            
+
             ###############################################################################
             # Dictionary for reading in hourly consumption by FSA
             ###############################################################################
@@ -712,7 +771,7 @@ class App(customtkinter.CTk):
             hourly_data_month_day = hourly_consumption_data_dic_by_month[hourly_consumption_data_dic_by_month['DAY'] == int(day)]
             
             # Add column for date and time
-            hourly_data_month_day.loc[:, "HOUR"] = hourly_data_month_day["HOUR"] - 1
+            #hourly_data_month_day.loc[:, "HOUR"] = hourly_data_month_day["HOUR"] - 1
             hourly_data_month_day.loc[:, "DATE"] = pd.to_datetime(hourly_data_month_day[["YEAR", "MONTH", "DAY","HOUR"]], format="%Y-%m-%d, %H:%M")
             
             # Append next day to another dataframe to plot on same figure
@@ -720,7 +779,7 @@ class App(customtkinter.CTk):
                 title = "Hourly Power Consumption Beginning: " + year + "/" + month + "/" + day
                 hourly_data_month_day_saved = hourly_data_month_day[["YEAR", "MONTH", "DAY", "HOUR", "DATE", "TOTAL_CONSUMPTION"]].copy()
                 Y_pred_denorm_saved_df_saved = Y_pred_denorm_saved_df.copy()
-                hourly_data_month_day_error["HOUR_NEW"] = (hourly_data_month_day.index%24) + 1
+                hourly_data_month_day_error["HOUR_NEW"] = (hourly_data_month_day.index%24)
                 hourly_data_month_day_error = hourly_data_month_day_error.rename(columns={"HOUR_NEW": "Hour"})
             else:
                 hourly_data_month_day_saved = pd.concat([hourly_data_month_day_saved, hourly_data_month_day], axis=0, ignore_index=True)
@@ -756,14 +815,12 @@ class App(customtkinter.CTk):
         
         # Set Up data direcotry path for data collection
         data_path = run_student[0]
-        target_dir = data_path + "/raw_data"
         
 
         ### Calling Data ###
         # Choose FSA for data collection + Get latitude and longitude of chosen fsa
-        fsa = "M2M"
-        lat = realDataGetter.fsa_map[fsa_typed]["lat"]
-        lon = realDataGetter.fsa_map[fsa_typed]["lon"]
+        lat = dataCollectionAndPreprocessingFlow.fsa_map[fsa_typed]["lat"]
+        lon = dataCollectionAndPreprocessingFlow.fsa_map[fsa_typed]["lon"]
 
         # Choose date range for data collection
         start_year = 2018
@@ -780,23 +837,50 @@ class App(customtkinter.CTk):
         start_date = datetime(start_year, start_month, start_day, start_hour,0,0)
         end_date = datetime(end_year, end_month, end_day, end_hour,0,0)
 
-        # Collect data - Using asynchronous functions
-        weather_data, power_data = asyncio.run(realDataGetter.get_data_for_time_range(dirs_inputs, start_date, end_date, fsa_typed, lat, lon))
-
-        weather_data.to_csv(f'{hourly_demand}/weather_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_prevPowerAnal.csv', index=False)
-        power_data.to_csv(f'{hourly_demand}/power_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_prevPowerAnal.csv', index=False)
+        # # Collect data - Using asynchronous functions
+        try:
+            weather_data = pd.read_csv(f'{power_weather_data_path}/weather_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv')
+            power_data = pd.read_csv(f'{power_weather_data_path}/power_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv')
+        except FileNotFoundError: 
+            weather_data, power_data = asyncio.run(dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date, end_date, fsa_typed, lat, lon))
+            weather_data.to_csv(f'{power_weather_data_path}/weather_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
+            power_data.to_csv(f'{power_weather_data_path}/power_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
+            
+        
+        
+        
+        # Normalize Data
+        norm_weather_data, norm_power_data, power_scaler = dataCollectionAndPreprocessingFlow.normalize_data(weather_data, power_data)
     
+        # Save Normalized Data to CSV
+        norm_weather_data.to_csv(f'{x_y_input_path}/norm_weather_data_{fsa_typed}.csv', index=False)
+        norm_power_data.to_csv(f'{x_y_input_path}/norm_power_data_{fsa_typed}.csv', index=False)
+    
+        # Save Scaler
+        joblib.dump(power_scaler, f'{saved_model_path}/power_scaler_{fsa_typed}.pkl')
+
+
+        # Train and Save KNN Model
+        Power_Forecasting_KNN_Saver.save_knn_model(norm_weather_data, norm_power_data, power_scaler, fsa_typed, saved_model_path)
+
     def open_file_button_event(self):
         global input_data_filename
         filetypes = (('excel files', '*.xlsm'), ('All files', '*.*'))  
         input_data_filename = fd.askopenfilename(title='Input Excel File', initialdir=input_excel_path, filetypes=filetypes)
         
-    def train_predict_models_button_event(self):
+    def train_input_excel_models_button_event(self):
         #print("checkbox frame modified: ", selected_features_o3)
         
         Y = pd.read_excel(input_data_filename, sheet_name = "Power_Consumption")
         X = pd.read_excel(input_data_filename, sheet_name = "Power_Consumption")
-        print(X_test)
+        print(X)
+        
+    def predict_input_excel_models_button_event(self):
+        #print("checkbox frame modified: ", selected_features_o3)
+        
+        Y = pd.read_excel(input_data_filename, sheet_name = "Power_Consumption")
+        X = pd.read_excel(input_data_filename, sheet_name = "Power_Consumption")
+        print(X)
         
     def save_results_button_event(self):
         print("SAVE RESULTS")
@@ -889,7 +973,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_pc_run
+    run_student = joseph_laptop_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):
@@ -912,7 +996,14 @@ if __name__ == "__main__":
     #%% Run GUI
     app = App()
     app.mainloop()
+    restart_program = 1
     while restart_program == 1:
-        app.destroy()
-        app = App()
-        app.mainloop()
+        try:
+            app.destroy()
+            app = App()
+            app.mainloop()
+        except: 
+            restart_program = 0
+            
+
+        
