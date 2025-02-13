@@ -204,11 +204,11 @@ async def get_data_for_time_range(data_path, start_date: datetime, end_date: dat
         weather_data_list = [data for data in retuned_data if not data.empty] # Get all data that is not empty
         weather_data = pd.concat(weather_data_list) if weather_data_list else pd.DataFrame() # Concatenate all dataframes into one dataframe
 
-    # Fill missing data in weather data + Calculate Windchill + Add Calendar Columns (Weekend, Season, Holiday)
+    # Fill missing data in weather data + Calculate Windchill + Add Calendar Columns (Weekend, Season, Holiday) + Add 24 Lags
     weather_data = fill_missing_data(weather_data)
     weather_data = calculate_windchill(weather_data)
     weather_data = add_calendar_columns(weather_data)
-    #weather_data = add_lags_to_weather_data(weather_data, 1) # Add lagged columns to weather data - TESTING 
+    weather_data = add_lags_to_weather_data(weather_data, 24)
 
     # Collect Power Data - Pick up data from saved CSV from IESO
     power_data = get_power_data(data_path, start_date, end_date, fsa)
@@ -289,5 +289,5 @@ end_date = datetime(end_year, end_month, end_day, end_hour,0,0)
 weather_data, power_data = asyncio.run(get_data_for_time_range(data_path, start_date, end_date, fsa, lat, lon))
 
 # Save data to CSV
-weather_data.to_csv(f'{target_dir}/weather_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_Anal.csv', index=False)
-power_data.to_csv(f'{target_dir}/power_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}_Anal.csv', index=False)
+weather_data.to_csv(f'{target_dir}/weather_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
+power_data.to_csv(f'{target_dir}/power_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
