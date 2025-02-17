@@ -5,21 +5,7 @@ Created on Wed Jan  8 14:18:11 2025
 @author: sposa
 """
 
-# from tkinter import *
-
-# root = Tk()
-
-# # Creating a Label Widget
-# myLabel = Label(root, text = "POWER SYSTEM FORECASTING")
-# myLabel2 = Label(root, text = "BY: Hanad Mohmaud, Clover K. Joseph, Joseph Sposato, and Janna Wong.")
-
-# # Pushing it onto the screen
-# myLabel.grid(row = 0, column =0)
-# myLabel2.grid(row = 1, column =1)
-
-# root.mainloop()
-
-import dataCollectionAndPreprocessingFlow
+import Power_Forecasting_dataCollectionAndPreprocessingFlow
 import Power_Forecasting_KNN_Saver
 import asyncio  # Import asyncio library for async operations
 import aiohttp # Import aiohttp library for making HTTP requests
@@ -50,8 +36,9 @@ import canada_holiday
 
 import joblib
 
+#%%  Code for Initalization of scollable frame
 class ScrollableCheckBoxFrame(customtkinter.CTkScrollableFrame):
-    #%% Code for Initalization of scollable frame
+
     def __init__(self, master, item_list, command=None, **kwargs):
         super().__init__(master, **kwargs)
 
@@ -78,53 +65,48 @@ class ScrollableCheckBoxFrame(customtkinter.CTkScrollableFrame):
     def get_checked_items(self):
         return [checkbox.cget("text") for checkbox in self.checkbox_list if checkbox.get() == 1]
 
-
+#%% Code for Initalization of GUI application
 class App(customtkinter.CTk):  
     def __init__(self):  
-        #%% Code for Initalization of GUI application
-        
         ###############################################################################
         # All file paths
         ###############################################################################
         
-        # Paths for all the graphs that will be shown
-        global image_path, background_images_path, saved_model_path, x_y_input_path, power_weather_data_path, input_excel_path
+        # All file path locations
+        global image_path, background_images_path, saved_model_path, x_y_input_path, power_weather_data_path, input_excel_path, output_results_path
         image_path = os.path.join(dirs_inputs, "Model_Plots") 
         saved_model_path = os.path.join(dirs_inputs, "Saved_Models")    
         x_y_input_path = os.path.join(dirs_inputs, "X_Y_Inputs")   
         background_images_path = os.path.join(dirs_inputs, "GUI_Background_Images") 
         power_weather_data_path = os.path.join(dirs_inputs, "Power_Weather_Data")
         input_excel_path = os.path.join(dirs_inputs, "Input_Data_Excel")
+        output_results_path = os.path.join(dirs_inputs, "Output_Results")
         
-        year_chosen_option_menu = ""
-        month_chosen_option_menu = ""
-        day_chosen_option_menu = ""
-        
-        
+        ###############################################################################
+        # Initialize GUI
+        ###############################################################################
         
         customtkinter.set_default_color_theme("blue") # change the colour theme of the application
-        super().__init__()
-
-        
+        super().__init__()    
         self.title("Power System Forecasting.py")
         self.geometry("1920x1080")
-
+        
         # Set grid layout 1x2
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         
-        # Path for all the background images
+        # Path for start menu background
         start_menu_image_path = os.path.join(background_images_path, "Start_Menu_Page.png")
         
         # Create background image
         image = PIL.Image.open(start_menu_image_path)
         background_image = customtkinter.CTkImage(image, size=(1920, 1080))
         
-        
 
         ###############################################################################
         # Create Start Frame (all code for desired frame is in here)
         ###############################################################################
+        
         self.start_frame = customtkinter.CTkFrame(self, corner_radius=0)
         self.start_frame.grid_columnconfigure(0, weight=1)
         self.start_frame.grid_rowconfigure(0, weight=1)
@@ -136,22 +118,23 @@ class App(customtkinter.CTk):
         self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
         customtkinter.set_appearance_mode("dark")
         
-        
-        
-
+        # Create desired font
         my_font = customtkinter.CTkFont(family="Roboto", size=40, 
                                         weight="bold", slant="italic", underline=False, overstrike=False) #font to be used for titles       
+        
+        # Create start button to go to main menu
         self.start_button = customtkinter.CTkButton(self.start_frame, text="Start ", command=self.start_button_event, height=85, width=250, font=my_font, corner_radius=50,bg_color='#0f0f39',fg_color="#4B0082")
         self.start_button.grid(row = 0, column = 0, padx = (700, 700), pady = (0, 175), sticky = "sew")
     
         
-        
         ###############################################################################
         # Create Navigation Frame (all code for desired frame is in here)
         ###############################################################################
+        
         self.navigation_frame = customtkinter.CTkFrame(self, corner_radius=0)
         self.navigation_frame.grid_rowconfigure(7, weight=1)
         
+        # Create all labels and buttons on navigation frame
         self.navigation_frame_label = customtkinter.CTkLabel(self.navigation_frame, text="        Power System Forecasting", 
                                                              compound="left", font=customtkinter.CTkFont(size=15, weight="bold"))
         self.navigation_frame_label.grid(row=0, column=0, padx=20, pady=20)
@@ -185,25 +168,21 @@ class App(customtkinter.CTk):
                                                       fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
                                                       anchor="w", command=self.summary_button_event)
         self.summary_button.grid(row=6, column=0, sticky="ew")
-            
-        
-        
-
-        self.navigation_visible = False  # Track the visibility of the navigation frame
+             
+        # Track the visibility of the navigation frame
+        self.navigation_visible = False  
 
         # Initially hide the navigation frame
         self.toggle_navigation()
-        
-        
 
-        
-        
-        
+
         ###############################################################################
         # Create Home Frame (all code for desired frame is in here)
         ###############################################################################
+        
         # Create frame
         home_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
+        
         # Create background image
         image = PIL.Image.open(home_menu_image_path)
         background_image_home = customtkinter.CTkImage(image, size=(1920, 1080))
@@ -215,21 +194,20 @@ class App(customtkinter.CTk):
         self.home_frame.grid_columnconfigure(2, weight=1)
         self.home_frame.grid_columnconfigure(3, weight=1)
 
-
-        
+        # Insert background image
         self.background_label = customtkinter.CTkLabel(self.home_frame,
                                                      image=background_image_home,
                                                      text="")  # Empty text
         self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
-
         
         # Create title and description
         self.home_frame_Label_Title = customtkinter.CTkLabel(self.home_frame, text="Welcome to Power Forecasting!", font=customtkinter.CTkFont(family="Roboto Flex", size=50, slant="italic"), 
                                                              bg_color='#140034', text_color=("white"))
         self.home_frame_Label_Title.grid(row=0, column=0, padx = 100, pady = 20, columnspan=4, sticky = "ew")
         
+        ###############################################################################
         # Create Option 1 titles and widgets
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 1: Predictions using saved models.", font=customtkinter.CTkFont(family="Roboto Flex", size=30),
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 1: Make predictions using saved Ontario located models.", font=customtkinter.CTkFont(family="Roboto Flex", size=30),
             bg_color='#140034', text_color=("white"))
         self.home_frame_Label_Selection.grid(row=1, column=0, padx = 50, pady = (10, 40), columnspan=4, sticky = "w")
         
@@ -256,7 +234,7 @@ class App(customtkinter.CTk):
         max_date = date(2024, 3, 31)
         
         self.calendar = Calendar(self.calendar_frame, selectmode='day', year=2024, month=1, day=1, mindate = min_date, maxdate = max_date)
-        self.calendar.pack(pady=0, padx=20)
+        self.calendar.pack(padx= 0, pady = 0)
         
         # Number of Days
         self.home_frame_number_of_days_option_menu = customtkinter.CTkOptionMenu(self.home_frame, values=["1", "2", "3"], command = self.number_of_days_option_menu_event)
@@ -275,142 +253,157 @@ class App(customtkinter.CTk):
                                                       anchor="w", command=self.generate_models_button_event)
         self.generate_models_button.grid(row=2, column=3, padx = 50, sticky = "ew")
         
-        
-        # Create Option 2 titles and widgets
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 2: Train the models with ANY postal code in Ontario.", font=customtkinter.CTkFont(family="Roboto Flex", size=30),
+        ###############################################################################
+        # Create Option 2 training option widgets with training features and which models to train
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 2: Select models to train and select corresponding training features.", font=customtkinter.CTkFont(family="Roboto Flex", size=30),
             bg_color='#140034', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=4, column=0, padx = 50, pady = (40, 30), columnspan=4, sticky = "w")
+        self.home_frame_Label_Selection.grid(row=4, column=0, padx = 50, pady = (40, 10), columnspan=4, sticky = "w")
+        
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Models to Train", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#140034', text_color=("white"))
+        self.home_frame_Label_Selection.grid(row=5, column=1, padx = 50,  pady = (0,1), sticky = "ew")
         
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Training Features", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#140034', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=5, column=1, padx = 50, pady = (0,1), sticky = "ew")
-
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Models to Train", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#140034', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=5, column=2, padx = 50,  pady = (0,1), sticky = "ew")
+        self.home_frame_Label_Selection.grid(row=5, column=2, padx = 50, pady = (0,1), sticky = "ew")
+ 
+        # Create scrollable check box of models
+        global model_names_list, selected_models
+        model_names_list = ["Linear Regression", "Scalar Vector Regression", "K-Nearest Neighbors", "Convolutional Neural Network"]
+        selected_models = model_names_list
+        self.scrollable_models_checkbox_frame = ScrollableCheckBoxFrame(self.home_frame, height = 130, width=150, command=self.models_checkbox_event,
+                                                         item_list=model_names_list)
+        self.scrollable_models_checkbox_frame.grid(row=6, column=1, padx = 50, pady = (10, 15), sticky = "new")
+        self.scrollable_models_checkbox_frame._scrollbar.configure(height=0)
         
-
+        # Create scrollable check box of features 
+        column_names = pd.read_csv(os.path.join(x_y_input_path, "Features_Column_Template.csv"), nrows = 0)
+        global selected_features
+        selected_features = column_names.columns.tolist()
+        print(selected_features)
+        self.scrollable_features_checkbox_frame = ScrollableCheckBoxFrame(self.home_frame, height = 130, width=150, command=self.features_checkbox_event,
+                                                         item_list=column_names.columns)
+        self.scrollable_features_checkbox_frame.grid(row=6, column=2, padx = 50, pady = (10, 15), sticky = "new")
+        self.scrollable_features_checkbox_frame._scrollbar.configure(height=0)
+        
+        ###############################################################################
+        # Create Option 2.1 titles and widgets for training only in Ontario
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 2.1: Train models with ANY postal code in Ontario.", font=customtkinter.CTkFont(family="Roboto Flex", size=30),
+            bg_color='#140034', text_color=("white"))
+        self.home_frame_Label_Selection.grid(row=7, column=0, padx = 50, pady = (10, 10), columnspan=4, sticky = "w")
+   
         # Create search bar for FSA
         self.fsa_search_bar = customtkinter.CTkEntry(self.home_frame, placeholder_text ="Please enter first three digits of postal code.")
         
-        self.fsa_search_bar.grid(row=6, column=0, padx = 15, pady = 30, sticky = "new")
-
-        # Create scrollable check box of features
-        column_names = pd.read_csv(os.path.join(x_y_input_path, "Features_Column_Template.csv"), nrows = 0)
-        self.scrollable_features_checkbox_frame_o2 = ScrollableCheckBoxFrame(self.home_frame, height = 100, width=150, command=self.features_checkbox_event_o2,
-                                                         item_list=column_names)
-        self.scrollable_features_checkbox_frame_o2.grid(row=6, column=1, padx = 80, pady = (15, 0), sticky = "new")
-        self.scrollable_features_checkbox_frame_o2._scrollbar.configure(height=0)
-        
-        # Create scrollable check box of models
-        self.scrollable_models_checkbox_frame_o2 = ScrollableCheckBoxFrame(self.home_frame, height = 100, width=150, command=self.models_checkbox_event_o2,
-                                                         item_list=["Linear Regression", "Scalar Vector Regression", "K-Nearest Neighbots", "Convolutional Neural Network"])
-        self.scrollable_models_checkbox_frame_o2.grid(row=6, column=2, padx = 50, pady = (15, 0), sticky = "new")
-        self.scrollable_models_checkbox_frame_o2._scrollbar.configure(height=0)
+        self.fsa_search_bar.grid(row=8, column=1, padx = 50, pady = (10, 10), sticky = "new")
         
         # Create Train button
-        self.train_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Train Models",
+        self.train_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Train Ontario Located Models",
                                                       text_color=("gray10", "gray90"),
                                                       anchor="w", command=self.train_models_button_event)
-        self.train_models_button.grid(row=6, column=3, padx = 50, pady = 30, sticky = "new")
+        self.train_models_button.grid(row=8, column=3, padx = 50, pady = (10, 10), sticky = "new")
         
-        
-        # Create Option 3 titles and widgets
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 3: Train the models with ANY input dataset.", font=customtkinter.CTkFont(family="Roboto Flex", size=30),
+        ###############################################################################
+        # Create Option 2.2 titles and widgets for training any data set
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 2.2: Train the models with ANY input dataset.", font=customtkinter.CTkFont(family="Roboto Flex", size=30),
             bg_color='#140034', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=7, column=0, padx = 50, pady = (40, 30), columnspan=4, sticky = "w")
+        self.home_frame_Label_Selection.grid(row=9, column=0, padx = 50, pady = (10, 10), columnspan=4, sticky = "w")
         
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Training Features", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#140034', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=8, column=1, padx = 50, pady = (0,1), sticky = "ew")
- 
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Models to Train", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#140034', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=8, column=2, padx = 50,  pady = (0,1), sticky = "ew")
-        
-        self.open_file_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Open Input Data Excel File",
+        # Open excel file template
+        self.open_file_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Open Input Data Excel File Template",
                                                       text_color=("gray10", "gray90"),
                                                       anchor="w", command=self.open_file_button_event)
-        self.open_file_button.grid(row=9, column=0, padx = 50, pady = 30, sticky = "new")
+        self.open_file_button.grid(row=10, column=1, padx = 50, pady = 10, sticky = "new")
         
-        # Create scrollable check box of features
-        column_names = pd.read_csv(os.path.join(x_y_input_path, "Features_Column_Template.csv"), nrows = 0)
-        self.scrollable_features_checkbox_frame_o3 = ScrollableCheckBoxFrame(self.home_frame, height = 100, width=150, command=self.features_checkbox_event_o3,
-                                                         item_list=column_names)
-        self.scrollable_features_checkbox_frame_o3.grid(row=9, column=1, padx = 80, pady = (15, 0), sticky = "new")
-        self.scrollable_features_checkbox_frame_o3._scrollbar.configure(height=0)
-        
-        # Create scrollable check box of models
-        self.scrollable_models_checkbox_frame_o3 = ScrollableCheckBoxFrame(self.home_frame, height = 100, width=150, command=self.models_checkbox_event_o3,
-                                                         item_list=["Linear Regression", "Scalar Vector Regression", "K-Nearest Neighbots", "Convolutional Neural Network"])
-        self.scrollable_models_checkbox_frame_o3.grid(row=9, column=2, padx = 50, pady = (15, 0), sticky = "new")
-        self.scrollable_models_checkbox_frame_o3._scrollbar.configure(height=0)
-        
+        # Upload excel file template
+        self.open_file_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Upload Input Data Excel File",
+                                                      text_color=("gray10", "gray90"),
+                                                      anchor="w", command=self.upload_file_button_event)
+        self.open_file_button.grid(row=10, column=2, padx = 50, pady = 10, sticky = "new")
         
         # Create Train button
-        self.train_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Train Models",
+        self.train_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Train Inputted Dataset Models",
                                                       text_color=("gray10", "gray90"),
                                                       anchor="w", command=self.train_input_excel_models_button_event)
-        self.train_models_button.grid(row=8, column=3, padx = 50, pady = 10, sticky = "sew")
+        self.train_models_button.grid(row=10, column=3, padx = 50, pady = 10, sticky = "sew")
         
         # Create Predict button
-        self.predict_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Predict Models",
+        self.predict_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=0, height=40, border_spacing=10, text="Predict Inputted Dataset Models",
                                                       text_color=("gray10", "gray90"),
                                                       anchor="w", command=self.predict_input_excel_models_button_event)
-        self.predict_models_button.grid(row=9, column=3, padx = 50, pady = 10, sticky = "new")
-
-
-        
-        
-        
+        self.predict_models_button.grid(row=11, column=3, padx = 50, pady = 10, sticky = "new")
+ 
+    
         ###############################################################################        
         # Create second frame (Model 1) (all code for desired frame is in here)
         ###############################################################################
         self.model_1_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
         self.model_1_frame.grid_columnconfigure(0, weight=1)
         self.model_1_frame.grid_columnconfigure(1, weight=1)
+        self.model_1_frame.grid_rowconfigure(0, weight=1)
+        self.model_1_frame.grid_rowconfigure(1, weight=1)
+        self.model_1_frame.grid_rowconfigure(2, weight=1)
+        self.model_1_frame.grid_rowconfigure(3, weight=1)
+        self.model_1_frame.grid_rowconfigure(4, weight=1)
         
         self.background_label = customtkinter.CTkLabel(self.model_1_frame,
                                                      image=background_image_home,
                                                      text="")  # Empty text
         self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
-       
         
-
+        
         ###############################################################################
         # Create third frame (Model 2) (all code for desired frame is in here)
         ###############################################################################
         self.model_2_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
         self.model_2_frame.grid_columnconfigure(0, weight=1)
         self.model_2_frame.grid_columnconfigure(1, weight=1)
+        self.model_2_frame.grid_rowconfigure(0, weight=1)
+        self.model_2_frame.grid_rowconfigure(1, weight=1)
+        self.model_2_frame.grid_rowconfigure(2, weight=1)
+        self.model_2_frame.grid_rowconfigure(3, weight=1)
+        self.model_2_frame.grid_rowconfigure(4, weight=1)
+        
         
         self.background_label = customtkinter.CTkLabel(self.model_2_frame,
                                                      image=background_image_home,
                                                      text="")  # Empty text
         self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
-
-        
+     
         ###############################################################################
         # Create fourth frame (Model 3) (all code for desired frame is in here)
         ###############################################################################
         self.model_3_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
         self.model_3_frame.grid_columnconfigure(0, weight=1)
         self.model_3_frame.grid_columnconfigure(1, weight=1)
+        self.model_3_frame.grid_rowconfigure(0, weight=1)
+        self.model_3_frame.grid_rowconfigure(1, weight=1)
+        self.model_3_frame.grid_rowconfigure(2, weight=1)
+        self.model_3_frame.grid_rowconfigure(3, weight=1)
+        self.model_3_frame.grid_rowconfigure(4, weight=1)
         
         self.background_label = customtkinter.CTkLabel(self.model_3_frame,
                                                      image=background_image_home,
                                                      text="")  # Empty text
         self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
-        
+
         ###############################################################################
         # Create fifth frame (Model 4) (all code for desired frame is in here)
         ###############################################################################
         self.model_4_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
         self.model_4_frame.grid_columnconfigure(0, weight=1)
         self.model_4_frame.grid_columnconfigure(1, weight=1)
+        self.model_4_frame.grid_rowconfigure(0, weight=1)
+        self.model_4_frame.grid_rowconfigure(1, weight=1)
+        self.model_4_frame.grid_rowconfigure(2, weight=1)
+        self.model_4_frame.grid_rowconfigure(3, weight=1)
+        self.model_4_frame.grid_rowconfigure(4, weight=1)
         
         self.background_label = customtkinter.CTkLabel(self.model_4_frame,
                                                      image=background_image_home,
                                                      text="")  # Empty text
         self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
+        
         
         ###############################################################################
         # Create sixth frame (summary) (all code for desired frame is in here)
@@ -436,18 +429,11 @@ class App(customtkinter.CTk):
         self.restart_program_button.grid(row=0, column=1, padx = 100, pady = 30, sticky = "ew")
         
         
-
-       
         ###############################################################################
         # Select default frame
         ###############################################################################
         self.select_frame_by_name("Start")
         
-
-
-        
-
-
 
     ###############################################################################
     # Function to select different frames
@@ -495,7 +481,7 @@ class App(customtkinter.CTk):
             self.summary_frame.grid_forget()
 
     ###############################################################################
-    # Function when selecting buttons
+    # Functions when selecting buttons
     ###############################################################################
     def start_button_event(self):
         self.hamburger_button = customtkinter.CTkButton(self, text="☰", width=40, height=40, command=self.toggle_navigation)
@@ -507,18 +493,33 @@ class App(customtkinter.CTk):
 
     def model_1_button_event(self):
         self.select_frame_by_name("Model 1")
+        self.navigation_frame.grid_forget()
+        self.navigation_visible = True
+        self.toggle_navigation()
 
     def model_2_button_event(self):
         self.select_frame_by_name("Model 2")
+        self.navigation_frame.grid_forget()
+        self.navigation_visible = True
+        self.toggle_navigation()
         
     def model_3_button_event(self):
         self.select_frame_by_name("Model 3")
+        self.navigation_frame.grid_forget()
+        self.navigation_visible = True
+        self.toggle_navigation()
 
     def model_4_button_event(self):
         self.select_frame_by_name("Model 4")
+        self.navigation_frame.grid_forget()
+        self.navigation_visible = True
+        self.toggle_navigation()
         
     def summary_button_event(self):
         self.select_frame_by_name("Summary")
+        self.navigation_frame.grid_forget()
+        self.navigation_visible = True
+        self.toggle_navigation()
        
     def generate_models_button_event(self):
 
@@ -544,7 +545,7 @@ class App(customtkinter.CTk):
             self.model_frame_Label_Title.grid(row=0, column=0, padx=20, pady=(20, 10), columnspan=2)  
 
             self.next_button = customtkinter.CTkButton(model_frame, text="→", command=model_event_next, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40,bg_color='#140034',fg_color="#4B0082")
-            self.next_button.grid(row=4, column=1, padx=20, pady=(200, 0),  sticky = "se")  
+            self.next_button.grid(row=4, column=1, padx=20, pady=(10, 0),  sticky = "se")  
             
             
             
@@ -552,7 +553,7 @@ class App(customtkinter.CTk):
             
             if (model_frame != self.model_1_frame):
                 self.next_button = customtkinter.CTkButton(model_frame, text="←", command=model_event_back, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40,bg_color='#140034',fg_color="#4B0082")
-                self.next_button.grid(row=4, column=0, padx=20, pady=(200, 0),  sticky = "sw") 
+                self.next_button.grid(row=4, column=0, padx=20, pady=(10, 0),  sticky = "sw") 
             
             
             # Plot models on same graph
@@ -564,7 +565,7 @@ class App(customtkinter.CTk):
             ax.set_xlabel("HOUR")
             ax.set_ylabel("CONSUMPTION in kW")
             ax.legend(loc = "upper left")
-            plt.setp(ax.get_xticklabels(), rotation = 20) 
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%b-%d, %H:%M'))
             plot_svg =  os.path.join(image_path, "Predicted_Actual_Graph.png")
             plt.savefig(plot_svg)
             plt.close()
@@ -597,9 +598,38 @@ class App(customtkinter.CTk):
             self.metrix_table.grid(row=3, column=0, padx=20, pady=20, columnspan=2)
             
             
-            #os.remove(plot_svg)
+            os.remove(plot_svg)
+            
+        # Function to display when no model is saved
+        def plot_no_model(self, model_frame, model_event_next, model_event_back, model_name):
             
             
+            model_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
+            # Create background image
+            image = PIL.Image.open(model_menu_image_path)
+            background_image_model = customtkinter.CTkImage(image, size=(1920, 1080))
+            
+            
+            self.background_label = customtkinter.CTkLabel(model_frame,
+                                                         image=background_image_model,
+                                                         text="")  # Empty text
+            self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
+         
+
+            self.model_frame_Label_Title = customtkinter.CTkLabel(model_frame, text=model_name, font=customtkinter.CTkFont(family="Roboto Flex", size=40, slant="italic"), 
+                                                                 bg_color='#140034', text_color=("white"))
+            self.model_frame_Label_Title.grid(row=0, column=0, padx=20, pady=(20, 10), columnspan=2)  
+
+            self.next_button = customtkinter.CTkButton(model_frame, text="→", command=model_event_next, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40,bg_color='#140034',fg_color="#4B0082")
+            self.next_button.grid(row=4, column=1, padx=20, pady=(10, 0),  sticky = "se")  
+            
+            
+            if (model_frame != self.model_1_frame):
+                self.next_button = customtkinter.CTkButton(model_frame, text="←", command=model_event_back, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40,bg_color='#140034',fg_color="#4B0082")
+                self.next_button.grid(row=4, column=0, padx=20, pady=(10, 0),  sticky = "sw") 
+        
+        
+        
         months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
         
         
@@ -628,41 +658,135 @@ class App(customtkinter.CTk):
             num_of_days = 1
 
         dirs_hourly_consumption_demand = os.path.join(dirs_inputs, "Hourly_Demand_Data")
-        
-        ###############################################################################
-        # Import Models
-        ###############################################################################
-
-        # Load model from gui_pickup folder using joblib
-        pipe_saved = joblib.load(os.path.join(saved_model_path, "KNN_L9G_Model.pkl"))
+    
         
 
-        
+        # Define dataframes
         hourly_data_month_day_saved = pd.DataFrame(columns = ['HOUR', 'TOTAL_CONSUMPTION'])
-        Y_pred_denorm_saved_df_saved = pd.DataFrame(columns = ['TOTAL_CONSUMPTION'])
-        hourly_data_month_day_error = pd.DataFrame()
+        
+        # Get one date behind so that lags can be propoerly incorporated
+        new_date = selected_date_datetime + timedelta(num_of_days-1) 
+        old_date = selected_date_datetime - timedelta(days=1)
+        old_year = str(old_date.year)
+        old_month = months[(old_date.month-1)]
+        old_day = str(old_date.day)
+        
+        year = str(new_date.year)
+        month = months[(new_date.month-1)]
+        day = str(new_date.day)
+
+
+        ### Calling Data ###
+        # Choose FSA for data collection + Get latitude and longitude of chosen fsa
+        lat = Power_Forecasting_dataCollectionAndPreprocessingFlow.fsa_map[fsa_chosen]["lat"]
+        lon = Power_Forecasting_dataCollectionAndPreprocessingFlow.fsa_map[fsa_chosen]["lon"]
+
+        # Choose date range for data collection
+        start_year = int(old_year)
+        start_month = int(old_month)
+        start_day = int(old_day)
+        start_hour = 0
+
+        end_year = int(year)
+        end_month = int(month)
+        end_day = int(day)
+        end_hour = 23
+
+        # Making datetime objects for start and end dates
+        start_date = datetime(start_year, start_month, start_day, start_hour,0,0)
+        end_date = datetime(end_year, end_month, end_day, end_hour,0,0)
+        print(start_date)
+        print(end_date)
+
+        # # Collect data - Using asynchronous functions
+        # 
+        weather_data, dummy_hourly_data_month_day = asyncio.run(Power_Forecasting_dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date, end_date, fsa_chosen, lat, lon))
+        
+        dummy_hourly_data_month_day = dummy_hourly_data_month_day.reset_index(drop = True) 
+        weather_data = weather_data.reset_index(drop = True)
+        
+        index_first_day = weather_data[(weather_data['Day'] == start_day)].index
+        
+        dummy_hourly_data_month_day = dummy_hourly_data_month_day.drop(index_first_day, axis='index', inplace = False).reset_index(drop=True)
+        weather_data = weather_data.drop(index_first_day, axis='index', inplace = False).reset_index(drop=True)
+        
+        print(weather_data)
         
         
+        norm_weather_data, dummy_norm_power_data, dummy_scaler = Power_Forecasting_dataCollectionAndPreprocessingFlow.normalize_data(weather_data, dummy_hourly_data_month_day)
+        
+        weather_data.to_csv(f'{power_weather_data_path}/YYYYweather_data_{fsa_chosen}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
+       
+        ###############################################################################
+        # Import and predict Models
+        ###############################################################################
+        
+        
+        total_features = ["Hour"]
+        for feature in selected_features:
+            total_features.append(feature)
+        total_features_temp = total_features.copy()
+        for lag in range (1, 24):
+            for feature in total_features_temp:
+                if feature == "Weekend" or feature == "Season":
+                    continue
+                if feature == "Hour":
+                    total_features.append(feature+"_"+str(lag))
+                else:
+                    total_features.append(feature+"_Lag_"+str(lag))
+        total_features.insert(0, "Day")
+        total_features.insert(0, "Month")
+        total_features.insert(0, "Year")
+        
+        
+        # Import saved CSV into script as dataframes
+        X_test = norm_weather_data[total_features]
+        
+        # Dictionary for model prediction dataframes
+        # model -> Value
+        Y_pred_denorm_saved_df = {}
+        
+        for model_name in model_names_list:
+            if model_name == "K-Nearest Neighbors":
+                model_name = "KNN"
+            if model_name == "Convolutional Neural Network":
+                model_name = "CNN" 
+            if model_name == "Linear Regression":
+                model_name = "LR"
+            if model_name == "Scalar Vector Regression":
+                model_name = "SVR" 
+                
+            # Load model from gui_pickup folder using joblib
+            try:
+                pipe_saved = joblib.load(os.path.join(saved_model_path, (model_name+"_"+fsa_chosen+"_Model.pkl")))
+            except:
+                continue
+
+            # Predict using loaded model
+            Y_pred_saved = pipe_saved.predict(X_test)
+            
+            # Ensure Y_pred and Y_test are reshaped correctly
+            Y_pred_saved = Y_pred_saved.reshape(-1, 1)
+            
+            # Denormalize Y_pred and Y_test with min_max_scaler_y.pkl using joblib
+            scaler_path = os.path.join(saved_model_path, "power_scaler_"+fsa_chosen+".pkl")
+            if not os.path.exists(scaler_path):
+                raise FileNotFoundError(f"Scaler file not found: {scaler_path}")
+            scaler = joblib.load(scaler_path)
+            
+            # Denormalize Y_pred_saved and Y_test with min_max_scaler.pkl
+            Y_pred_denorm_saved = scaler.inverse_transform(Y_pred_saved)
+            Y_pred_denorm_saved_df[model_name] = pd.DataFrame(Y_pred_denorm_saved, columns=['TOTAL_CONSUMPTION'])
+        
+        # Dictionary for model prediction dataframes error 
+        # model -> Value
+        hourly_data_month_day_error = {}
+        hourly_data_month_day_error_df = pd.DataFrame()
         for day_num in range (num_of_days):
             
             # new date
             new_date = selected_date_datetime + timedelta(days=day_num) 
-            
-            try:
-                old_year = str(selected_date_datetime.year)
-            except NameError:
-                old_year = "2024"
-                
-            try:
-                old_month = months[(selected_date_datetime.month-1)]
-            except NameError:
-                old_month = "01"
-                
-            try:
-                old_day = str(selected_date_datetime.day)
-            except NameError:
-                old_day = "01"
-                
+    
             try:
                 year = str(new_date.year)
             except NameError:
@@ -678,61 +802,10 @@ class App(customtkinter.CTk):
             except NameError:
                 day = "01"
             
-            ### Calling Data ###
-            # Choose FSA for data collection + Get latitude and longitude of chosen fsa
-            lat = dataCollectionAndPreprocessingFlow.fsa_map[fsa_chosen]["lat"]
-            lon = dataCollectionAndPreprocessingFlow.fsa_map[fsa_chosen]["lon"]
-
-            # Choose date range for data collection
-            start_year = int(old_year)
-            start_month = int(old_month)
-            start_day = int(old_day)
-            start_hour = 0
-
-            end_year = int(year)
-            end_month = int(month)
-            end_day = int(day)
-            end_hour = 23
-
-            # Making datetime objects for start and end dates
-            start_date = datetime(start_year, start_month, start_day, start_hour,0,0)
-            end_date = datetime(end_year, end_month, end_day, end_hour,0,0)
-            print(start_date)
-            print(end_date)
-
-            # # Collect data - Using asynchronous functions
-            # 
-            weather_data, dummy_hourly_data_month_day = asyncio.run(dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date, end_date, fsa_chosen, lat, lon))
-            norm_weather_data, dummy_norm_power_data, dummy_scaler = dataCollectionAndPreprocessingFlow.normalize_data(weather_data, dummy_hourly_data_month_day)
-            
-            weather_data.to_csv(f'{power_weather_data_path}/YYYYweather_data_{fsa_chosen}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
-           
-            
-            
-            # Import saved CSV into script as dataframes
-            X_test = norm_weather_data
-            
-            # Predict using loaded model
-            Y_pred_saved = pipe_saved.predict(X_test)
-            
-            # Ensure Y_pred and Y_test are reshaped correctly
-            Y_pred_saved = Y_pred_saved.reshape(-1, 1)
-            
-            # Denormalize Y_pred and Y_test with min_max_scaler_y.pkl using joblib
-            scaler_path = os.path.join(saved_model_path, "power_scaler_L9G.pkl")
-            if not os.path.exists(scaler_path):
-                raise FileNotFoundError(f"Scaler file not found: {scaler_path}")
-            scaler = joblib.load(scaler_path)
-            
-            # Denormalize Y_pred_saved and Y_test with min_max_scaler.pkl
-            Y_pred_denorm_saved = scaler.inverse_transform(Y_pred_saved)
-            Y_pred_denorm_saved_df = pd.DataFrame(Y_pred_denorm_saved, columns=['TOTAL_CONSUMPTION'])
-            
 
             ###############################################################################
             # Dictionary for reading in hourly consumption by FSA
             ###############################################################################
-            # FSA -> Year -> Month -> Value
             hourly_consumption_data_dic_by_month = pd.DataFrame()
             
             # Initialize dataframes to be used
@@ -771,38 +844,86 @@ class App(customtkinter.CTk):
             hourly_data_month_day = hourly_consumption_data_dic_by_month[hourly_consumption_data_dic_by_month['DAY'] == int(day)]
             
             # Add column for date and time
-            #hourly_data_month_day.loc[:, "HOUR"] = hourly_data_month_day["HOUR"] - 1
-            hourly_data_month_day.loc[:, "DATE"] = pd.to_datetime(hourly_data_month_day[["YEAR", "MONTH", "DAY","HOUR"]], format="%Y-%m-%d, %H:%M")
+            hourly_data_month_day.loc[:, "HOUR"] = hourly_data_month_day["HOUR"] - 1
+            hourly_data_month_day.loc[:, "DATE"] = pd.to_datetime(hourly_data_month_day[["YEAR", "MONTH", "DAY","HOUR"]])
             
             # Append next day to another dataframe to plot on same figure
             if (day_num == 0):
                 title = "Hourly Power Consumption Beginning: " + year + "/" + month + "/" + day
                 hourly_data_month_day_saved = hourly_data_month_day[["YEAR", "MONTH", "DAY", "HOUR", "DATE", "TOTAL_CONSUMPTION"]].copy()
-                Y_pred_denorm_saved_df_saved = Y_pred_denorm_saved_df.copy()
-                hourly_data_month_day_error["HOUR_NEW"] = (hourly_data_month_day.index%24)
-                hourly_data_month_day_error = hourly_data_month_day_error.rename(columns={"HOUR_NEW": "Hour"})
             else:
                 hourly_data_month_day_saved = pd.concat([hourly_data_month_day_saved, hourly_data_month_day], axis=0, ignore_index=True)
-                Y_pred_denorm_saved_df_saved = pd.concat([Y_pred_denorm_saved_df_saved, Y_pred_denorm_saved_df], axis=0, ignore_index=True)
-            
-            
-            # Find Error
-            if (self.detailed_table_checkbox_var.get() == 1):
-                hourly_data_month_day_error["Actual Consumption: Day " + str(day_num+1) + " (kW)"] = hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
-                hourly_data_month_day_error["Predicted Consumption: Day " + str(day_num+1) + " (kW)"] = Y_pred_denorm_saved_df["TOTAL_CONSUMPTION"].reset_index(drop = True)
-            hourly_data_month_day_error["Error: Day " + str(day_num+1) + " (%)"] = 100*abs(Y_pred_denorm_saved_df["TOTAL_CONSUMPTION"].reset_index(drop = True) - hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True))/hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
-            hourly_data_month_day_error = hourly_data_month_day_error.round(decimals = 2)
-            
-            
-        
-            
-        hourly_data_month_day_error_columns = pd.DataFrame([hourly_data_month_day_error.columns], columns = hourly_data_month_day_error.columns)
-        hourly_data_month_day_error = pd.concat([hourly_data_month_day_error_columns, hourly_data_month_day_error.iloc[0:]]).reset_index(drop=True)
-        
 
-        plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df_saved, hourly_data_month_day_error, self.model_1_frame, self.model_2_button_event, "N/A", "Model 1")
-        plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df_saved, hourly_data_month_day_error, self.model_2_frame, self.model_3_button_event, self.model_1_button_event, "Model 2")
-        plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df_saved, hourly_data_month_day_error, self.model_3_frame, self.model_4_button_event, self.model_2_button_event, "Model 3")
+
+            for model_name in model_names_list:
+                if model_name == "K-Nearest Neighbors":
+                    model_name = "KNN"
+                if model_name == "Convolutional Neural Network":
+                    model_name = "CNN" 
+                if model_name == "Linear Regression":
+                    model_name = "LR"
+                if model_name == "Scalar Vector Regression":
+                    model_name = "SVR" 
+                try:
+                    if (day_num == 0):
+                        hourly_data_month_day_error_df["HOUR_NEW"] = (hourly_data_month_day.index%24)
+                        hourly_data_month_day_error[model_name] = hourly_data_month_day_error_df
+                        hourly_data_month_day_error[model_name] = hourly_data_month_day_error[model_name].rename(columns={"HOUR_NEW": "Hour"})
+                       
+                    Y_pred_denorm_saved_df_day = Y_pred_denorm_saved_df[model_name].iloc[(24*day_num):(24*day_num + 24)]
+                    
+                    # Find Error
+                    if (self.detailed_table_checkbox_var.get() == 1):
+                        hourly_data_month_day_error[model_name]["Actual Consumption: Day " + str(day_num+1) + " (kW)"] = hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
+                        hourly_data_month_day_error[model_name]["Predicted Consumption: Day " + str(day_num+1) + " (kW)"] = Y_pred_denorm_saved_df_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
+                    hourly_data_month_day_error[model_name]["Error: Day " + str(day_num+1) + " (%)"] = 100*abs(Y_pred_denorm_saved_df_day["TOTAL_CONSUMPTION"].reset_index(drop = True) - hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True))/hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
+                    hourly_data_month_day_error[model_name] = hourly_data_month_day_error[model_name].round(decimals = 2)
+ 
+                except:
+                    continue
+        global save_results_dic
+        save_results_dic = {}
+        
+        for model_name in model_names_list:
+            if model_name == "K-Nearest Neighbors":
+                model_name = "KNN"
+            if model_name == "Convolutional Neural Network":
+                model_name = "CNN" 
+            if model_name == "Linear Regression":
+                model_name = "LR"
+            if model_name == "Scalar Vector Regression":
+                model_name = "SVR" 
+            try:    
+                save_results_dic[model_name] = pd.concat([hourly_data_month_day_saved[["YEAR", "MONTH", "DAY", "HOUR", "TOTAL_CONSUMPTION"]], Y_pred_denorm_saved_df[model_name]], axis=1)
+                save_results_dic[model_name]["HOUR"] = save_results_dic[model_name]["HOUR"] + 1
+                save_results_dic[model_name].columns.values[4] = "ACTUAL CONSUMPTION"
+                save_results_dic[model_name].columns.values[5] = "PREDICTED CONSUMPTION"
+                
+                hourly_data_month_day_error_columns = pd.DataFrame([hourly_data_month_day_error[model_name].columns], columns = hourly_data_month_day_error[model_name].columns)
+                hourly_data_month_day_error[model_name] = pd.concat([hourly_data_month_day_error_columns, hourly_data_month_day_error[model_name].iloc[0:]]).reset_index(drop=True)
+            except:
+                continue
+        try:
+            plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df["KNN"], hourly_data_month_day_error["KNN"], self.model_1_frame, self.model_2_button_event, "N/A", "Model 1")
+        except:
+            plot_no_model(self, self.model_1_frame, self.model_2_button_event, "N/A", "NO SAVED MODEL FOR KNN")
+        
+        try:
+            plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df["CNN"], hourly_data_month_day_error["CNN"], self.model_2_frame, self.model_3_button_event, self.model_1_button_event, "Model 2")
+        except:
+            plot_no_model(self, self.model_2_frame, self.model_3_button_event, self.model_1_button_event, "NO SAVED MODEL FOR CNN")
+        
+        try:
+            plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df["LR"], hourly_data_month_day_error["LR"], self.model_3_frame, self.model_4_button_event, self.model_2_button_event, "Model 3")
+        except:
+            plot_no_model(self, self.model_3_frame, self.model_4_button_event, self.model_2_button_event, "NO SAVED MODEL FOR LR")
+        
+        try:
+            plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df["SVR"], hourly_data_month_day_error["SVR"], self.model_4_frame, self.summary_button_event, self.model_3_button_event, "Model 4")
+        except:
+            plot_no_model(self, self.model_4_frame, self.summary_button_event, self.model_3_button_event, "NO SAVED MODEL FOR SVR")
+        
+        
         
     def train_models_button_event(self):
         nest_asyncio.apply() # Apply nest_asyncio to allow for nested asyncio operations
@@ -810,7 +931,7 @@ class App(customtkinter.CTk):
         fsa_typed = self.fsa_search_bar.get()
         
         print(fsa_typed)
-        print("checkbox frame modified: ", selected_features_o2)
+        print("checkbox frame modified: ", selected_features)
         
         
         # Set Up data direcotry path for data collection
@@ -819,8 +940,8 @@ class App(customtkinter.CTk):
 
         ### Calling Data ###
         # Choose FSA for data collection + Get latitude and longitude of chosen fsa
-        lat = dataCollectionAndPreprocessingFlow.fsa_map[fsa_typed]["lat"]
-        lon = dataCollectionAndPreprocessingFlow.fsa_map[fsa_typed]["lon"]
+        lat = Power_Forecasting_dataCollectionAndPreprocessingFlow.fsa_map[fsa_typed]["lat"]
+        lon = Power_Forecasting_dataCollectionAndPreprocessingFlow.fsa_map[fsa_typed]["lon"]
 
         # Choose date range for data collection
         start_year = 2018
@@ -842,7 +963,7 @@ class App(customtkinter.CTk):
             weather_data = pd.read_csv(f'{power_weather_data_path}/weather_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv')
             power_data = pd.read_csv(f'{power_weather_data_path}/power_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv')
         except FileNotFoundError: 
-            weather_data, power_data = asyncio.run(dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date, end_date, fsa_typed, lat, lon))
+            weather_data, power_data = asyncio.run(Power_Forecasting_dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date, end_date, fsa_typed, lat, lon))
             weather_data.to_csv(f'{power_weather_data_path}/weather_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
             power_data.to_csv(f'{power_weather_data_path}/power_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
             
@@ -850,23 +971,47 @@ class App(customtkinter.CTk):
         
         
         # Normalize Data
-        norm_weather_data, norm_power_data, power_scaler = dataCollectionAndPreprocessingFlow.normalize_data(weather_data, power_data)
+        norm_weather_data, norm_power_data, power_scaler = Power_Forecasting_dataCollectionAndPreprocessingFlow.normalize_data(weather_data, power_data)
     
         # Save Normalized Data to CSV
         norm_weather_data.to_csv(f'{x_y_input_path}/norm_weather_data_{fsa_typed}.csv', index=False)
         norm_power_data.to_csv(f'{x_y_input_path}/norm_power_data_{fsa_typed}.csv', index=False)
-    
-        # Save Scaler
-        joblib.dump(power_scaler, f'{saved_model_path}/power_scaler_{fsa_typed}.pkl')
-
-
+        
+        total_features = ["Hour"]
+        for feature in selected_features:
+            total_features.append(feature)
+        total_features_temp = total_features.copy()
+        for lag in range (1, 24):
+            for feature in total_features_temp:
+                if feature == "Weekend" or feature == "Season":
+                    continue
+                if feature == "Hour":
+                    total_features.append(feature+"_"+str(lag))
+                else:
+                    total_features.append(feature+"_Lag_"+str(lag))
+        total_features.insert(0, "Day")
+        total_features.insert(0, "Month")
+        total_features.insert(0, "Year")
+        
+        print(total_features)
+        
         # Train and Save KNN Model
-        Power_Forecasting_KNN_Saver.save_knn_model(norm_weather_data, norm_power_data, power_scaler, fsa_typed, saved_model_path)
-
+        for model in selected_models:
+            if model == "K-Nearest Neighbors":
+                Power_Forecasting_KNN_Saver.save_knn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
+                
+        
+        
     def open_file_button_event(self):
+        input_excel_template_path = os.path.join(input_excel_path, "Input_Data_Excel_File_Template.xlsm")
+        os.startfile(input_excel_template_path)
+    
+    def upload_file_button_event(self):
         global input_data_filename
         filetypes = (('excel files', '*.xlsm'), ('All files', '*.*'))  
         input_data_filename = fd.askopenfilename(title='Input Excel File', initialdir=input_excel_path, filetypes=filetypes)
+        os.startfile(input_data_filename)
+        
         
     def train_input_excel_models_button_event(self):
         #print("checkbox frame modified: ", selected_features_o3)
@@ -883,7 +1028,24 @@ class App(customtkinter.CTk):
         print(X)
         
     def save_results_button_event(self):
-        print("SAVE RESULTS")
+        saved_results_path = os.path.join(output_results_path, "Output_Results.xlsx")
+        writer = pd.ExcelWriter(saved_results_path)
+        for model_name in model_names_list:
+            if model_name == "K-Nearest Neighbors":
+                model_name = "KNN"
+            if model_name == "Convolutional Neural Network":
+                model_name = "CNN" 
+            if model_name == "Linear Regression":
+                model_name = "LR"
+            if model_name == "Scalar Vector Regression":
+                model_name = "SVR" 
+            try:
+                save_results_dic[model_name].to_excel(writer, sheet_name = (model_name + "_Model_Results"), index = False)
+            except:
+                continue
+        writer.close()
+        os.startfile(saved_results_path)
+        
     def restart_program_button_event(self): 
         global restart_program
         restart_program = 1
@@ -917,25 +1079,15 @@ class App(customtkinter.CTk):
         number_of_days_chosen_option_menu = choice
         #print("optionmenu dropdown clicked:", choice)
     
-    def features_checkbox_event_o2(self):
-        global selected_features_o2
-        selected_features_o2 = self.scrollable_features_checkbox_frame_o2.get_checked_items()
-        print("checkbox frame modified: ", selected_features_o2)
+    def features_checkbox_event(self):
+        global selected_features
+        selected_features = self.scrollable_features_checkbox_frame.get_checked_items()
+        print("checkbox frame modified: ", selected_features)
         
-    def models_checkbox_event_o2(self):
-        global selected_models_o2
-        selected_models_o2 = self.scrollable_models_checkbox_frame_o2.get_checked_items()
-        print("checkbox frame modified: ", selected_models_o2)
-        
-    def features_checkbox_event_o3(self):
-        global selected_features_o3
-        selected_features_o3 = self.scrollable_features_checkbox_frame_o3.get_checked_items()
-        print("checkbox frame modified: ", selected_features_o3)
-        
-    def models_checkbox_event_o3(self):
-        global selected_models_o3
-        selected_models_o3 = self.scrollable_models_checkbox_frame_o3.get_checked_items()
-        print("checkbox frame modified: ", selected_models_o3)
+    def models_checkbox_event(self):
+        global selected_models
+        selected_models = self.scrollable_models_checkbox_frame.get_checked_items()
+        print("checkbox frame modified: ", selected_models)
     
     def show_table_checkbox_event(self):
         self.detailed_table_checkbox_var.get()
@@ -973,7 +1125,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_laptop_run
+    run_student = joseph_pc_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):

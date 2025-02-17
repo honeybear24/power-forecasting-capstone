@@ -61,13 +61,15 @@ def save_knn_model(X_df_knn: pd.DataFrame, Y_df_knn: pd.DataFrame, power_scaler,
     # #%% Export metrix evaluation to csv
     metrix_evaluation = pd.DataFrame({
                                 "Model": ["KNN"],
-                                "MAPE": [mape],
-                                "MAE": [mae],
+                                "MAPE (%)": [mape*100],
+                                "MAE (kW)": [mae],
                                 "r2": [r2],
                                     })
     
     file_path_metrics = os.path.join(file_path, "KNN_" + fsa + "_Metrics.csv")   
     metrix_evaluation.to_csv(file_path_metrics, index=False)
+
+
 
 
 
