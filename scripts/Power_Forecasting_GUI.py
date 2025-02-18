@@ -121,7 +121,12 @@ class App(customtkinter.CTk):
         ###############################################################################
         
         self.start_frame = customtkinter.CTkFrame(self, corner_radius=0)
-        self.start_frame.grid_columnconfigure(0, weight=1)
+        self.start_frame.grid_columnconfigure(0, weight=2)
+        self.start_frame.grid_columnconfigure(1, weight=2)
+        self.start_frame.grid_columnconfigure(2, weight=1)
+        self.start_frame.grid_columnconfigure(3, weight=1)
+        self.start_frame.grid_columnconfigure(4, weight=2)
+        self.start_frame.grid_columnconfigure(5, weight=2)
         self.start_frame.grid_rowconfigure(0, weight=1)
         
         # Create background label for start frame
@@ -137,7 +142,7 @@ class App(customtkinter.CTk):
         
         # Create start button to go to main menu
         self.start_button = customtkinter.CTkButton(self.start_frame, text="Start ", command=self.start_button_event, height=85, width=250, font=my_font, corner_radius=40, bg_color="#0f0f39", hover_color="#560067")
-        self.start_button.grid(row = 0, column = 0, padx = (700, 700), pady = (0, 175), sticky = "sew")
+        self.start_button.grid(row = 0, column = 2, padx = 100, pady = (0, 175), columnspan = 2, sticky = "sew")
     
         
         ###############################################################################
