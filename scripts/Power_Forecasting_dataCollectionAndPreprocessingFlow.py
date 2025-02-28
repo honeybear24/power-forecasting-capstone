@@ -37,8 +37,11 @@ def fill_missing_data(data: pd.DataFrame):
 # add_calendar_columns - Add Weekends, Holidays, and Seasons calendar columns to dataframe
 def add_calendar_columns(data: pd.DataFrame):
 
-    # Add temporary DATE coliumn to dataframe to perform operations
-    data['DATE'] = pd.to_datetime(data['Date/Time (LST)'])
+    # Add temporary DATE column to dataframe to perform operations
+    try:
+        data['DATE'] = pd.to_datetime(data['Date/Time (LST)'])
+    except:
+        data['DATE'] = pd.to_datetime(data[["Year", "Month", "Day","Hour"]])
 
     # Add Weekend Column to dataframe (0 = Weekday, 1 = Weekend) - // = Floor Division (returns integer and drops remainder)
     data['Weekend'] = data['DATE'].dt.dayofweek // 5  # Wekdays = 0 - 4, Weekends = 5 - 6
@@ -68,9 +71,11 @@ def add_calendar_columns(data: pd.DataFrame):
     data = data.drop(columns=['DATE'])
 
     # Drop Date/Time (LST) column
-    data = data.drop(columns=['Date/Time (LST)'])
-
-    return data
+    try:
+        data = data.drop(columns=['Date/Time (LST)'])
+        return data
+    except:
+        return data
 
 # add_lags_to_weather_data - Add lagged columns to weather   
 def add_lags_to_weather_data(data: pd.DataFrame, lag: int):

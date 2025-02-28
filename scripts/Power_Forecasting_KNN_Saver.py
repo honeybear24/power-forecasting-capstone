@@ -14,12 +14,9 @@ import os
 import math
 import numpy as np
 import joblib
-
-#%% KNN Model
-# JOSEPH FILLS IN CODE HERE ON A NEW BRANCH
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.neighbors import KNeighborsRegressor 
-from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error, mean_squared_error, r2_score
+from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error, mean_squared_error, r2_score, root_mean_squared_error
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -43,7 +40,6 @@ def save_knn_model(X_df_knn: pd.DataFrame, Y_df_knn: pd.DataFrame, power_scaler,
 
     # Get metric evaluation
     Y_pred = knn_model.predict(X_test)
-    print(Y_pred)
     
     # Denomalize nomalized power data to check and see if matching with original data
     Y_pred_denormalized = Y_pred.copy()
@@ -57,13 +53,16 @@ def save_knn_model(X_df_knn: pd.DataFrame, Y_df_knn: pd.DataFrame, power_scaler,
     mae = mean_absolute_error(Y_test_denormalized, Y_pred_denormalized)
     mse = mean_squared_error(Y_test_denormalized, Y_pred_denormalized)
     r2 = r2_score(Y_test_denormalized, Y_pred_denormalized)
+    rmse = root_mean_squared_error(Y_test_denormalized, Y_pred_denormalized)
     
     # #%% Export metrix evaluation to csv
     metrix_evaluation = pd.DataFrame({
                                 "Model": ["KNN"],
                                 "MAPE (%)": [mape*100],
-                                "MAE (kW)": [mae],
+                                "MAE (MW)": [mae*0.001],
                                 "r2": [r2],
+                                "MSE (MW Squared)": [mse*0.001*0.001],
+                                "RMSE (MW)" : [rmse*0.001],  
                                     })
     
     file_path_metrics = os.path.join(file_path, "KNN_" + fsa + "_Metrics.csv")   
