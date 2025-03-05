@@ -36,7 +36,7 @@ def fill_missing_data(data: pd.DataFrame):
 
 # add_calendar_columns - Add Weekends, Holidays, and Seasons calendar columns to dataframe
 def add_calendar_columns(data: pd.DataFrame):
-
+    
     # Add temporary DATE column to dataframe to perform operations
     try:
         data['DATE'] = pd.to_datetime(data['Date/Time (LST)'])
@@ -48,7 +48,40 @@ def add_calendar_columns(data: pd.DataFrame):
 
     # Add Season Column to dataframe (1 = Winter, 2 = Spring, 3 = Summer, 4 = Fall) - NO MAKE 0 OR 1 
     data['Season'] = (data['Month'] % 12 + 3) // 3 
+    
+    # Convert year, month, day, hour to boolean values
+    # Day range 1 to 31 (subtract last day for 0 condition)
+    days = [*range(1, 31)]
+    # Hour range 0 to 23 (subtract last hour for 0 condition)
+    hours = [*range(0, 23)]
+    # Hour range 0 to 23 (subtract last month for 0 condition)
+    months = [*range(1, 12)]
+    
+    years = data["Year"].unique()
+    
+    
+    for year in years:
+        data["Year_" + str(year)] = data["Year"]==int(year)
+        data["Year_" + str(year)] = data["Year_" + str(year)].astype(int)
 
+    for month in months:
+        data["Month_" + str(month)] = data["Month"]==int(month)
+        data["Month_" + str(month)] = data["Month_" + str(month)].astype(int)
+
+    for day in days:
+        data["Day_"+str(day)] = data["Day"]==int(day)
+        data["Day_"+str(day)] = data["Day_"+str(day)].astype(int)
+
+    for hour in hours:
+        data["Hour_"+str(hour)] = data["Hour"]==int(hour)
+        data["Hour_"+str(hour)] = data["Hour_"+str(hour)].astype(int)
+    
+    
+    
+    
+    
+    
+    
     # # Add Holiday Column
     # data['Holiday'] = 0 # Initialize Holiday Column
     # temp_value = 0 # Temporary value to store holiday value for the day
@@ -68,7 +101,7 @@ def add_calendar_columns(data: pd.DataFrame):
     #         print(" -> " + str(date_temp)  + ", " + str(row['Hour']) + ", " + str(temp_value))
 
     # Drop temporary DATE column   
-    data = data.drop(columns=['DATE'])
+    data = data.drop(columns=['DATE', 'Year', 'Month', 'Day', 'Hour'])
 
     # Drop Date/Time (LST) column
     try:
@@ -82,7 +115,9 @@ def add_lags_to_weather_data(data: pd.DataFrame, lag: int):
     
     # Add lag columns to weather dataframe
     for i in range(1, lag + 1):
-        data[f'Hour_{i}'] = data['Hour'].shift(i)
+        for hour in range(0, 23):
+            data[f'Hour_{hour}_Lag_{i}'] = data[f'Hour_{hour}'].shift(i)
+            
         data[f'Temperature_Lag_{i}'] = data['Temperature'].shift(i)
         data[f'Dew Point Temperature_Lag_{i}'] = data['Dew Point Temperature'].shift(i)
         data[f'Wind Speed_Lag_{i}'] = data['Wind Speed'].shift(i)
@@ -95,7 +130,7 @@ def add_lags_to_weather_data(data: pd.DataFrame, lag: int):
 
     return data
 
-# 
+
 
 # get_weather_data - For a given day and FSA (through the lat and long), get the weather data for that day
 async def get_weather_data(session: aiohttp.ClientSession, current_date: datetime, next_date: datetime, lat: float, lon: float):
@@ -239,6 +274,9 @@ def normalize_data(weather_data: pd.DataFrame, power_data: pd.DataFrame, scaler=
 
     # Normalize Weather Data
     weather_data_normalized = weather_data.copy()
+    
+    weather_data_normalized
+    
     weather_data_normalized[weather_data_normalized.columns] = scaler.fit_transform(weather_data_normalized[weather_data_normalized.columns])
 
     # Normalize Power Data - Only TOTAL_CONSUMPTION column

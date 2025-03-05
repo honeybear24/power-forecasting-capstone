@@ -742,8 +742,6 @@ class App(customtkinter.CTk):
                 self.restart_program_button.grid(row=2, column=1, padx = 100, pady = 30, sticky = "ew")
             
             
-            os.remove(plot_svg)
-            
         # Function to display when no model is saved
         def plot_no_model(self, model_frame, model_event_next, model_event_back, model_name):
             
@@ -847,8 +845,8 @@ class App(customtkinter.CTk):
         
         dummy_hourly_data_month_day = dummy_hourly_data_month_day.reset_index(drop = True) 
         weather_data = weather_data.reset_index(drop = True)
-        
-        index_first_day = weather_data[(weather_data['Day'] == start_day)].index
+
+        index_first_day = weather_data[(weather_data['Day' == start_day].index
         
         dummy_hourly_data_month_day = dummy_hourly_data_month_day.drop(index_first_day, axis='index', inplace = False).reset_index(drop=True)
         weather_data = weather_data.drop(index_first_day, axis='index', inplace = False).reset_index(drop=True)
@@ -862,22 +860,39 @@ class App(customtkinter.CTk):
         # Import and predict Models
         ###############################################################################
         
+        total_features = []
+        # Convert year, month, day, hour to boolean values
+        # Day range 1 to 31 (subtract last day for 0 condition)
+        days = [*range(1, 31)]
+        # Hour range 0 to 23 (subtract last hour for 0 condition)
+        hours = [*range(0, 23)]
+        # Hour range 0 to 23 (subtract last month for 0 condition)
+        months = [*range(1, 12)]
         
-        total_features = ["Hour"]
+        years = power_data["YEAR"].unique()
+        
+        for year in years:
+            total_features.append("Year_" + str(year))
+
+        for month in months:
+            total_features.append("Month_" + str(month))
+
+        for day in days:
+            total_features.append("Day_" + str(day))
+        
+        for hour in hours:
+            total_features.append("Hour_" + str(hour))
+                     
         for feature in selected_features:
             total_features.append(feature)
+            
         total_features_temp = total_features.copy()
         for lag in range (1, 24):
             for feature in total_features_temp:
-                if feature == "Weekend" or feature == "Season":
+                if (feature == "Weekend" or feature == "Season" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
                     continue
-                if feature == "Hour":
-                    total_features.append(feature+"_"+str(lag))
                 else:
                     total_features.append(feature+"_Lag_"+str(lag))
-        total_features.insert(0, "Day")
-        total_features.insert(0, "Month")
-        total_features.insert(0, "Year")
         
         
         # Import saved CSV into script as dataframes
@@ -1146,21 +1161,39 @@ class App(customtkinter.CTk):
         weather_data.to_csv(f'{x_y_input_path}/YYYYweather_data_{fsa_typed}.csv', index=False)
         # norm_power_data.to_csv(f'{x_y_input_path}/norm_power_data_{fsa_typed}.csv', index=False)
         
-        total_features = ["Hour"]
+        total_features = []
+        # Convert year, month, day, hour to boolean values
+        # Day range 1 to 31 (subtract last day for 0 condition)
+        days = [*range(1, 31)]
+        # Hour range 0 to 23 (subtract last hour for 0 condition)
+        hours = [*range(0, 23)]
+        # Hour range 0 to 23 (subtract last month for 0 condition)
+        months = [*range(1, 12)]
+        
+        years = power_data["YEAR"].unique()
+        
+        for year in years:
+            total_features.append("Year_" + str(year))
+
+        for month in months:
+            total_features.append("Month_" + str(month))
+
+        for day in days:
+            total_features.append("Day_" + str(day))
+        
+        for hour in hours:
+            total_features.append("Hour_" + str(hour))
+                     
         for feature in selected_features:
             total_features.append(feature)
+            
         total_features_temp = total_features.copy()
         for lag in range (1, 24):
             for feature in total_features_temp:
-                if feature == "Weekend" or feature == "Season":
+                if (feature == "Weekend" or feature == "Season" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
                     continue
-                if feature == "Hour":
-                    total_features.append(feature+"_"+str(lag))
                 else:
                     total_features.append(feature+"_Lag_"+str(lag))
-        total_features.insert(0, "Day")
-        total_features.insert(0, "Month")
-        total_features.insert(0, "Year")
         
         # Train and Save KNN Model
         for model in selected_models:
@@ -1201,21 +1234,39 @@ class App(customtkinter.CTk):
         file_path_scalar = os.path.join(saved_model_path, "power_scaler_" + input_data_basename + ".pkl")
         joblib.dump(power_scaler, file_path_scalar)
         
-        total_features = ["Hour"]
+        total_features = []
+        # Convert year, month, day, hour to boolean values
+        # Day range 1 to 31 (subtract last day for 0 condition)
+        days = [*range(1, 31)]
+        # Hour range 0 to 23 (subtract last hour for 0 condition)
+        hours = [*range(0, 23)]
+        # Hour range 0 to 23 (subtract last month for 0 condition)
+        months = [*range(1, 12)]
+        
+        years = power_data["YEAR"].unique()
+        
+        for year in years:
+            total_features.append("Year_" + str(year))
+
+        for month in months:
+            total_features.append("Month_" + str(month))
+
+        for day in days:
+            total_features.append("Day_" + str(day))
+        
+        for hour in hours:
+            total_features.append("Hour_" + str(hour))
+                     
         for feature in selected_features:
             total_features.append(feature)
+            
         total_features_temp = total_features.copy()
         for lag in range (1, 24):
             for feature in total_features_temp:
-                if feature == "Weekend" or feature == "Season":
+                if (feature == "Weekend" or feature == "Season" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
                     continue
-                if feature == "Hour":
-                    total_features.append(feature+"_"+str(lag))
                 else:
                     total_features.append(feature+"_Lag_"+str(lag))
-        total_features.insert(0, "Day")
-        total_features.insert(0, "Month")
-        total_features.insert(0, "Year")
         
         # Train and Save Models
         for model in selected_models:
@@ -1357,7 +1408,6 @@ class App(customtkinter.CTk):
                                                                   anchor="w", command=self.restart_program_button_event)
                 self.restart_program_button.grid(row=2, column=1, padx = 100, pady = 30, sticky = "ew")
             
-            os.remove(plot_svg)
             
         # Function to display when no model is saved
         def plot_no_model_2(self, model_frame, model_event_next, model_event_back, model_name):
@@ -1404,7 +1454,7 @@ class App(customtkinter.CTk):
         # Remove first day because of lags
         dummy_power_data = dummy_power_data.reset_index(drop = True) 
         weather_data = weather_data.reset_index(drop = True)
-        
+
         index_first_day = weather_data[(weather_data['Day'] == weather_data["Day"].iloc[0])].index
         
         dummy_power_data = dummy_power_data.drop(index_first_day, axis='index', inplace = False).reset_index(drop=True)
@@ -1418,22 +1468,55 @@ class App(customtkinter.CTk):
         # Import and predict Models
         ###############################################################################
         
+        total_features = []
+        # Convert year, month, day, hour to boolean values
+        # Day range 1 to 31 (subtract last day for 0 condition)
+        days = [*range(1, 31)]
+        # Hour range 0 to 23 (subtract last hour for 0 condition)
+        hours = [*range(0, 23)]
+        # Hour range 0 to 23 (subtract last month for 0 condition)
+        months = [*range(1, 12)]
         
-        total_features = ["Hour"]
+        years = power_data["YEAR"].unique()
+        
+        for year in years:
+            total_features.append("Year_" + str(year))
+
+        for month in months:
+            total_features.append("Month_" + str(month))
+
+        for day in days:
+            total_features.append("Day_" + str(day))
+        
+        for hour in hours:
+            total_features.append("Hour_" + str(hour))
+                     
         for feature in selected_features:
             total_features.append(feature)
+            
         total_features_temp = total_features.copy()
         for lag in range (1, 24):
             for feature in total_features_temp:
-                if feature == "Weekend" or feature == "Season":
+                if (feature == "Weekend" or feature == "Season" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
                     continue
-                if feature == "Hour":
-                    total_features.append(feature+"_"+str(lag))
                 else:
                     total_features.append(feature+"_Lag_"+str(lag))
-        total_features.insert(0, "Day")
-        total_features.insert(0, "Month")
-        total_features.insert(0, "Year")
+                    
+        # total_features = ["Hour"]
+        # for feature in selected_features:
+        #     total_features.append(feature)
+        # total_features_temp = total_features.copy()
+        # for lag in range (1, 24):
+        #     for feature in total_features_temp:
+        #         if feature == "Weekend" or feature == "Season":
+        #             continue
+        #         if feature == "Hour":
+        #             total_features.append(feature+"_"+str(lag))
+        #         else:
+        #             total_features.append(feature+"_Lag_"+str(lag))
+        # total_features.insert(0, "Day")
+        # total_features.insert(0, "Month")
+        # total_features.insert(0, "Year")
         
         
         # Import saved CSV into script as dataframes
@@ -1626,8 +1709,8 @@ class App(customtkinter.CTk):
                 save_results_dic[model_name].to_excel(writer, sheet_name = (model_name + "_Model_Results"), index = False)
                 workbook  = writer.book
                 worksheet = writer.sheets[(model_name + "_Model_Results")]
-                worksheet.set_column('A:D', 10) 
-                worksheet.set_column('E:F', 30) 
+                worksheet.set_column('A:D', 10)
+                worksheet.set_column('E:F', 30)
                 worksheet.set_column('G:K', 20)
             except:
                 blank_dataframe.to_excel(writer, sheet_name = (model_name + "_Model_Results"), index = False)
@@ -1718,7 +1801,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_laptop_run
+    run_student = joseph_pc_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):
