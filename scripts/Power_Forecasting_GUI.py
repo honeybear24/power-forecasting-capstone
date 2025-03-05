@@ -345,13 +345,13 @@ class App(customtkinter.CTk):
                                                       command = self.show_table_checkbox_event)
         self.detailed_table_checkbox.grid(row=6, column=3, padx = padding_x, sticky = "nwe")
         
-        # Create Generate Models Button
-        self.generate_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=20, height=40, border_spacing=10, text="Generate Models",
+        # Create Generate Forecasts Button
+        self.generate_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=20, height=40, border_spacing=10, text="Generate Forecasts",
                                                       text_color=("gray10", "gray90"),
                                                       fg_color="#14206d",  
                                                       hover_color="#560067", 
                                                       bg_color= "#05122d",
-                                                      anchor="center", command=self.generate_models_button_event, font=my_button_font)
+                                                      anchor="center", command=self.predict_models_button_event, font=my_button_font)
         self.generate_models_button.grid(row=5, column=3, padx = padding_x, sticky = "ew")
         
         ###############################################################################
@@ -617,7 +617,7 @@ class App(customtkinter.CTk):
         self.navigation_visible = False
         self.toggle_navigation()
        
-    def generate_models_button_event(self):
+    def predict_models_button_event(self):
 
         
         # Function to plot the model figures
@@ -855,8 +855,9 @@ class App(customtkinter.CTk):
         
         norm_weather_data, dummy_norm_power_data, dummy_scaler = Power_Forecasting_dataCollectionAndPreprocessingFlow.normalize_data(weather_data, dummy_hourly_data_month_day)
         
-        weather_data.to_csv(f'{power_weather_data_path}/YYYYweather_data_{fsa_chosen}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
-       
+        #weather_data.to_csv(f'{power_weather_data_path}/YYYYweather_data_{fsa_chosen}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
+        #norm_weather_data.to_csv(f'{power_weather_data_path}/YYYYnorm_weather_data_{fsa_chosen}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
+        
         ###############################################################################
         # Import and predict Models
         ###############################################################################
@@ -881,7 +882,7 @@ class App(customtkinter.CTk):
         
         # Import saved CSV into script as dataframes
         X_test = norm_weather_data[total_features]
-        
+        #X_test = weather_data[total_features]
         # Dictionary for model prediction dataframes
         # model -> Value
         Y_pred_denorm_saved_df = {}
@@ -917,6 +918,7 @@ class App(customtkinter.CTk):
             # Denormalize Y_pred_saved and Y_test with min_max_scaler.pkl
             Y_pred_denorm_saved = scaler.inverse_transform(Y_pred_saved)
             Y_pred_denorm_saved_df[model_name] = pd.DataFrame(Y_pred_denorm_saved, columns=['TOTAL_CONSUMPTION'])
+            #Y_pred_denorm_saved_df[model_name] = pd.DataFrame(Y_pred_saved, columns=['TOTAL_CONSUMPTION'])
             
             # Convert to MW
             Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name]*0.001
@@ -1140,7 +1142,8 @@ class App(customtkinter.CTk):
         file_path_scalar = os.path.join(saved_model_path, "power_scaler_" + fsa_typed + ".pkl")
         joblib.dump(power_scaler, file_path_scalar)
         # # Save Normalized Data to CSV
-        # norm_weather_data.to_csv(f'{x_y_input_path}/norm_weather_data_{fsa_typed}.csv', index=False)
+        norm_weather_data.to_csv(f'{x_y_input_path}/YYYYnorm_weather_data_{fsa_typed}.csv', index=False)
+        weather_data.to_csv(f'{x_y_input_path}/YYYYweather_data_{fsa_typed}.csv', index=False)
         # norm_power_data.to_csv(f'{x_y_input_path}/norm_power_data_{fsa_typed}.csv', index=False)
         
         total_features = ["Hour"]
@@ -1165,6 +1168,8 @@ class App(customtkinter.CTk):
                 Power_Forecasting_KNN_Saver.save_knn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
             if model == "Linear Regression":
                 Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
+                #Power_Forecasting_LR_Saver.save_lr_model(weather_data[total_features], power_data, power_scaler, fsa_typed, saved_model_path)
+            
             if model == "Scalar Vector Regression":
                 Power_Forecasting_SVR_Saver.save_svr_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
                 
@@ -1529,7 +1534,7 @@ class App(customtkinter.CTk):
                 model_name = "LR"
             if model_name == "Scalar Vector Regression":
                 model_name = "SVR" 
-            try:    
+            try:  
                 save_results_dic[model_name] = pd.concat([weather_data[["Year", "Month", "Day", "Hour"]], Y_pred_denorm_saved_df[model_name]], axis=1)
                 save_results_dic[model_name].columns.values[4] = "PREDICTED CONSUMPTION (MW)"
                 save_results_dic[model_name] = save_results_dic[model_name].rename(columns={"Year": "YEAR"})
@@ -1541,12 +1546,13 @@ class App(customtkinter.CTk):
                 metrics_values[model_name] = pd.read_csv(metrics_model_path, header=0)
                 metrics_values[model_name] = metrics_values[model_name].round(decimals = 4)
                 
-                save_results_dic[model_name] = pd.concat([save_results_dic[model_name],  metrics_values[model_name][["MAPE (%)", "MAE (kW)", "r2"]]], axis=1).fillna("")
+                save_results_dic[model_name] = pd.concat([save_results_dic[model_name],  metrics_values[model_name][["MAPE (%)", "MAE (MW)", "r2", "MSE (MW Squared)", "RMSE (MW)"]]], axis=1).fillna("")
                 
                 
                 
                 metrics_values_columns = pd.DataFrame([metrics_values[model_name].columns], columns = metrics_values[model_name].columns)
                 table_values_columns = pd.DataFrame([table_values[model_name].columns], columns = table_values[model_name].columns)
+                print(metrics_values_columns)
                 
                 metrics_values[model_name] = pd.concat([metrics_values_columns, metrics_values[model_name].iloc[0:]]).reset_index(drop=True) 
                 table_values[model_name] = pd.concat([table_values_columns, table_values[model_name].iloc[0:]]).reset_index(drop=True)
@@ -1712,7 +1718,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_pc_run
+    run_student = joseph_laptop_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):
