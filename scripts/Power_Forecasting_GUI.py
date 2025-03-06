@@ -272,10 +272,10 @@ class App(customtkinter.CTk):
 
 
         ###############################################################################
-        # Create Option 2 training option widgets with training features and which models to train
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 1: Make predictions using saved Ontario located models.", font=my_title_font,
+        # Create Option 1 Ontario Model Predictions
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 1: Ontario Model Predictions.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=4, column=0, padx = padding_x, pady = (10, 40), columnspan=4, sticky = "w")
+        self.home_frame_Label_Selection.grid(row=4, column=0, padx = padding_x, pady = (10, 40), sticky = "w")
         
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Postal Code", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
         self.home_frame_Label_Selection.grid(row=5, column=0, padx = padding_x, pady = (0,10), sticky = "ew")
@@ -355,10 +355,10 @@ class App(customtkinter.CTk):
         self.generate_models_button.grid(row=5, column=3, padx = padding_x, sticky = "ew")
         
         ###############################################################################
-        # Create Option 2.1 titles and widgets for training only in Ontario
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 2: Train models with ANY postal code in Ontario.", font=my_title_font,
+        # Create Option 2 titles and widgets for training only in Ontario
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 2: Train Ontario Models.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=7, column=0, padx = padding_x, pady = (10, 10), columnspan=4, sticky = "w")
+        self.home_frame_Label_Selection.grid(row=4, column=1, padx = padding_x, pady = (10, 10), sticky = "w")
    
         # Create search bar for FSA
         self.fsa_search_bar = customtkinter.CTkEntry(self.home_frame, placeholder_text ="Please enter first three digits of postal code. (ex. 'LOH', 'M5B', etc.)",
@@ -384,10 +384,10 @@ class App(customtkinter.CTk):
         self.progress_bar_train_ontario.set(0)  # Initialize the progress bar to 0
         
         ###############################################################################
-        # Create Option 2.2 titles and widgets for training any data set
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 3: Train models with ANY input dataset.", font=my_title_font,
+        # Create Option 3 titles and widgets for training any data set
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 3: Train/Predict Input dataset.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=9, column=0, padx = padding_x, pady = (10, 10), columnspan=4, sticky = "w")
+        self.home_frame_Label_Selection.grid(row=4, column=2, padx = padding_x, pady = (10, 10), columnspan=2, sticky = "w")
         
         # Open excel file template
         self.open_file_button = customtkinter.CTkButton(self.home_frame, corner_radius=20, height=40, border_spacing=10, text="Open Input Data Excel File Template",
@@ -892,7 +892,7 @@ class App(customtkinter.CTk):
         total_features_temp = total_features.copy()
         for lag in range (1, 24):
             for feature in total_features_temp:
-                if (feature == "Weekend" or feature == "Season" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
+                if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
                     continue
                 else:
                     total_features.append(feature+"_Lag_"+str(lag))
@@ -1193,7 +1193,7 @@ class App(customtkinter.CTk):
         total_features_temp = total_features.copy()
         for lag in range (1, 24):
             for feature in total_features_temp:
-                if (feature == "Weekend" or feature == "Season" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
+                if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
                     continue
                 else:
                     total_features.append(feature+"_Lag_"+str(lag))
@@ -1267,7 +1267,7 @@ class App(customtkinter.CTk):
         total_features_temp = total_features.copy()
         for lag in range (1, 24):
             for feature in total_features_temp:
-                if (feature == "Weekend" or feature == "Season" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
+                if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
                     continue
                 else:
                     total_features.append(feature+"_Lag_"+str(lag))
@@ -1501,7 +1501,7 @@ class App(customtkinter.CTk):
         total_features_temp = total_features.copy()
         for lag in range (1, 24):
             for feature in total_features_temp:
-                if (feature == "Weekend" or feature == "Season" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
+                if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
                     continue
                 else:
                     total_features.append(feature+"_Lag_"+str(lag))
@@ -1805,7 +1805,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_pc_run
+    run_student = joseph_laptop_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):

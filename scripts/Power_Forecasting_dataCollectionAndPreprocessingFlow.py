@@ -11,9 +11,10 @@ import asyncio  # Import asyncio library for async operations
 import aiohttp # Import aiohttp library for making HTTP requests
 import nest_asyncio # Allows for asyncio to be nested
 nest_asyncio.apply() # Apply nest_asyncio to allow for nested asyncio operations
-import canada_holiday # Import library to get Canadian Holidays
+#import canada_holiday # Import library to get Canadian Holidays
 from sklearn import preprocessing # Import preprocessing library for data normalization
 import joblib # Import joblib to save and load models
+import canada_holiday
 
 ### Functions ###
 
@@ -36,7 +37,7 @@ def fill_missing_data(data: pd.DataFrame):
 
 # add_calendar_columns - Add Weekends, Holidays, and Seasons calendar columns to dataframe
 def add_calendar_columns(data: pd.DataFrame):
-     
+    
     # Add temporary DATE column to dataframe to perform operations
     try:
         data['DATE'] = pd.to_datetime(data['Date/Time (LST)'])
@@ -48,6 +49,26 @@ def add_calendar_columns(data: pd.DataFrame):
 
     # Add Season Column to dataframe (1 = Winter, 2 = Spring, 3 = Summer, 4 = Fall) - NO MAKE 0 OR 1 
     data['Season'] = (data['Month'] % 12 + 3) // 3 
+    
+    # Add Holiday Column
+    data['Holiday'] = 0 # Initialize Holiday Column
+    holiday_array = []
+    temp_value = 0 # Temporary value to store holiday value for the day
+    for index, row in  data.iterrows(): # Loop through all rows in dataframe
+        date_temp = date(row['Year'], row['Month'], row['Day'])
+        if (row["Hour"] == 0):
+            if canada_holiday.is_holiday(date_temp, "Ontario"): # Check if date is a holiday
+                temp_value = 1
+                holiday_array.append(temp_value)
+                #data.loc[index, 'Holiday'] = temp_value
+            else:
+                temp_value = 0
+                holiday_array.append(temp_value)
+                
+        else:
+            holiday_array.append(temp_value)
+            #data.loc[index, 'Holiday'] = temp_value # Fill in holdiay column for rest of day
+    data['Holiday'] = holiday_array
     
     # Convert year, month, day, hour to boolean values
     # Day range 1 to 31 (subtract last day for 0 condition)
@@ -76,27 +97,11 @@ def add_calendar_columns(data: pd.DataFrame):
         data["Hour_"+str(hour)] = data["Hour"]==int(hour)
         data["Hour_"+str(hour)] = data["Hour_"+str(hour)].astype(int)
     
-    # # Add Holiday Column
-    # data['Holiday'] = 0 # Initialize Holiday Column
-    # temp_value = 0 # Temporary value to store holiday value for the day
-    # for index, row in  data.iterrows(): # Loop through all rows in dataframe
-    #     date_temp = date(row['Year'], row['Month'], row['Day'])
-    #     if (row["Hour"] == 0):
-    #         if canada_holiday.is_holiday(date_temp, "Ontario"): # Check if date is a holiday
-    #             temp_value = 1
-    #             data.loc[index, 'Holiday'] = temp_value
-    #             print("################### HOLIDAY ###################")
-    #             print(" -> " + str(date_temp) + ", " + str(row['Hour']) + ", " + str(temp_value))
-    #         else:
-    #             temp_value = 0
-    #             print(" -> " + str(date_temp) + ", " + str(row['Hour']) + ", " + str(temp_value))
-    #     else:
-    #         data.loc[index, 'Holiday'] = temp_value # Fill in holdiay column for rest of day
-    #         print(" -> " + str(date_temp)  + ", " + str(row['Hour']) + ", " + str(temp_value))
+    
 
     # Drop temporary DATE column   
     data = data.drop(columns=['DATE'])
-
+    
     # Drop Date/Time (LST) column
     try:
         data = data.drop(columns=['Date/Time (LST)'])
@@ -207,7 +212,7 @@ def get_power_data(data_path, start_date: datetime, end_date: datetime, fsa: str
     monthly_power_data_df['YEAR'] = monthly_power_data_df['DATE'].dt.year
     monthly_power_data_df['MONTH'] = monthly_power_data_df['DATE'].dt.month
     monthly_power_data_df['DAY'] = monthly_power_data_df['DATE'].dt.day
-
+    
     # Filter power data for residential power and for target FSA
     monthly_power_data_df = monthly_power_data_df.loc[monthly_power_data_df['CUSTOMER_TYPE'] == "Residential"] # Filter for Residential Data
     monthly_power_data_df = monthly_power_data_df.loc[monthly_power_data_df['FSA'] == fsa] # Filter for FSA Data
@@ -248,6 +253,7 @@ async def get_data_for_time_range(data_path, start_date: datetime, end_date: dat
     weather_data = fill_missing_data(weather_data)
     weather_data = calculate_windchill(weather_data)
     weather_data = add_calendar_columns(weather_data)
+
     weather_data = add_lags_to_weather_data(weather_data, 23)
 
     # Collect Power Data - Pick up data from saved CSV from IESO
