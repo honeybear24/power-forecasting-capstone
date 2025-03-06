@@ -29,7 +29,7 @@ def save_knn_model(X_df_knn: pd.DataFrame, Y_df_knn: pd.DataFrame, power_scaler,
     
     knn_model = GridSearchCV(estimator = pipeline_knn,
                              scoring = ['neg_mean_absolute_percentage_error'],
-                             param_grid = {'model__n_neighbors': range(1,2)},
+                             param_grid = {'model__n_neighbors': range(1,40)},
                              refit = 'neg_mean_absolute_percentage_error')
     
     knn_model.fit(X_train, Y_train)

@@ -284,7 +284,7 @@ class App(customtkinter.CTk):
         self.home_frame_Label_Selection.grid(row=5, column=2, padx = padding_x,  pady = (0,10), sticky = "ew")
         
         # FSA
-        self.home_frame_fsa_option_menu = customtkinter.CTkOptionMenu(self.home_frame, values=["L9G", "L7G", "L8G", "L6G"], command = self.fsa_option_menu_event,
+        self.home_frame_fsa_option_menu = customtkinter.CTkOptionMenu(self.home_frame, values=["L9G", "L7G", "L8G", "L6G", "M9M"], command = self.fsa_option_menu_event,
          fg_color="#14206d",button_color="#14206d",
          dropdown_fg_color="#05122d", 
          bg_color="#05122d", 
@@ -846,15 +846,18 @@ class App(customtkinter.CTk):
         dummy_hourly_data_month_day = dummy_hourly_data_month_day.reset_index(drop = True) 
         weather_data = weather_data.reset_index(drop = True)
 
-        index_first_day = weather_data[(weather_data['Day' == start_day].index
+        index_first_day = weather_data[(weather_data['Day'] == start_day)].index
         
         dummy_hourly_data_month_day = dummy_hourly_data_month_day.drop(index_first_day, axis='index', inplace = False).reset_index(drop=True)
         weather_data = weather_data.drop(index_first_day, axis='index', inplace = False).reset_index(drop=True)
         
+        # Drop temporary year month day hour columns
+        weather_data = weather_data.drop(columns=['Year', 'Month', 'Day', 'Hour'])
+        
         norm_weather_data, dummy_norm_power_data, dummy_scaler = Power_Forecasting_dataCollectionAndPreprocessingFlow.normalize_data(weather_data, dummy_hourly_data_month_day)
         
-        #weather_data.to_csv(f'{power_weather_data_path}/YYYYweather_data_{fsa_chosen}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
-        #norm_weather_data.to_csv(f'{power_weather_data_path}/YYYYnorm_weather_data_{fsa_chosen}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
+        weather_data.to_csv(f'{power_weather_data_path}/YYYYweather_data_{fsa_chosen}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
+        norm_weather_data.to_csv(f'{power_weather_data_path}/YYYYnorm_weather_data_{fsa_chosen}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
         
         ###############################################################################
         # Import and predict Models
@@ -863,24 +866,24 @@ class App(customtkinter.CTk):
         total_features = []
         # Convert year, month, day, hour to boolean values
         # Day range 1 to 31 (subtract last day for 0 condition)
-        days = [*range(1, 31)]
+        days_range = [*range(1, 31)]
         # Hour range 0 to 23 (subtract last hour for 0 condition)
-        hours = [*range(0, 23)]
+        hours_range = [*range(0, 23)]
         # Hour range 0 to 23 (subtract last month for 0 condition)
-        months = [*range(1, 12)]
+        months_range = [*range(1, 12)]
+        # Year range depending on weather data columns
+        years_range = weather_data.columns
         
-        years = power_data["YEAR"].unique()
-        
-        for year in years:
-            total_features.append("Year_" + str(year))
-
-        for month in months:
+        for year in years_range:
+            if ("Year_" in year):
+                total_features.append(year)
+        for month in months_range:
             total_features.append("Month_" + str(month))
 
-        for day in days:
+        for day in days_range:
             total_features.append("Day_" + str(day))
         
-        for hour in hours:
+        for hour in hours_range:
             total_features.append("Hour_" + str(hour))
                      
         for feature in selected_features:
@@ -965,7 +968,6 @@ class App(customtkinter.CTk):
                 day = str(new_date.day)
             except NameError:
                 day = "01"
-            
 
             ###############################################################################
             # Dictionary for reading in hourly consumption by FSA
@@ -1164,24 +1166,25 @@ class App(customtkinter.CTk):
         total_features = []
         # Convert year, month, day, hour to boolean values
         # Day range 1 to 31 (subtract last day for 0 condition)
-        days = [*range(1, 31)]
+        days_range = [*range(1, 31)]
         # Hour range 0 to 23 (subtract last hour for 0 condition)
-        hours = [*range(0, 23)]
+        hours_range = [*range(0, 23)]
         # Hour range 0 to 23 (subtract last month for 0 condition)
-        months = [*range(1, 12)]
+        months_range = [*range(1, 12)]
+        # Year range depending on weather data columns
+        years_range = weather_data.columns
         
-        years = power_data["YEAR"].unique()
-        
-        for year in years:
-            total_features.append("Year_" + str(year))
+        for year in years_range:
+            if ("Year_" in year):
+                total_features.append(year)
 
-        for month in months:
+        for month in months_range:
             total_features.append("Month_" + str(month))
 
-        for day in days:
+        for day in days_range:
             total_features.append("Day_" + str(day))
         
-        for hour in hours:
+        for hour in hours_range:
             total_features.append("Hour_" + str(hour))
                      
         for feature in selected_features:
@@ -1194,6 +1197,7 @@ class App(customtkinter.CTk):
                     continue
                 else:
                     total_features.append(feature+"_Lag_"+str(lag))
+       
         
         # Train and Save KNN Model
         for model in selected_models:

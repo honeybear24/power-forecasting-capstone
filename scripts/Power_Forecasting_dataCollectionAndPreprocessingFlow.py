@@ -36,7 +36,7 @@ def fill_missing_data(data: pd.DataFrame):
 
 # add_calendar_columns - Add Weekends, Holidays, and Seasons calendar columns to dataframe
 def add_calendar_columns(data: pd.DataFrame):
-    
+     
     # Add temporary DATE column to dataframe to perform operations
     try:
         data['DATE'] = pd.to_datetime(data['Date/Time (LST)'])
@@ -57,8 +57,8 @@ def add_calendar_columns(data: pd.DataFrame):
     # Hour range 0 to 23 (subtract last month for 0 condition)
     months = [*range(1, 12)]
     
-    years = data["Year"].unique()
-    
+    # Year range from 2018 to 2050 of training dataset
+    years = [*range(2018, 2051)]
     
     for year in years:
         data["Year_" + str(year)] = data["Year"]==int(year)
@@ -75,12 +75,6 @@ def add_calendar_columns(data: pd.DataFrame):
     for hour in hours:
         data["Hour_"+str(hour)] = data["Hour"]==int(hour)
         data["Hour_"+str(hour)] = data["Hour_"+str(hour)].astype(int)
-    
-    
-    
-    
-    
-    
     
     # # Add Holiday Column
     # data['Holiday'] = 0 # Initialize Holiday Column
@@ -101,7 +95,7 @@ def add_calendar_columns(data: pd.DataFrame):
     #         print(" -> " + str(date_temp)  + ", " + str(row['Hour']) + ", " + str(temp_value))
 
     # Drop temporary DATE column   
-    data = data.drop(columns=['DATE', 'Year', 'Month', 'Day', 'Hour'])
+    data = data.drop(columns=['DATE'])
 
     # Drop Date/Time (LST) column
     try:
@@ -223,7 +217,6 @@ def get_power_data(data_path, start_date: datetime, end_date: datetime, fsa: str
 
 # get_data_for_time_range - get data for a given time range for a given latitude and longitude
 async def get_data_for_time_range(data_path, start_date: datetime, end_date: datetime, fsa, lat: float, lon: float):
-
     # Weather Data Collection - Done asynchronously wtih Weather API #
     async with aiohttp.ClientSession() as session: # Using session to make requests
         
@@ -277,7 +270,16 @@ def normalize_data(weather_data: pd.DataFrame, power_data: pd.DataFrame, scaler=
     
     weather_data_normalized
     
-    weather_data_normalized[weather_data_normalized.columns] = scaler.fit_transform(weather_data_normalized[weather_data_normalized.columns])
+    # Do not normalize the categorical variables
+    features = weather_data_normalized.columns
+    normalized_features = []
+    for feature in features:
+        if (feature == "Weekend" or feature == "Season" or ("Year" in feature) or ("Month" in feature) or ("Day" in feature) or ("Hour" in feature)):
+            continue
+        else:
+            normalized_features.append(feature)
+        
+    weather_data_normalized[normalized_features] = scaler.fit_transform(weather_data_normalized[normalized_features])
 
     # Normalize Power Data - Only TOTAL_CONSUMPTION column
     power_data_normalized = power_data.copy()
