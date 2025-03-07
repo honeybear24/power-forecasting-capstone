@@ -275,7 +275,7 @@ class App(customtkinter.CTk):
         # Create Option 1 Ontario Model Predictions
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 1: Ontario Model Predictions.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=4, column=0, padx = padding_x, pady = (10, 40), sticky = "w")
+        self.home_frame_Label_Selection.grid(row=4, column=0, padx = padding_x, pady = (10, 40), columnspan = 4, sticky = "w")
         
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Postal Code", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
         self.home_frame_Label_Selection.grid(row=5, column=0, padx = padding_x, pady = (0,10), sticky = "ew")
@@ -358,7 +358,7 @@ class App(customtkinter.CTk):
         # Create Option 2 titles and widgets for training only in Ontario
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 2: Train Ontario Models.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=4, column=1, padx = padding_x, pady = (10, 10), sticky = "w")
+        self.home_frame_Label_Selection.grid(row=7, column=0, padx = padding_x, pady = (10, 10), columnspan = 4, sticky = "w")
    
         # Create search bar for FSA
         self.fsa_search_bar = customtkinter.CTkEntry(self.home_frame, placeholder_text ="Please enter first three digits of postal code. (ex. 'LOH', 'M5B', etc.)",
@@ -387,7 +387,7 @@ class App(customtkinter.CTk):
         # Create Option 3 titles and widgets for training any data set
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 3: Train/Predict Input dataset.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=4, column=2, padx = padding_x, pady = (10, 10), columnspan=2, sticky = "w")
+        self.home_frame_Label_Selection.grid(row=9, column=0, padx = padding_x, pady = (10, 10), columnspan=4, sticky = "w")
         
         # Open excel file template
         self.open_file_button = customtkinter.CTkButton(self.home_frame, corner_radius=20, height=40, border_spacing=10, text="Open Input Data Excel File Template",
