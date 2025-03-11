@@ -9,6 +9,7 @@ import Power_Forecasting_dataCollectionAndPreprocessingFlow
 import Power_Forecasting_KNN_Saver
 import Power_Forecasting_LR_Saver
 import Power_Forecasting_SVR_Saver
+import Power_Forecasting_CNN_Saver
 import asyncio  # Import asyncio library for async operations
 import aiohttp # Import aiohttp library for making HTTP requests
 import nest_asyncio # Allows for asyncio to be nested
@@ -37,6 +38,7 @@ import xlsxwriter
 import math
 import numpy as np
 import canada_holiday
+from keras import models
 
 import time
 import threading
@@ -915,9 +917,13 @@ class App(customtkinter.CTk):
             if model_name == "Scalar Vector Regression":
                 model_name = "SVR" 
             
+            
             # Load model from gui_pickup folder using joblib
             try:
-                pipe_saved = joblib.load(os.path.join(saved_model_path, (model_name+"_"+fsa_chosen+"_Model.pkl")))
+                if model_name == "CNN":
+                    pipe_saved = models.load_model(os.path.join(saved_model_path, (model_name+"_"+fsa_chosen+"_Model.pkl")))
+                else:
+                    pipe_saved = joblib.load(os.path.join(saved_model_path, (model_name+"_"+fsa_chosen+"_Model.pkl"))) 
             except:
                 continue
 
@@ -1159,6 +1165,7 @@ class App(customtkinter.CTk):
         file_path_scalar = os.path.join(saved_model_path, "power_scaler_" + fsa_typed + ".pkl")
         joblib.dump(power_scaler, file_path_scalar)
         # # Save Normalized Data to CSV
+        norm_power_data.to_csv(f'{x_y_input_path}/YYYYnorm_power_data_{fsa_typed}.csv', index=False)
         norm_weather_data.to_csv(f'{x_y_input_path}/YYYYnorm_weather_data_{fsa_typed}.csv', index=False)
         weather_data.to_csv(f'{x_y_input_path}/YYYYweather_data_{fsa_typed}.csv', index=False)
         # norm_power_data.to_csv(f'{x_y_input_path}/norm_power_data_{fsa_typed}.csv', index=False)
@@ -1205,10 +1212,12 @@ class App(customtkinter.CTk):
                 Power_Forecasting_KNN_Saver.save_knn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
             if model == "Linear Regression":
                 Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
-                #Power_Forecasting_LR_Saver.save_lr_model(weather_data[total_features], power_data, power_scaler, fsa_typed, saved_model_path)
-            
+                #Power_Forecasting_LR_Saver.save_lr_model(weather_data[total_features], power_data, power_scaler, fsa_typed, saved_model_path
             if model == "Scalar Vector Regression":
                 Power_Forecasting_SVR_Saver.save_svr_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
+                
+            if model == "Convolutional Neural Network":
+                Power_Forecasting_CNN_Saver.save_cnn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
                 
         #Progress Bar Function for Ontartio training dataset
         def update_progress():
@@ -1280,7 +1289,9 @@ class App(customtkinter.CTk):
                 Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path)
             if model == "Scalar Vector Regression":
                 Power_Forecasting_SVR_Saver.save_svr_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path)   
-        
+            if model == "Convolutional Neural Network":
+                Power_Forecasting_CNN_Saver.save_cnn_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path)
+                
         #Progress Bar Function for any training dataset
         def update_progress():
             for i in range(101):
@@ -1505,23 +1516,6 @@ class App(customtkinter.CTk):
                     continue
                 else:
                     total_features.append(feature+"_Lag_"+str(lag))
-                    
-        # total_features = ["Hour"]
-        # for feature in selected_features:
-        #     total_features.append(feature)
-        # total_features_temp = total_features.copy()
-        # for lag in range (1, 24):
-        #     for feature in total_features_temp:
-        #         if feature == "Weekend" or feature == "Season":
-        #             continue
-        #         if feature == "Hour":
-        #             total_features.append(feature+"_"+str(lag))
-        #         else:
-        #             total_features.append(feature+"_Lag_"+str(lag))
-        # total_features.insert(0, "Day")
-        # total_features.insert(0, "Month")
-        # total_features.insert(0, "Year")
-        
         
         # Import saved CSV into script as dataframes
         X_test = norm_weather_data[total_features]
@@ -1542,7 +1536,10 @@ class App(customtkinter.CTk):
                 
             # Load model from gui_pickup folder using joblib
             try:
-                pipe_saved = joblib.load(os.path.join(saved_model_path, (model_name+"_"+input_data_basename+"_Model.pkl")))
+                if model_name == "CNN":
+                    pipe_saved = models.load_model(os.path.join(saved_model_path, (model_name+"_"+input_data_basename+"_Model.pkl")))
+                else:
+                    pipe_saved = joblib.load(os.path.join(saved_model_path, (model_name+"_"+input_data_basename+"_Model.pkl")))
             except:
                 continue
 
@@ -1805,7 +1802,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_laptop_run
+    run_student = joseph_pc_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):
