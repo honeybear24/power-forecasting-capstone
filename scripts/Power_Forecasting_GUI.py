@@ -86,7 +86,7 @@ class App(customtkinter.CTk):
         # Global Variables
         global save_results_dic
         save_results_dic = {}
-        global model_names_list, selected_models
+        global model_names_list, selected_models, options_list
         global selected_features
         
         # All file path locations
@@ -204,6 +204,9 @@ class App(customtkinter.CTk):
         # Create Home Frame (all code for desired frame is in here)
         ###############################################################################
         
+        ###############################################################################
+        # Initial Setup
+        
         # Create frame
         home_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
         
@@ -214,8 +217,8 @@ class App(customtkinter.CTk):
         # Create frame
         self.home_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
         self.home_frame.grid_columnconfigure(0, weight=2)
-        self.home_frame.grid_columnconfigure(1, weight=1)
-        self.home_frame.grid_columnconfigure(2, weight=2)
+        self.home_frame.grid_columnconfigure(1, weight=2)
+        self.home_frame.grid_columnconfigure(2, weight=1)
         self.home_frame.grid_columnconfigure(3, weight=2)
 
 
@@ -232,33 +235,53 @@ class App(customtkinter.CTk):
         
         # Set X padding for all frames
         padding_x = 10
+        padding_x_option1 = 50
+        padding_x_option2 = 50
+        padding_x_option3 = 30
+        pad_home = 50
         
-        # Create title and description
+        # Create main title and description
         self.home_frame_Label_Title = customtkinter.CTkLabel(self.home_frame, text="Welcome to Power Forecasting!", font=customtkinter.CTkFont(family="RobotoCondensed-ExtraBoldItalic", size=50, weight="bold", slant = "italic"), 
                                                              bg_color='#05122d', text_color=("white"))
         self.home_frame_Label_Title.grid(row=0, column=0, padx = padding_x, pady = 20, columnspan=4)
         
-        ###############################################################################
-        # Create Step 1 titles and widgets
+        # Create selected option frames
+        self.option1_frame = customtkinter.CTkFrame(self.home_frame, fg_color = '#05122d', bg_color = '#05122d')
+        self.option2_frame = customtkinter.CTkFrame(self.home_frame, fg_color = '#05122d',bg_color = '#05122d')
+        self.option3_frame = customtkinter.CTkFrame(self.home_frame, fg_color = '#05122d', bg_color = '#05122d')
+        for frame in [self.option1_frame, self.option2_frame, self.option3_frame]:
+            frame.grid(row=4, column=0, rowspan=10, columnspan=4, sticky="nsew", padx=50, pady=100)
+            frame.grid_columnconfigure(0,weight=1)
+            frame.grid_columnconfigure(1,weight=1)
+            frame.grid_columnconfigure(2,weight=1)
+            frame.grid_columnconfigure(3,weight=1)
+            frame.rowconfigure(0)
+            frame.rowconfigure(1)
+            frame.rowconfigure(2)
+            frame.grid_remove()
+        
+        # Create titles for selecting models, features, and option
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select models to train/predict and select corresponding features.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=1, column=0, padx = padding_x, pady = (40, 10), columnspan=4, sticky = "w")
+        self.home_frame_Label_Selection.grid(row=1, column=0, padx = padding_x, pady = (40, 10), columnspan=4)
         
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Models to Train", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Models to Train/Predict", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
         self.home_frame_Label_Selection.grid(row=2, column=1, padx = padding_x,  pady = (0,1), sticky = "ew")
         
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Training Features", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Training Features      ", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
         self.home_frame_Label_Selection.grid(row=2, column=2, padx = padding_x, pady = (0,1), sticky = "ew")
- 
-        # Create scrollable check box of models
+
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Main Options           ", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
+        self.home_frame_Label_Selection.grid(row=2, column=3, padx = padding_x, pady = (0,1), sticky = "w")
         
+        # Create scrollable check box of models
         model_names_list = ["Linear Regression", "Scalar Vector Regression", "K-Nearest Neighbors", "Convolutional Neural Network"]
         selected_models = model_names_list
-        self.scrollable_models_checkbox_frame = ScrollableCheckBoxFrame(self.home_frame, height = 130, width=150, command=self.models_checkbox_event,
+        self.scrollable_models_checkbox_frame = ScrollableCheckBoxFrame(self.home_frame, height = 130, width=130, command=self.models_checkbox_event,
                                                          item_list=model_names_list, 
                                                          fg_color="#05122d",
                                                          bg_color= "#05122d")
-        self.scrollable_models_checkbox_frame.grid(row=3, column=1, padx = padding_x, pady = (10, 15), sticky = "new")
+        self.scrollable_models_checkbox_frame.grid(row=3, column=1, padx = padding_x, pady = (10, 15), sticky = "ew")
         self.scrollable_models_checkbox_frame._scrollbar.configure(height=0)
         
         # Create scrollable check box of features 
@@ -268,31 +291,40 @@ class App(customtkinter.CTk):
                                                          item_list=column_names.columns, 
                                                          fg_color="#05122d",
                                                          bg_color= "#05122d")
-        self.scrollable_features_checkbox_frame.grid(row=3, column=2, padx = padding_x, pady = (10, 15), sticky = "new")
+        self.scrollable_features_checkbox_frame.grid(row=3, column=2, padx = padding_x, pady = (10, 15), sticky = "ew")
         self.scrollable_features_checkbox_frame._scrollbar.configure(height=0)
         
-
-
-        ###############################################################################
-        # Create Option 1 Ontario Model Predictions
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 1: Ontario Model Predictions.", font=my_title_font,
-            bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=4, column=0, padx = padding_x, pady = (10, 40), columnspan = 4, sticky = "w")
+        # Create drop down menu for options
+        options_list = ["Predict Ontario Models", "Train Ontario Models", "Train/Predict Excel Dataset Models"]
+        self.options_dropdown_menu = customtkinter.CTkOptionMenu(self.home_frame, values=options_list, command=self.show_frame_based_on_option,
+            fg_color="#14206d", button_color="#14206d", dropdown_fg_color="#05122d", bg_color="#05122d", font=my_text_font)
+        self.options_dropdown_menu.set(options_list[0])
+        self.options_dropdown_menu.grid(row=3, column=3, padx=padding_x, pady= 20, sticky ='nw')
         
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Postal Code", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=5, column=0, padx = padding_x, pady = (0,10), sticky = "ew")
+        self.show_frame_based_on_option(options_list[0])
+        
+        ###############################################################################
+        # Create Option 1 (Predict Ontario Models) Widgets
+        
+        
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option1_frame, text="OPTION 1: Make predictions using saved Ontario located models.", font=my_title_font,
+            bg_color='#05122d', text_color=("white"))
+        self.home_frame_Label_Selection.grid(row=0, column=0, padx = padding_x_option1, pady = (10, 40), columnspan=4)
+        
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option1_frame, text="Postal Code", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
+        self.home_frame_Label_Selection.grid(row=1, column=0, padx = padding_x_option1, sticky = "ew")
 
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Number of Days", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=5, column=2, padx = padding_x,  pady = (0,10), sticky = "ew")
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option1_frame, text="Number of Days", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
+        self.home_frame_Label_Selection.grid(row=1, column=2, padx = padding_x_option1, sticky = "ew")
         
         # FSA
-        self.home_frame_fsa_option_menu = customtkinter.CTkOptionMenu(self.home_frame, values=["L9G", "L7G", "L8G", "L6G", "M9M"], command = self.fsa_option_menu_event,
+        self.home_frame_fsa_option_menu = customtkinter.CTkOptionMenu(self.option1_frame, values=["L9G", "L7G", "L8G", "L6G", "M9M"], command = self.fsa_option_menu_event,
          fg_color="#14206d",button_color="#14206d",
          dropdown_fg_color="#05122d", 
          bg_color="#05122d", 
          font=my_text_font)
         self.home_frame_fsa_option_menu.set("L9G")
-        self.home_frame_fsa_option_menu.grid(row=6, column=0, padx = padding_x, sticky = "new")
+        self.home_frame_fsa_option_menu.grid(row=2, column=0, padx = padding_x_option1, pady= 5,sticky = "n")
         
         
         # Calendar
@@ -309,15 +341,15 @@ class App(customtkinter.CTk):
 
         # Add calendar frame for Date
         #self.calendar_frame = customtkinter.CTkFrame(self.home_frame, corner_radius=0, fg_color='#05122d')
-        #self.calendar_frame.grid(row=2, column=1, padx = padding_x, sticky = "ew", rowspan = 2)
+        #self.calendar_frame.grid(row=2, column=1, padx = padding_x_option1, sticky = "ew", rowspan = 2)
 
         # Set minimum date
-        min_date = date(2023, 1, 1)
+        min_date = date(2024, 11, 1)
         
         # Set maximum date
-        max_date = date(2024, 3, 31)
+        max_date = date(2024, 11, 30)
         
-        self.calendar = Calendar(self.home_frame, selectmode='day', year=2023, month=1, day=1, mindate = min_date, maxdate = max_date,
+        self.calendar = Calendar(self.option1_frame, selectmode='day', year=2023, month=1, day=1, mindate = min_date, maxdate = max_date,
                    background='#14206d',  # Dark Blue Background
                     foreground='#FFFFFF',  # White Text
                     selectbackground='#05122d',  # Turquoise for Selected Date
@@ -327,114 +359,320 @@ class App(customtkinter.CTk):
                     othermonthforeground='#7F8C8D',  # Medium Gray Text for Other Month's Days
                     hover_color=("gray70", "gray30"),
                     othermonthweforeground='#7F8C8D')
-        self.calendar.grid(row=5, column=1, padx = padding_x, sticky = "ew", rowspan = 2)
+        self.calendar.grid(row=1, column=1, padx = padding_x_option1, sticky = "ew", rowspan = 2)
         
         # Number of Days
-        self.home_frame_number_of_days_option_menu = customtkinter.CTkOptionMenu(self.home_frame, values=["1", "2", "3"], command = self.number_of_days_option_menu_event,
+        self.home_frame_number_of_days_option_menu = customtkinter.CTkOptionMenu(self.option1_frame, values=["1", "2", "3"], command = self.number_of_days_option_menu_event,
             fg_color="#14206d",
             button_color="#14206d",
             dropdown_fg_color="#05122d",
             bg_color="#05122d")
         self.home_frame_number_of_days_option_menu.set("1")
-        self.home_frame_number_of_days_option_menu.grid(row=6, column=2, padx = padding_x, sticky = "new")
+        self.home_frame_number_of_days_option_menu.grid(row=2, column=2, rowspan = 2, padx = padding_x_option1, sticky ='n')
+
+        
         
         # Create Show Detailed Table Check Box
         self.detailed_table_checkbox_var = customtkinter.IntVar(value = 1)
-        self.detailed_table_checkbox = customtkinter.CTkCheckBox(self.home_frame, text="Show Detailed Table",
+        self.detailed_table_checkbox = customtkinter.CTkCheckBox(self.option1_frame, text="Show Detailed Table",
                                                       text_color=("gray10", "gray90"), variable = self.detailed_table_checkbox_var, onvalue = 1, offvalue = 0, 
                                                       checkmark_color="#14206d",  
                                                       bg_color= "#05122d",
                                                       command = self.show_table_checkbox_event)
-        self.detailed_table_checkbox.grid(row=6, column=3, padx = padding_x, sticky = "nwe")
+        self.detailed_table_checkbox.grid(row=2, column=3, padx = padding_x_option1, sticky = "nwe")
         
         # Create Generate Forecasts Button
-        self.generate_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=20, height=40, border_spacing=10, text="Generate Forecasts",
+        self.generate_models_button = customtkinter.CTkButton(self.option1_frame, corner_radius=20, height=40, border_spacing=10, text="Generate Forecasts",
                                                       text_color=("gray10", "gray90"),
                                                       fg_color="#14206d",  
                                                       hover_color="#560067", 
                                                       bg_color= "#05122d",
                                                       anchor="center", command=self.predict_models_button_event, font=my_button_font)
-        self.generate_models_button.grid(row=5, column=3, padx = padding_x, sticky = "ew")
+        self.generate_models_button.grid(row=1, column=3, padx = padding_x_option1, sticky = "ew")
         
         ###############################################################################
-        # Create Option 2 titles and widgets for training only in Ontario
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 2: Train Ontario Models.", font=my_title_font,
+        # Create Option 2 (Train Ontario Models) Widgets
+        
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option2_frame, text="OPTION 2: Train models with ANY postal code in Ontario.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=7, column=0, padx = padding_x, pady = (10, 10), columnspan = 4, sticky = "w")
+        self.home_frame_Label_Selection.grid(row=0, column=0, padx = padding_x_option2, pady = (10, 10), columnspan=4)
    
         # Create search bar for FSA
-        self.fsa_search_bar = customtkinter.CTkEntry(self.home_frame, placeholder_text ="Please enter first three digits of postal code. (ex. 'LOH', 'M5B', etc.)",
+        self.fsa_search_bar = customtkinter.CTkEntry(self.option2_frame, placeholder_text ="Enter first three digits of postal code. (ex. 'LOH', 'M5B', etc.)",
                                 fg_color="#14206d",  # Foreground color (entry background)
                               bg_color="#05122d",  # Background color (frame background)
                               text_color="#ffffff",  # Text color
                               font=my_text_font)
-        self.fsa_search_bar.grid(row=8, column=1, padx = 100, pady = (10, 10), columnspan = 2, sticky = "new")
+        self.fsa_search_bar.grid(row=1, column=0, padx = padding_x_option2, pady = (10, 10), columnspan = 3, sticky = "new")
         
         # Create Train button
-        self.train_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=20, height=40, border_spacing=10, text="Train Ontario Located Models",
+        self.train_models_button = customtkinter.CTkButton(self.option2_frame, corner_radius=20, height=40, border_spacing=10, text="Train Ontario Located Models",
                                                       fg_color="#14206d",  
                                                       
                                                       bg_color= "#05122d",hover_color="#560067",
                                                       text_color=("gray10", "gray90"),
                                                       font = my_button_font,
                                                       anchor="center", command=self.train_models_button_event)
-        self.train_models_button.grid(row=8, column=3, padx = padding_x, pady = (10, 10), sticky = "new")
+        self.train_models_button.grid(row=1, column=3, padx = padding_x_option2, pady = (10, 10), sticky = "new")
         
         # Create progress bar for training Ontario data
-        self.progress_bar_train_ontario = customtkinter.CTkProgressBar(self.home_frame, width=300, fg_color="#14206d")
-        self.progress_bar_train_ontario.grid(row=9, column=3, padx = padding_x, pady=0, sticky="new")
+        self.progress_bar_train_ontario = customtkinter.CTkProgressBar(self.option2_frame, width=300, fg_color="#14206d")
+        self.progress_bar_train_ontario.grid(row=2, column=3, padx = padding_x_option2, pady=0, sticky="new")
         self.progress_bar_train_ontario.set(0)  # Initialize the progress bar to 0
         
+        
         ###############################################################################
-        # Create Option 3 titles and widgets for training any data set
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 3: Train/Predict Input dataset.", font=my_title_font,
+        # Create Option 3 (Train/Predict Excel Dataset Models) Widgets
+        
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option3_frame, text="OPTION 3: Train/Predict models with ANY input dataset.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=9, column=0, padx = padding_x, pady = (10, 10), columnspan=4, sticky = "w")
+        self.home_frame_Label_Selection.grid(row=0, column=0, padx = padding_x_option3, pady = (10, 10), columnspan=4)
         
         # Open excel file template
-        self.open_file_button = customtkinter.CTkButton(self.home_frame, corner_radius=20, height=40, border_spacing=10, text="Open Input Data Excel File Template",
+        self.open_file_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Open Excel Dataset File Template",
                                                       bg_color='#05122d',
                                                       fg_color="#4B0082",
                                                       hover_color="#560067",
                                                       text_color=("gray10", "gray90"),
                                                       font = my_button_font,
                                                       anchor="center", command=self.open_file_button_event)
-        self.open_file_button.grid(row=10, column=1, padx = padding_x, pady = 10, sticky = "new")
+        self.open_file_button.grid(row=1, column=0, padx = padding_x_option3, pady = 20, sticky = "new")
         
         # Upload excel file template
-        self.upload_file_button = customtkinter.CTkButton(self.home_frame, corner_radius=20, height=40, border_spacing=10, text="Upload Input Data Excel File",
+        self.upload_file_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Upload Excel Dataset File",
                                                       bg_color='#05122d',
                                                       fg_color="#4B0082",
                                                       hover_color="#560067",
                                                       text_color=("gray10", "gray90"),
                                                       font = my_button_font,
                                                       anchor="center", command=self.upload_file_button_event)
-        self.upload_file_button.grid(row=10, column=2, padx = padding_x, pady = 10, sticky = "new")
+        self.upload_file_button.grid(row=1, column=1, padx = padding_x_option3, pady = 20, sticky = "new")
         
         # Create Train button
-        self.train_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=20, height=40, border_spacing=10, text="Train Inputted Dataset Models",
+        self.train_models_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Train Excel Dataset Models",
                                                       fg_color="#14206d",
                                                       bg_color= "#05122d",
                                                       hover_color="#560067",
                                                       text_color=("gray10", "gray90"),
                                                       font = my_button_font,
                                                       anchor="center", command=self.train_input_excel_models_button_event)
-        self.train_models_button.grid(row=10, column=3, padx = padding_x, pady = 10, sticky = "sew")
+        self.train_models_button.grid(row=1, column=2, padx = padding_x_option3, pady = 20, sticky = "sew")
         
         # Create progress bar for training Ontario data
-        self.progress_bar_train_any = customtkinter.CTkProgressBar(self.home_frame, width=300, fg_color="#14206d")
-        self.progress_bar_train_any.grid(row=11, column=3, padx = padding_x, pady=0, sticky="new")
+        self.progress_bar_train_any = customtkinter.CTkProgressBar(self.option3_frame, width=300, fg_color="#14206d")
+        self.progress_bar_train_any.grid(row=2, column=2, padx = padding_x_option3, pady=0, sticky="new")
         self.progress_bar_train_any.set(0)  # Initialize the progress bar to 0
         
         # Create Predict button
-        self.predict_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=20, height=40, border_spacing=10, text="Predict Inputted Dataset Models",
+        self.predict_models_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Predict Excel Dataset Models",
                                                       fg_color="#14206d",
                                                       bg_color= "#05122d",
                                                       hover_color="#560067",
                                                       text_color=("gray10", "gray90"),
                                                       font = my_button_font,
                                                       anchor="center", command=self.predict_input_excel_models_button_event)
-        self.predict_models_button.grid(row=12, column=3, padx = padding_x, pady = 20, sticky = "new")
+        self.predict_models_button.grid(row=1, column=3, padx = padding_x_option3, pady = 20, sticky = "new")
+ 
+    
+        
+        
+        ###############################################################################
+        # Create Step 1 titles and widgets
+        # self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select models to train/predict and select corresponding features.", font=my_title_font,
+        #     bg_color='#05122d', text_color=("white"))
+        # self.home_frame_Label_Selection.grid(row=1, column=0, padx = padding_x, pady = (40, 10), columnspan=4, sticky = "w")
+        
+        # self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Models to Train", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
+        # self.home_frame_Label_Selection.grid(row=2, column=1, padx = padding_x,  pady = (0,1), sticky = "ew")
+        
+        # self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Training Features", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
+        # self.home_frame_Label_Selection.grid(row=2, column=2, padx = padding_x, pady = (0,1), sticky = "ew")
+ 
+        # # Create scrollable check box of models
+        
+        # model_names_list = ["Linear Regression", "Scalar Vector Regression", "K-Nearest Neighbors", "Convolutional Neural Network"]
+        # selected_models = model_names_list
+        # self.scrollable_models_checkbox_frame = ScrollableCheckBoxFrame(self.home_frame, height = 130, width=150, command=self.models_checkbox_event,
+        #                                                  item_list=model_names_list, 
+        #                                                  fg_color="#05122d",
+        #                                                  bg_color= "#05122d")
+        # self.scrollable_models_checkbox_frame.grid(row=3, column=1, padx = padding_x, pady = (10, 15), sticky = "new")
+        # self.scrollable_models_checkbox_frame._scrollbar.configure(height=0)
+        
+        # # Create scrollable check box of features 
+        # column_names = pd.read_csv(os.path.join(x_y_input_path, "Features_Column_Template.csv"), nrows = 0)
+        # selected_features = column_names.columns.tolist()
+        # self.scrollable_features_checkbox_frame = ScrollableCheckBoxFrame(self.home_frame, height = 130, width=150, command=self.features_checkbox_event,
+        #                                                  item_list=column_names.columns, 
+        #                                                  fg_color="#05122d",
+        #                                                  bg_color= "#05122d")
+        # self.scrollable_features_checkbox_frame.grid(row=3, column=2, padx = padding_x, pady = (10, 15), sticky = "new")
+        # self.scrollable_features_checkbox_frame._scrollbar.configure(height=0)
+        
+
+
+        # ###############################################################################
+        # # Create Option 1 Ontario Model Predictions
+        # self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 1: Ontario Model Predictions.", font=my_title_font,
+        #     bg_color='#05122d', text_color=("white"))
+        # self.home_frame_Label_Selection.grid(row=4, column=0, padx = padding_x, pady = (10, 40), columnspan = 4, sticky = "w")
+        
+        # self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Postal Code", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
+        # self.home_frame_Label_Selection.grid(row=5, column=0, padx = padding_x, pady = (0,10), sticky = "ew")
+
+        # self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Number of Days", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
+        # self.home_frame_Label_Selection.grid(row=5, column=2, padx = padding_x,  pady = (0,10), sticky = "ew")
+        
+        # # FSA
+        # self.home_frame_fsa_option_menu = customtkinter.CTkOptionMenu(self.home_frame, values=["L9G", "L7G", "L8G", "L6G", "M9M"], command = self.fsa_option_menu_event,
+        #  fg_color="#14206d",button_color="#14206d",
+        #  dropdown_fg_color="#05122d", 
+        #  bg_color="#05122d", 
+        #  font=my_text_font)
+        # self.home_frame_fsa_option_menu.set("L9G")
+        # self.home_frame_fsa_option_menu.grid(row=6, column=0, padx = padding_x, sticky = "new")
+        
+        
+        # # Calendar
+        # # FOR buttons on the calendar
+        # style = ttk.Style()
+        # style.theme_use('default')
+
+        # #Configure button styles for the calendar
+        # style.configure('TButton', background='#14206d', foreground='#ffffff')  # Blue background, white text
+        # style.map('TButton',
+        #   background=[('active', '#8A2BE2')],  # Violet background when the button is active (hovered)
+        #   foreground=[('active', '#ffffff')],  # White text when the button is active (hovered)
+        #   relief=[('pressed', 'groove'), ('!pressed', 'ridge')])
+
+        # # Add calendar frame for Date
+        # #self.calendar_frame = customtkinter.CTkFrame(self.home_frame, corner_radius=0, fg_color='#05122d')
+        # #self.calendar_frame.grid(row=2, column=1, padx = padding_x, sticky = "ew", rowspan = 2)
+
+        # # Set minimum date
+        # min_date = date(2024, 11, 1)
+        
+        # # Set maximum date
+        # max_date = date(2024, 11, 30)
+        
+        # self.calendar = Calendar(self.home_frame, selectmode='day', year=2023, month=1, day=1, mindate = min_date, maxdate = max_date,
+        #            background='#14206d',  # Dark Blue Background
+        #             foreground='#FFFFFF',  # White Text
+        #             selectbackground='#05122d',  # Turquoise for Selected Date
+        #             selectforeground='#FFFFFF',  # White Text for Selected Date    
+        #             othermonthbackground='#BDC3C7',  # Light Gray for Other Month's Days
+        #             othermonthwebackground='#95A5A6',  # Darker Gray for Other Month's Weekends
+        #             othermonthforeground='#7F8C8D',  # Medium Gray Text for Other Month's Days
+        #             hover_color=("gray70", "gray30"),
+        #             othermonthweforeground='#7F8C8D')
+        # self.calendar.grid(row=5, column=1, padx = padding_x, sticky = "ew", rowspan = 2)
+        
+        # # Number of Days
+        # self.home_frame_number_of_days_option_menu = customtkinter.CTkOptionMenu(self.home_frame, values=["1", "2", "3"], command = self.number_of_days_option_menu_event,
+        #     fg_color="#14206d",
+        #     button_color="#14206d",
+        #     dropdown_fg_color="#05122d",
+        #     bg_color="#05122d")
+        # self.home_frame_number_of_days_option_menu.set("1")
+        # self.home_frame_number_of_days_option_menu.grid(row=6, column=2, padx = padding_x, sticky = "new")
+        
+        # # Create Show Detailed Table Check Box
+        # self.detailed_table_checkbox_var = customtkinter.IntVar(value = 1)
+        # self.detailed_table_checkbox = customtkinter.CTkCheckBox(self.home_frame, text="Show Detailed Table",
+        #                                               text_color=("gray10", "gray90"), variable = self.detailed_table_checkbox_var, onvalue = 1, offvalue = 0, 
+        #                                               checkmark_color="#14206d",  
+        #                                               bg_color= "#05122d",
+        #                                               command = self.show_table_checkbox_event)
+        # self.detailed_table_checkbox.grid(row=6, column=3, padx = padding_x, sticky = "nwe")
+        
+        # # Create Generate Forecasts Button
+        # self.generate_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=20, height=40, border_spacing=10, text="Generate Forecasts",
+        #                                               text_color=("gray10", "gray90"),
+        #                                               fg_color="#14206d",  
+        #                                               hover_color="#560067", 
+        #                                               bg_color= "#05122d",
+        #                                               anchor="center", command=self.predict_models_button_event, font=my_button_font)
+        # self.generate_models_button.grid(row=5, column=3, padx = padding_x, sticky = "ew")
+        
+        # ###############################################################################
+        # # Create Option 2 titles and widgets for training only in Ontario
+        # self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 2: Train Ontario Models.", font=my_title_font,
+        #     bg_color='#05122d', text_color=("white"))
+        # self.home_frame_Label_Selection.grid(row=7, column=0, padx = padding_x, pady = (10, 10), columnspan = 4, sticky = "w")
+   
+        # # Create search bar for FSA
+        # self.fsa_search_bar = customtkinter.CTkEntry(self.home_frame, placeholder_text ="Please enter first three digits of postal code. (ex. 'LOH', 'M5B', etc.)",
+        #                         fg_color="#14206d",  # Foreground color (entry background)
+        #                       bg_color="#05122d",  # Background color (frame background)
+        #                       text_color="#ffffff",  # Text color
+        #                       font=my_text_font)
+        # self.fsa_search_bar.grid(row=8, column=1, padx = 100, pady = (10, 10), columnspan = 2, sticky = "new")
+        
+        # # Create Train button
+        # self.train_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=20, height=40, border_spacing=10, text="Train Ontario Located Models",
+        #                                               fg_color="#14206d",  
+                                                      
+        #                                               bg_color= "#05122d",hover_color="#560067",
+        #                                               text_color=("gray10", "gray90"),
+        #                                               font = my_button_font,
+        #                                               anchor="center", command=self.train_models_button_event)
+        # self.train_models_button.grid(row=8, column=3, padx = padding_x, pady = (10, 10), sticky = "new")
+        
+        # # Create progress bar for training Ontario data
+        # self.progress_bar_train_ontario = customtkinter.CTkProgressBar(self.home_frame, width=300, fg_color="#14206d")
+        # self.progress_bar_train_ontario.grid(row=9, column=3, padx = padding_x, pady=0, sticky="new")
+        # self.progress_bar_train_ontario.set(0)  # Initialize the progress bar to 0
+        
+        # ###############################################################################
+        # # Create Option 3 titles and widgets for training any data set
+        # self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="OPTION 3: Train/Predict Input dataset.", font=my_title_font,
+        #     bg_color='#05122d', text_color=("white"))
+        # self.home_frame_Label_Selection.grid(row=9, column=0, padx = padding_x, pady = (10, 10), columnspan=4, sticky = "w")
+        
+        # # Open excel file template
+        # self.open_file_button = customtkinter.CTkButton(self.home_frame, corner_radius=20, height=40, border_spacing=10, text="Open Input Data Excel File Template",
+        #                                               bg_color='#05122d',
+        #                                               fg_color="#4B0082",
+        #                                               hover_color="#560067",
+        #                                               text_color=("gray10", "gray90"),
+        #                                               font = my_button_font,
+        #                                               anchor="center", command=self.open_file_button_event)
+        # self.open_file_button.grid(row=10, column=1, padx = padding_x, pady = 10, sticky = "new")
+        
+        # # Upload excel file template
+        # self.upload_file_button = customtkinter.CTkButton(self.home_frame, corner_radius=20, height=40, border_spacing=10, text="Upload Input Data Excel File",
+        #                                               bg_color='#05122d',
+        #                                               fg_color="#4B0082",
+        #                                               hover_color="#560067",
+        #                                               text_color=("gray10", "gray90"),
+        #                                               font = my_button_font,
+        #                                               anchor="center", command=self.upload_file_button_event)
+        # self.upload_file_button.grid(row=10, column=2, padx = padding_x, pady = 10, sticky = "new")
+        
+        # # Create Train button
+        # self.train_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=20, height=40, border_spacing=10, text="Train Inputted Dataset Models",
+        #                                               fg_color="#14206d",
+        #                                               bg_color= "#05122d",
+        #                                               hover_color="#560067",
+        #                                               text_color=("gray10", "gray90"),
+        #                                               font = my_button_font,
+        #                                               anchor="center", command=self.train_input_excel_models_button_event)
+        # self.train_models_button.grid(row=10, column=3, padx = padding_x, pady = 10, sticky = "sew")
+        
+        # # Create progress bar for training Ontario data
+        # self.progress_bar_train_any = customtkinter.CTkProgressBar(self.home_frame, width=300, fg_color="#14206d")
+        # self.progress_bar_train_any.grid(row=11, column=3, padx = padding_x, pady=0, sticky="new")
+        # self.progress_bar_train_any.set(0)  # Initialize the progress bar to 0
+        
+        # # Create Predict button
+        # self.predict_models_button = customtkinter.CTkButton(self.home_frame, corner_radius=20, height=40, border_spacing=10, text="Predict Inputted Dataset Models",
+        #                                               fg_color="#14206d",
+        #                                               bg_color= "#05122d",
+        #                                               hover_color="#560067",
+        #                                               text_color=("gray10", "gray90"),
+        #                                               font = my_button_font,
+        #                                               anchor="center", command=self.predict_input_excel_models_button_event)
+        # self.predict_models_button.grid(row=12, column=3, padx = padding_x, pady = 20, sticky = "new")
  
     
         ###############################################################################        
@@ -531,7 +769,25 @@ class App(customtkinter.CTk):
         ###############################################################################
         self.select_frame_by_name("Start")
         
-
+    
+    ###############################################################################
+    # Function to select small frames (option menu frames) on the home menu
+    ###############################################################################     
+    def show_frame_based_on_option(self, option):
+        if option == options_list[0]:
+            self.option1_frame.grid()
+            self.option2_frame.grid_remove()
+            self.option3_frame.grid_remove()
+        elif option == options_list[1]:
+            self.option1_frame.grid_remove()
+            self.option2_frame.grid()
+            self.option3_frame.grid_remove()
+        elif option == options_list[2]:
+            self.option1_frame.grid_remove()
+            self.option2_frame.grid_remove()
+            self.option3_frame.grid()
+    
+    
     ###############################################################################
     # Function to select different frames
     ###############################################################################
@@ -560,18 +816,26 @@ class App(customtkinter.CTk):
             self.home_frame.grid_forget()
         if name == "Model: Linear Regression":
             self.model_1_frame.grid(row=0, column=1, sticky="nsew")
+            self.navigation_frame.grid_forget()
+            self.navigation_visible = False
         else:
             self.model_1_frame.grid_forget()
         if name == "Model: Scalar Vector Regression":
             self.model_2_frame.grid(row=0, column=1, sticky="nsew")
+            self.navigation_frame.grid_forget()
+            self.navigation_visible = False
         else:
             self.model_2_frame.grid_forget()
         if name == "Model: K-Nearest Neighbors":
             self.model_3_frame.grid(row=0, column=1, sticky="nsew")
+            self.navigation_frame.grid_forget()
+            self.navigation_visible = False
         else:
             self.model_3_frame.grid_forget()
         if name == "Model: Convolutional Neural Network":
             self.model_4_frame.grid(row=0, column=1, sticky="nsew")
+            self.navigation_frame.grid_forget()
+            self.navigation_visible = False
         else:
             self.model_4_frame.grid_forget()
         if name == "Summary":
@@ -899,15 +1163,13 @@ class App(customtkinter.CTk):
                 else:
                     total_features.append(feature+"_Lag_"+str(lag))
         
+
         
-        # Import saved CSV into script as dataframes
-        X_test = norm_weather_data[total_features]
-        #X_test = weather_data[total_features]
         # Dictionary for model prediction dataframes
         # model -> Value
         Y_pred_denorm_saved_df = {}
         
-        for model_name in model_names_list:
+        for model_name in selected_models:
             if model_name == "K-Nearest Neighbors":
                 model_name = "KNN"
             if model_name == "Convolutional Neural Network":
@@ -917,11 +1179,16 @@ class App(customtkinter.CTk):
             if model_name == "Scalar Vector Regression":
                 model_name = "SVR" 
             
-            
+            # Import saved CSV into script as dataframes
+            #if model_name == "LR":
+                #X_test = weather_data[total_features]
+            #else:
+            X_test = norm_weather_data[total_features]
+
             # Load model from gui_pickup folder using joblib
             try:
                 if model_name == "CNN":
-                    pipe_saved = models.load_model(os.path.join(saved_model_path, (model_name+"_"+fsa_chosen+"_Model.pkl")))
+                    pipe_saved = models.load_model(os.path.join(saved_model_path, (model_name+"_"+fsa_chosen+"_Model.keras")))
                 else:
                     pipe_saved = joblib.load(os.path.join(saved_model_path, (model_name+"_"+fsa_chosen+"_Model.pkl"))) 
             except:
@@ -941,8 +1208,11 @@ class App(customtkinter.CTk):
             
             # Denormalize Y_pred_saved and Y_test with min_max_scaler.pkl
             Y_pred_denorm_saved = scaler.inverse_transform(Y_pred_saved)
+            #if model_name == "LR":
+                #Y_pred_denorm_saved_df[model_name] = pd.DataFrame(Y_pred_saved, columns=['TOTAL_CONSUMPTION'])
+            #else:
             Y_pred_denorm_saved_df[model_name] = pd.DataFrame(Y_pred_denorm_saved, columns=['TOTAL_CONSUMPTION'])
-            #Y_pred_denorm_saved_df[model_name] = pd.DataFrame(Y_pred_saved, columns=['TOTAL_CONSUMPTION'])
+            
             
             # Convert to MW
             Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name]*0.001
@@ -1030,7 +1300,7 @@ class App(customtkinter.CTk):
                 hourly_data_month_day_saved = pd.concat([hourly_data_month_day_saved, hourly_data_month_day], axis=0, ignore_index=True)
 
 
-            for model_name in model_names_list:
+            for model_name in selected_models:
                 if model_name == "K-Nearest Neighbors":
                     model_name = "KNN"
                 if model_name == "Convolutional Neural Network":
@@ -1058,7 +1328,7 @@ class App(customtkinter.CTk):
                     continue
         
         
-        for model_name in model_names_list:
+        for model_name in selected_models:
             if model_name == "K-Nearest Neighbors":
                 model_name = "KNN"
             if model_name == "Convolutional Neural Network":
@@ -1140,9 +1410,9 @@ class App(customtkinter.CTk):
         start_day = 1
         start_hour = 0
 
-        end_year = 2023
-        end_month = 12
-        end_day = 31
+        end_year = 2024
+        end_month = 11
+        end_day = 30
         end_hour = 23
 
         # Making datetime objects for start and end dates
@@ -1212,7 +1482,7 @@ class App(customtkinter.CTk):
                 Power_Forecasting_KNN_Saver.save_knn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
             if model == "Linear Regression":
                 Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
-                #Power_Forecasting_LR_Saver.save_lr_model(weather_data[total_features], power_data, power_scaler, fsa_typed, saved_model_path
+                #Power_Forecasting_LR_Saver.save_lr_model(weather_data[total_features], power_data, power_scaler, fsa_typed, saved_model_path)
             if model == "Scalar Vector Regression":
                 Power_Forecasting_SVR_Saver.save_svr_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
                 
@@ -1459,6 +1729,7 @@ class App(customtkinter.CTk):
         
         
         
+        
         weather_data =  pd.read_excel(input_data_filename, sheet_name = "Weather_Forecast", header = 0)
         weather_data = Power_Forecasting_dataCollectionAndPreprocessingFlow.add_calendar_columns(weather_data)
         weather_data = Power_Forecasting_dataCollectionAndPreprocessingFlow.add_lags_to_weather_data(weather_data, 23)
@@ -1524,7 +1795,7 @@ class App(customtkinter.CTk):
         # model -> Value
         Y_pred_denorm_saved_df = {}
         
-        for model_name in model_names_list:
+        for model_name in selected_models:
             if model_name == "K-Nearest Neighbors":
                 model_name = "KNN"
             if model_name == "Convolutional Neural Network":
@@ -1537,7 +1808,7 @@ class App(customtkinter.CTk):
             # Load model from gui_pickup folder using joblib
             try:
                 if model_name == "CNN":
-                    pipe_saved = models.load_model(os.path.join(saved_model_path, (model_name+"_"+input_data_basename+"_Model.pkl")))
+                    pipe_saved = models.load_model(os.path.join(saved_model_path, (model_name+"_"+input_data_basename+"_Model.keras")))
                 else:
                     pipe_saved = joblib.load(os.path.join(saved_model_path, (model_name+"_"+input_data_basename+"_Model.pkl")))
             except:
@@ -1585,7 +1856,7 @@ class App(customtkinter.CTk):
             if (day_num == 0):
                 title = "Input Excel File: Hourly Power Consumption Beginning: " + year + "/" + month + "/" + day
     
-            for model_name in model_names_list:
+            for model_name in selected_models:
                 if model_name == "K-Nearest Neighbors":
                     model_name = "KNN"
                 if model_name == "Convolutional Neural Network":
@@ -1609,7 +1880,7 @@ class App(customtkinter.CTk):
                 except:
                     continue 
 
-        for model_name in model_names_list:
+        for model_name in selected_models:
             if model_name == "K-Nearest Neighbors":
                 model_name = "KNN"
             if model_name == "Convolutional Neural Network":

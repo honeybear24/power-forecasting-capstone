@@ -52,7 +52,6 @@ def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler,
     
     X_train, X_test, Y_train, Y_test = train_test_split(X_data, y_data, test_size=0.2, shuffle=False, random_state=42)
     
-    print("YAY!!!!")
     gc.collect()
   
     # Better model
@@ -121,7 +120,7 @@ def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler,
 
     
     # Save model
-    file_path_model = os.path.join(file_path, "CNN_" + fsa + "_Model.pkl")
+    file_path_model = os.path.join(file_path, "CNN_" + fsa + "_Model.keras")
     cnn_model.save(file_path_model)
     
     # Get metric evaluation

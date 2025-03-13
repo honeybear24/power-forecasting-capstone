@@ -22,15 +22,16 @@ from sklearn.preprocessing import StandardScaler
 
 def save_knn_model(X_df_knn: pd.DataFrame, Y_df_knn: pd.DataFrame, power_scaler, fsa, file_path):
     
-    X_train, X_test, Y_train, Y_test = train_test_split(X_df_knn, Y_df_knn['TOTAL_CONSUMPTION'], test_size=0.2, shuffle = False)
+    X_train, X_test, Y_train, Y_test = train_test_split(X_df_knn, Y_df_knn['TOTAL_CONSUMPTION'], test_size=730/(61320), shuffle = False)
     
     # TRY GRID SEARCH
     pipeline_knn = Pipeline([("model", KNeighborsRegressor(n_neighbors=1, weights = 'distance'))])
     
     knn_model = GridSearchCV(estimator = pipeline_knn,
                              scoring = ['neg_mean_absolute_percentage_error'],
-                             param_grid = {'model__n_neighbors': range(1,40)},
-                             refit = 'neg_mean_absolute_percentage_error')
+                             param_grid = {'model__n_neighbors': range(10,30)},
+                             refit = 'neg_mean_absolute_percentage_error', 
+                             cv = 10)
     
     knn_model.fit(X_train, Y_train)
     

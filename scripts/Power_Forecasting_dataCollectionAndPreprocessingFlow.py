@@ -270,6 +270,7 @@ def normalize_data(weather_data: pd.DataFrame, power_data: pd.DataFrame, scaler=
     # Initialize Scaler if not provided
     if not scaler:
         scaler = preprocessing.MinMaxScaler()
+        #scaler = preprocessing.StandardScaler()
 
     # Normalize Weather Data
     weather_data_normalized = weather_data.copy()
