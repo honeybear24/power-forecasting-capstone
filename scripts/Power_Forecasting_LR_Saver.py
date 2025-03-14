@@ -31,11 +31,11 @@ def save_lr_model(X: pd.DataFrame, Y: pd.DataFrame, power_scaler, fsa, file_path
     
     # Denomalize nomalized power data to check and see if matching with original data
     Y_pred_denormalized = Y_pred.copy()
-    Y_pred_denormalized = power_scaler.inverse_transform(Y_pred_denormalized.reshape(-1, 1))
+    # Y_pred_denormalized = power_scaler.inverse_transform(Y_pred_denormalized.reshape(-1, 1))
     
     # Denomalize nomalized power data to check and see if matching with original data
     Y_test_denormalized = Y_test.copy()
-    Y_test_denormalized = power_scaler.inverse_transform(Y_test_denormalized.values.reshape(-1, 1))
+    # Y_test_denormalized = power_scaler.inverse_transform(Y_test_denormalized.values.reshape(-1, 1))
     
     mape = mean_absolute_percentage_error(Y_test_denormalized, Y_pred_denormalized)
     mae = mean_absolute_error(Y_test_denormalized, Y_pred_denormalized)

@@ -26,7 +26,7 @@ def save_svr_model(X_df_SVR: pd.DataFrame, Y_df_SVR: pd.DataFrame, power_scaler,
     X_train, X_test, Y_train, Y_test = train_test_split(
         X_df_SVR, 
         Y_df_SVR["TOTAL_CONSUMPTION"],
-        test_size=0.2,
+        test_size=730/(61320),
         shuffle=False  # Keep time series order
     )
 
@@ -42,7 +42,7 @@ def save_svr_model(X_df_SVR: pd.DataFrame, Y_df_SVR: pd.DataFrame, power_scaler,
     
     #get the best parameters 
     
-    grid_search = GridSearchCV(estimator=svr, param_grid=param_grid, cv=5, scoring='neg_mean_absolute_percentage_error')
+    grid_search = GridSearchCV(estimator=svr, param_grid=param_grid, cv=10, scoring='neg_mean_absolute_percentage_error')
     grid_search.fit(X_train, Y_train)
     
     best_params = grid_search.best_params_

@@ -50,7 +50,7 @@ def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler,
     X_data, y_data = np.array(X_data, dtype=np.float16), np.array(y_data, dtype=np.float16)
     X_data = np.expand_dims(X_data, axis=-1)
     
-    X_train, X_test, Y_train, Y_test = train_test_split(X_data, y_data, test_size=0.2, shuffle=False, random_state=42)
+    X_train, X_test, Y_train, Y_test = train_test_split(X_data, y_data, test_size=730/(61320), shuffle=False, random_state=42)
     
     gc.collect()
   
@@ -125,13 +125,13 @@ def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler,
     
     # Get metric evaluation
     Y_pred = cnn_model.predict(X_test)
+
+    # Denomalize nomalized power data to check and see if matching with original data
+    Y_pred_denormalized = pd.DataFrame(Y_pred.copy())
+    Y_pred_denormalized = power_scaler.inverse_transform(Y_pred_denormalized.values.reshape(-1, 1))
     
     # Denomalize nomalized power data to check and see if matching with original data
-    Y_pred_denormalized = Y_pred.copy()
-    Y_pred_denormalized = power_scaler.inverse_transform(Y_pred_denormalized.reshape(-1, 1))
-    
-    # Denomalize nomalized power data to check and see if matching with original data
-    Y_test_denormalized = Y_test.copy()
+    Y_test_denormalized = pd.DataFrame(Y_test.copy())
     Y_test_denormalized = power_scaler.inverse_transform(Y_test_denormalized.values.reshape(-1, 1))
     
     mape = mean_absolute_percentage_error(Y_test_denormalized, Y_pred_denormalized)
