@@ -229,6 +229,7 @@ class App(customtkinter.CTk):
         self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
         
         # Fonts
+        global my_button_font
         my_text_font = customtkinter.CTkFont(family="Roboto Condensed", size=16)
         my_button_font = customtkinter.CTkFont(family="Roboto Condensed", size=18, weight="bold")
         my_title_font = customtkinter.CTkFont(family="Roboto Condensed", size=30)
@@ -795,16 +796,24 @@ class App(customtkinter.CTk):
                              font = customtkinter.CTkFont(family="Roboto Condensed", size=12))
                 self.metrix_table.grid(row=3, column=0, padx=20, pady=10, columnspan=2)
             else:
-                self.save_results_button = customtkinter.CTkButton(self.summary_frame, text="Save Results (Most Recent Run)",
-                                                              height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), 
-                                                                  corner_radius=40, bg_color='#05122d',fg_color="#4B0082",
-                                                                  anchor="w", command=self.save_results_button_event)
-                self.save_results_button.grid(row=2, column=0, padx = 100, pady = 30, sticky = "ew")
+                self.save_results_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Save Results (Most Recent Run)",
+                                                              bg_color='#05122d',
+                                                              fg_color="#4B0082",
+                                                              hover_color="#560067",
+                                                              text_color=("gray10", "gray90"),
+                                                              font = my_button_font,
+                                                              anchor="center", command=self.save_results_button_event)
+                self.save_results_button.grid(row=2, column=0, padx = 100, pady = 30, sticky = "new")
                 
-                self.restart_program_button = customtkinter.CTkButton(self.summary_frame, text="Exit Back to Start Menu", height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), 
-                                                                  corner_radius=40,bg_color='#05122d',fg_color="#4B0082",
-                                                                  anchor="w", command=self.restart_program_button_event)
-                self.restart_program_button.grid(row=2, column=1, padx = 100, pady = 30, sticky = "ew")
+                self.restart_program_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
+                                                              bg_color='#05122d',
+                                                              fg_color="#4B0082",
+                                                              hover_color="#560067",
+                                                              text_color=("gray10", "gray90"),
+                                                              font = my_button_font,
+                                                              anchor="center", command=self.restart_program_button_event)
+                self.restart_program_button.grid(row=2, column=1, padx = 100, pady = 30, sticky = "new")
+ 
             
             
         # Function to display when no model is saved
@@ -836,10 +845,15 @@ class App(customtkinter.CTk):
                     self.next_button = customtkinter.CTkButton(model_frame, text="←", command=model_event_back, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
                     self.next_button.grid(row=4, column=0, padx=20, pady=20,  sticky = "sw") 
             else:
-                self.restart_program_button = customtkinter.CTkButton(self.summary_frame, text="Exit Back to Start Menu", height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), 
-                                                                  corner_radius=40,bg_color='#05122d',fg_color="#4B0082",
-                                                                  anchor="w", command=self.restart_program_button_event)
-                self.restart_program_button.grid(row=1, column=1, padx = 100, pady = 30, sticky = "ew")
+                
+                self.restart_program_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
+                                                              bg_color='#05122d',
+                                                              fg_color="#4B0082",
+                                                              hover_color="#560067",
+                                                              text_color=("gray10", "gray90"),
+                                                              font = my_button_font,
+                                                              anchor="center", command=self.restart_program_button_event)
+                self.restart_program_button.grid(row=1, column=0, columnspan = 2, padx = 100, pady = 30, sticky = "new")
         
         
         months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
@@ -1504,16 +1518,23 @@ class App(customtkinter.CTk):
                              font = customtkinter.CTkFont(family="Roboto Condensed", size=12))
                 self.metrix_table.grid(row=3, column=0, padx=20, pady=10, columnspan=2)
             else:
-                self.save_results_button = customtkinter.CTkButton(self.summary_frame, text="Save Results (Most Recent Run)",
-                                                              height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), 
-                                                                  corner_radius=40, bg_color='#05122d',fg_color="#4B0082",
-                                                                  anchor="w", command=self.save_results_button_event)
-                self.save_results_button.grid(row=2, column=0, padx = 100, pady = 30, sticky = "ew")
+                self.save_results_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Save Results (Most Recent Run)",
+                                                              bg_color='#05122d',
+                                                              fg_color="#4B0082",
+                                                              hover_color="#560067",
+                                                              text_color=("gray10", "gray90"),
+                                                              font = my_button_font,
+                                                              anchor="center", command=self.save_results_button_event)
+                self.save_results_button.grid(row=2, column=0, padx = 100, pady = 30, sticky = "new")
                 
-                self.restart_program_button = customtkinter.CTkButton(self.summary_frame, text="Exit Back to Start Menu", height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), 
-                                                                  corner_radius=40,bg_color='#05122d',fg_color="#4B0082",
-                                                                  anchor="w", command=self.restart_program_button_event)
-                self.restart_program_button.grid(row=2, column=1, padx = 100, pady = 30, sticky = "ew")
+                self.restart_program_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
+                                                              bg_color='#05122d',
+                                                              fg_color="#4B0082",
+                                                              hover_color="#560067",
+                                                              text_color=("gray10", "gray90"),
+                                                              font = my_button_font,
+                                                              anchor="center", command=self.restart_program_button_event)
+                self.restart_program_button.grid(row=2, column=1, padx = 100, pady = 30, sticky = "new")
             
             
         # Function to display when no model is saved
@@ -1544,10 +1565,14 @@ class App(customtkinter.CTk):
                     self.next_button = customtkinter.CTkButton(model_frame, text="←", command=model_event_back, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
                     self.next_button.grid(row=4, column=0, padx=20, pady=20,  sticky = "sw") 
             else:
-                self.restart_program_button = customtkinter.CTkButton(self.summary_frame, text="Exit Back to Start Menu", height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), 
-                                                                  corner_radius=40,bg_color='#05122d',fg_color="#4B0082",
-                                                                  anchor="w", command=self.restart_program_button_event)
-                self.restart_program_button.grid(row=1, column=1, padx = 100, pady = 30, sticky = "ew")
+                self.restart_program_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
+                                                              bg_color='#05122d',
+                                                              fg_color="#4B0082",
+                                                              hover_color="#560067",
+                                                              text_color=("gray10", "gray90"),
+                                                              font = my_button_font,
+                                                              anchor="center", command=self.restart_program_button_event)
+                self.restart_program_button.grid(row=1, column=0, columnspan = 2, padx = 100, pady = 30, sticky = "new")
         
         
         
@@ -1908,7 +1933,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_pc_run
+    run_student = joseph_laptop_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):
