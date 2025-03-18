@@ -44,6 +44,7 @@ import time
 import threading
 
 import joblib
+import gc
 
 
 
@@ -86,7 +87,7 @@ class App(customtkinter.CTk):
         # Global Variables
         global save_results_dic
         save_results_dic = {}
-        global model_names_list, selected_models, options_list
+        global model_names_list, selected_models, options_list, fsa_predict_list
         global selected_features
         
         # All file path locations
@@ -98,6 +99,8 @@ class App(customtkinter.CTk):
         power_weather_data_path = os.path.join(dirs_inputs, "Power_Weather_Data")
         input_excel_path = os.path.join(dirs_inputs, "Input_Data_Excel")
         output_results_path = os.path.join(dirs_inputs, "Output_Results")
+        fsa_conversion_path = os.path.join(dirs_inputs, "Conversion_FSA_LatLong")
+        
         
         ###############################################################################
         # Initialize GUI
@@ -119,6 +122,10 @@ class App(customtkinter.CTk):
         image = PIL.Image.open(start_menu_image_path)
         background_image = customtkinter.CTkImage(image, size=(1920, 1080))
         
+        # Get FSA Map
+        fsa_map_path = os.path.join(fsa_conversion_path, "ontario_fsas.csv")
+        global fsa_map
+        fsa_map = Power_Forecasting_dataCollectionAndPreprocessingFlow.setup_fsa_map(fsa_map_path)
 
         ###############################################################################
         # Create Start Frame (all code for desired frame is in here)
@@ -319,7 +326,16 @@ class App(customtkinter.CTk):
         self.home_frame_Label_Selection.grid(row=1, column=2, padx = padding_x_option1, sticky = "ew")
         
         # FSA
-        self.home_frame_fsa_option_menu = customtkinter.CTkOptionMenu(self.option1_frame, values=["L9G", "L7G", "L8G", "L6G", "M9M"], command = self.fsa_option_menu_event,
+        fsa_predict_list = []
+        for fsa_str in os.listdir(saved_model_path):
+            if ("power_scaler" in fsa_str):
+                if ("power_scaler_Input" not in fsa_str):
+                    fsa_str = os.path.basename(fsa_str)
+                    fsa_str = os.path.splitext(fsa_str)
+                    fsa_str = fsa_str[0]
+                    fsa_str = fsa_str[-3:]
+                    fsa_predict_list.append(fsa_str)
+        self.home_frame_fsa_option_menu = customtkinter.CTkOptionMenu(self.option1_frame, values=fsa_predict_list, command = self.fsa_option_menu_event,
          fg_color="#14206d",button_color="#14206d",
          dropdown_fg_color="#05122d", 
          bg_color="#05122d", 
@@ -348,7 +364,7 @@ class App(customtkinter.CTk):
         min_date = date(2024, 11, 1)
         
         # Set maximum date
-        max_date = date(2024, 11, 30)
+        max_date = date(2024, 11, 28)
         
         self.calendar = Calendar(self.option1_frame, selectmode='day', year=2023, month=1, day=1, mindate = min_date, maxdate = max_date,
                    background='#14206d',  # Dark Blue Background
@@ -610,6 +626,8 @@ class App(customtkinter.CTk):
             self.start_frame.grid_forget()
         if name == "Home":
             self.home_frame.grid(row=0, column=1, sticky="nsew")
+            self.navigation_frame.grid_forget()
+            self.navigation_visible = False
         else:
             self.progress_bar_train_any.set(0)  # Initialize the progress bar to 0
             self.progress_bar_train_ontario.set(0)  # Initialize the progress bar to 0
@@ -724,7 +742,7 @@ class App(customtkinter.CTk):
             
             ax.plot(hourly_data_month_day_saved["DATE"], hourly_data_month_day_saved["TOTAL_CONSUMPTION"], 'o-', label = "Actual Consumption", color = "pink")
             if (model_frame == self.summary_frame): 
-                for model_name in model_names_list:
+                for model_name in selected_models:
                     if model_name == "K-Nearest Neighbors":
                         color_name = "purple"
                         model_name = "KNN"
@@ -899,8 +917,8 @@ class App(customtkinter.CTk):
 
         ### Calling Data ###
         # Choose FSA for data collection + Get latitude and longitude of chosen fsa
-        lat = Power_Forecasting_dataCollectionAndPreprocessingFlow.fsa_map[fsa_chosen]["lat"]
-        lon = Power_Forecasting_dataCollectionAndPreprocessingFlow.fsa_map[fsa_chosen]["lon"]
+        lat = fsa_map[fsa_chosen]["lat"]
+        lon = fsa_map[fsa_chosen]["lon"]
 
         # Choose date range for data collection
         start_year = int(old_year)
@@ -924,6 +942,9 @@ class App(customtkinter.CTk):
         
         dummy_hourly_data_month_day = dummy_hourly_data_month_day.reset_index(drop = True) 
         weather_data = weather_data.reset_index(drop = True)
+        
+        # CNN weather data
+        weather_data_cnn = weather_data.copy()
 
         index_first_day = weather_data[(weather_data['Day'] == start_day)].index
         
@@ -932,11 +953,27 @@ class App(customtkinter.CTk):
         
         # Drop temporary year month day hour columns
         weather_data = weather_data.drop(columns=['Year', 'Month', 'Day', 'Hour'])
+        # Drop temporary year month day hour columns
+        weather_data_cnn = weather_data_cnn.drop(columns=['Year', 'Month', 'Day', 'Hour'])
         
-        norm_weather_data, dummy_norm_power_data, dummy_scaler = Power_Forecasting_dataCollectionAndPreprocessingFlow.normalize_data(weather_data, dummy_hourly_data_month_day)
+        # Open weather scaler
+        scaler_path = os.path.join(saved_model_path, "weather_scaler_"+fsa_chosen+".pkl")
+        if not os.path.exists(scaler_path):
+            raise FileNotFoundError(f"Scaler file not found: {scaler_path}")
+        weather_scaler = joblib.load(scaler_path)
+        
+        # Normalize Weather
+        norm_weather_data = weather_scaler.transform(weather_data)
+        norm_weather_data = pd.DataFrame(norm_weather_data, columns = weather_data.columns)
+        
+        # Normalize CNN Weather
+        norm_weather_data_cnn = weather_scaler.transform(weather_data_cnn)
+        norm_weather_data_cnn = pd.DataFrame(norm_weather_data_cnn, columns = weather_data_cnn.columns)
         
         weather_data.to_csv(f'{power_weather_data_path}/YYYYweather_data_{fsa_chosen}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
         norm_weather_data.to_csv(f'{power_weather_data_path}/YYYYnorm_weather_data_{fsa_chosen}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
+        
+        weather_data_cnn.to_csv(f'{power_weather_data_path}/YYYYweather_data_cnn_{fsa_chosen}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
         
         ###############################################################################
         # Import and predict Models
@@ -976,8 +1013,6 @@ class App(customtkinter.CTk):
                 else:
                     total_features.append(feature+"_Lag_"+str(lag))
         
-
-        
         # Dictionary for model prediction dataframes
         # model -> Value
         Y_pred_denorm_saved_df = {}
@@ -992,12 +1027,11 @@ class App(customtkinter.CTk):
             if model_name == "Scalar Vector Regression":
                 model_name = "SVR" 
             
-            # Import saved CSV into script as dataframes
-            if model_name == "LR":
-                X_test = weather_data[total_features]
+            if model_name == "CNN":
+                X_test = norm_weather_data_cnn[total_features]
             else:
                 X_test = norm_weather_data[total_features]
-
+                
             # Load model from gui_pickup folder using joblib
             try:
                 if model_name == "CNN":
@@ -1006,49 +1040,64 @@ class App(customtkinter.CTk):
                     pipe_saved = joblib.load(os.path.join(saved_model_path, (model_name+"_"+fsa_chosen+"_Model.pkl"))) 
             except:
                 continue
-
-            
             
             if (model_name == "CNN"):
-                window_size = 168  # Last 168 hours (one week)
+                
+                for feature in X_test.columns:
+                  if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature) or ("Hour_" in feature)):
+                    X_test[feature].astype('bool')
+                  if ("Lag" in feature):
+                    X_test = X_test.drop(columns = [feature])
+                
+                # Create dataframe without humidity and speed
+                data = X_test
+                
+                #window_size = 168  # Last 168 hours (one week)
+                window_size = 24  # Last 24 hours (one day)
                 forecast_horizon = 24  # Next 24 hours
                 
-                X_data = []
                 
                 # Create input-output pairs using a sliding window
-                for i in range(len(X_test) - window_size - forecast_horizon + 1):
-                    X_data.append(X_test.iloc[i:i + window_size + forecast_horizon].values)  # Collect 168 hours of feature data
-                    # Collect the next 24 hours of output data from Y_df
+                Y_pred_saved = pd.DataFrame(columns=['TOTAL_CONSUMPTION'])
+                for day in range(num_of_days):
+                    X_data = []
+
+                    X_data.append(data.iloc[day*24:day*24 + window_size + forecast_horizon].values)  # Collect 24 hours of feature data
+                    
+                    # Convert to numpy arrays
+                    X_data = np.array(X_data, dtype=np.float16)
+                    X_data = np.expand_dims(X_data, axis=-1)
+    
+                    # Predict using loaded model
+                    Y_pred_cnn = pipe_saved.predict(X_data)
+                    Y_pred_cnn = pd.DataFrame(Y_pred_cnn)
+                    
+                    # Ensure Y_pred and Y_test are reshaped correctly
+                    Y_pred_cnn = Y_pred_cnn.values.reshape(-1, 1)
+                    
+                    Y_pred_cnn = pd.DataFrame(Y_pred_cnn, columns=['TOTAL_CONSUMPTION'])
+
+                    Y_pred_saved = pd.concat([Y_pred_saved, Y_pred_cnn], axis=0, ignore_index=True)
                 
-                # Convert to numpy arrays
-                X_data = np.array(X_data, dtype=np.float16)
-                X_data = np.expand_dims(X_data, axis=-1)
-                
-                # Predict using loaded model
-                Y_pred_saved = pipe_saved.predict(X_data)
-                Y_pred_saved = pd.DataFrame(Y_pred_saved)
+
             else:
                 # Predict using loaded model
                 Y_pred_saved = pipe_saved.predict(X_test)
                 
-                
-            # Ensure Y_pred and Y_test are reshaped correctly
-            Y_pred_saved = Y_pred_saved.reshape(-1, 1)
-            
+                # Ensure Y_pred and Y_test are reshaped correctly
+                Y_pred_saved = Y_pred_saved.reshape(-1, 1)
+
             # Denormalize Y_pred and Y_test with min_max_scaler_y.pkl using joblib
             scaler_path = os.path.join(saved_model_path, "power_scaler_"+fsa_chosen+".pkl")
             if not os.path.exists(scaler_path):
                 raise FileNotFoundError(f"Scaler file not found: {scaler_path}")
-            scaler = joblib.load(scaler_path)
+            power_scaler = joblib.load(scaler_path)
             
-            # Denormalize Y_pred_saved and Y_test with min_max_scaler.pkl
-            Y_pred_denorm_saved = scaler.inverse_transform(Y_pred_saved)
-            
-            if model_name == "LR":
-                Y_pred_denorm_saved_df[model_name] = pd.DataFrame(Y_pred_saved, columns=['TOTAL_CONSUMPTION'])
-            else:
-                Y_pred_denorm_saved_df[model_name] = pd.DataFrame(Y_pred_denorm_saved, columns=['TOTAL_CONSUMPTION'])
-            
+            # Inverse Transform power scaler
+            Y_pred_denorm_saved = power_scaler.inverse_transform(Y_pred_saved)
+
+            # Save power scaler to dictionary of models
+            Y_pred_denorm_saved_df[model_name] = pd.DataFrame(Y_pred_denorm_saved, columns=['TOTAL_CONSUMPTION'])
             
             # Convert to MW
             Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name]*0.001
@@ -1135,7 +1184,6 @@ class App(customtkinter.CTk):
             else:
                 hourly_data_month_day_saved = pd.concat([hourly_data_month_day_saved, hourly_data_month_day], axis=0, ignore_index=True)
 
-
             for model_name in selected_models:
                 if model_name == "K-Nearest Neighbors":
                     model_name = "KNN"
@@ -1174,6 +1222,13 @@ class App(customtkinter.CTk):
             if model_name == "Scalar Vector Regression":
                 model_name = "SVR" 
             try:    
+                Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].reset_index(drop = True)
+                hourly_data_month_day_saved = hourly_data_month_day_saved.reset_index(drop = True)
+                
+                # save_results_dic[model_name] = hourly_data_month_day_saved[["YEAR", "MONTH", "DAY", "HOUR", "TOTAL_CONSUMPTION"]]
+                # save_results_dic[model_name].columns.values[4] = "ACTUAL CONSUMPTION (MW)"
+                # save_results_dic[model_name]["PREDICTED CONSUMPTION (MW)"] = Y_pred_denorm_saved_df[model_name]
+                
                 save_results_dic[model_name] = pd.concat([hourly_data_month_day_saved[["YEAR", "MONTH", "DAY", "HOUR", "TOTAL_CONSUMPTION"]], Y_pred_denorm_saved_df[model_name]], axis=1)
                 save_results_dic[model_name]["HOUR"] = save_results_dic[model_name]["HOUR"] + 1
                 save_results_dic[model_name].columns.values[4] = "ACTUAL CONSUMPTION (MW)"
@@ -1237,8 +1292,8 @@ class App(customtkinter.CTk):
 
         ### Calling Data ###
         # Choose FSA for data collection + Get latitude and longitude of chosen fsa
-        lat = Power_Forecasting_dataCollectionAndPreprocessingFlow.fsa_map[fsa_typed]["lat"]
-        lon = Power_Forecasting_dataCollectionAndPreprocessingFlow.fsa_map[fsa_typed]["lon"]
+        lat = fsa_map[fsa_typed]["lat"]
+        lon = fsa_map[fsa_typed]["lon"]
 
         # Choose date range for data collection
         start_year = 2018
@@ -1263,13 +1318,19 @@ class App(customtkinter.CTk):
             weather_data, power_data = asyncio.run(Power_Forecasting_dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date, end_date, fsa_typed, lat, lon))
             weather_data.to_csv(f'{power_weather_data_path}/weather_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
             power_data.to_csv(f'{power_weather_data_path}/power_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
- 
-        # Normalize Data
-        norm_weather_data, norm_power_data, power_scaler = Power_Forecasting_dataCollectionAndPreprocessingFlow.normalize_data(weather_data, power_data)
         
-        # Save Scaler
+        
+        
+        
+        # Normalize Data
+        norm_weather_data, norm_power_data, weather_scaler, power_scaler = Power_Forecasting_dataCollectionAndPreprocessingFlow.normalize_data(weather_data, power_data)
+        
+        # Save Scalers
         file_path_scalar = os.path.join(saved_model_path, "power_scaler_" + fsa_typed + ".pkl")
         joblib.dump(power_scaler, file_path_scalar)
+        file_path_scalar = os.path.join(saved_model_path, "weather_scaler_" + fsa_typed + ".pkl")
+        joblib.dump(weather_scaler, file_path_scalar)
+        
         # # Save Normalized Data to CSV
         norm_power_data.to_csv(f'{x_y_input_path}/YYYYnorm_power_data_{fsa_typed}.csv', index=False)
         norm_weather_data.to_csv(f'{x_y_input_path}/YYYYnorm_weather_data_{fsa_typed}.csv', index=False)
@@ -1317,14 +1378,15 @@ class App(customtkinter.CTk):
             if model == "K-Nearest Neighbors":
                 Power_Forecasting_KNN_Saver.save_knn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
             if model == "Linear Regression":
-                #Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
-                Power_Forecasting_LR_Saver.save_lr_model(weather_data[total_features], power_data, power_scaler, fsa_typed, saved_model_path)
+                Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
             if model == "Scalar Vector Regression":
                 Power_Forecasting_SVR_Saver.save_svr_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
-                
             if model == "Convolutional Neural Network":
                 Power_Forecasting_CNN_Saver.save_cnn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
-                
+        
+        # Append FSA to drop down menu list
+        fsa_predict_list.append(fsa_typed)
+            
         #Progress Bar Function for Ontartio training dataset
         def update_progress():
             for i in range(101):
@@ -1339,6 +1401,8 @@ class App(customtkinter.CTk):
         weather_data =  pd.read_excel(input_data_filename, sheet_name = "Weather_Information", header = 0)
         weather_data = Power_Forecasting_dataCollectionAndPreprocessingFlow.add_calendar_columns(weather_data)
         weather_data = Power_Forecasting_dataCollectionAndPreprocessingFlow.add_lags_to_weather_data(weather_data, 23)
+        
+        
         power_data = pd.read_excel(input_data_filename, sheet_name = "Power_Consumption", header = 0)
         power_data = power_data.rename(columns={"Power Consumption": "TOTAL_CONSUMPTION"})
         power_data = power_data.rename(columns={"Year": "YEAR"})
@@ -1347,11 +1411,14 @@ class App(customtkinter.CTk):
         power_data = power_data.rename(columns={"Hour": "HOUR"})
         
         # Normalize Data
-        norm_weather_data, norm_power_data, power_scaler = Power_Forecasting_dataCollectionAndPreprocessingFlow.normalize_data(weather_data, power_data)
+        norm_weather_data, norm_power_data, weather_scaler, power_scaler = Power_Forecasting_dataCollectionAndPreprocessingFlow.normalize_data(weather_data, power_data)
         
         # Save Scaler
         file_path_scalar = os.path.join(saved_model_path, "power_scaler_" + input_data_basename + ".pkl")
         joblib.dump(power_scaler, file_path_scalar)
+        
+        file_path_scalar = os.path.join(saved_model_path, "weather_scaler_" + input_data_basename + ".pkl")
+        joblib.dump(weather_scaler, file_path_scalar)
         
         total_features = []
         # Convert year, month, day, hour to boolean values
@@ -1362,10 +1429,12 @@ class App(customtkinter.CTk):
         # Hour range 0 to 23 (subtract last month for 0 condition)
         months = [*range(1, 12)]
         
-        years = power_data["YEAR"].unique()
+        # Year range depending on weather data columns
+        years_range = weather_data.columns
         
-        for year in years:
-            total_features.append("Year_" + str(year))
+        for year in years_range:
+            if ("Year_" in year):
+                total_features.append(year)
 
         for month in months:
             total_features.append("Month_" + str(month))
@@ -1392,7 +1461,7 @@ class App(customtkinter.CTk):
             if model == "K-Nearest Neighbors":
                 Power_Forecasting_KNN_Saver.save_knn_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path)
             if model == "Linear Regression":
-                Power_Forecasting_LR_Saver.save_lr_model(weather_data[total_features], power_data, power_scaler, input_data_basename, saved_model_path)
+                Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path)
             if model == "Scalar Vector Regression":
                 Power_Forecasting_SVR_Saver.save_svr_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path)   
             if model == "Convolutional Neural Network":
@@ -1446,7 +1515,7 @@ class App(customtkinter.CTk):
             
             
             if (model_frame == self.summary_frame): 
-                for model_name in model_names_list:
+                for model_name in selected_models:
                     if model_name == "K-Nearest Neighbors":
                         color_name = "purple"
                         model_name = "KNN"
@@ -1581,25 +1650,42 @@ class App(customtkinter.CTk):
         weather_data = Power_Forecasting_dataCollectionAndPreprocessingFlow.add_calendar_columns(weather_data)
         weather_data = Power_Forecasting_dataCollectionAndPreprocessingFlow.add_lags_to_weather_data(weather_data, 23)
         
-        dummy_power_data =  pd.read_excel(input_data_filename, sheet_name = "Power_Consumption", header = 0)
-        dummy_power_data = dummy_power_data.rename(columns={"Power Consumption": "TOTAL_CONSUMPTION"})
+        
+        weather_data_cnn = weather_data.copy()
         
         # Remove first day because of lags
-        dummy_power_data = dummy_power_data.reset_index(drop = True) 
         weather_data = weather_data.reset_index(drop = True)
 
         index_first_day = weather_data[(weather_data['Day'] == weather_data["Day"].iloc[0])].index
         
-        dummy_power_data = dummy_power_data.drop(index_first_day, axis='index', inplace = False).reset_index(drop=True)
         weather_data = weather_data.drop(index_first_day, axis='index', inplace = False).reset_index(drop=True)
     
-        norm_weather_data, dummy_norm_power_data, dummy_scaler = Power_Forecasting_dataCollectionAndPreprocessingFlow.normalize_data(weather_data, dummy_power_data)
+        # Open weather scaler
+        scaler_path = os.path.join(saved_model_path, "weather_scaler_"+input_data_basename+".pkl")
+        if not os.path.exists(scaler_path):
+            raise FileNotFoundError(f"Scaler file not found: {scaler_path}")
+        weather_scaler = joblib.load(scaler_path)
+        
+        
+        # Drop temporary year month day hour columns
+        weather_data_dropped = weather_data.drop(columns=['Year', 'Month', 'Day', 'Hour'])
+        # Drop temporary year month day hour columns
+        weather_data_cnn_dropped = weather_data_cnn.drop(columns=['Year', 'Month', 'Day', 'Hour'])
+        
+        # Normalize Weather
+        norm_weather_data = weather_scaler.transform(weather_data_dropped)
+        norm_weather_data = pd.DataFrame(norm_weather_data, columns = weather_data_dropped.columns)
+        
+        # Normalize CNN Weather
+        norm_weather_data_cnn = weather_scaler.transform(weather_data_cnn_dropped)
+        norm_weather_data_cnn = pd.DataFrame(norm_weather_data_cnn, columns = weather_data_cnn_dropped.columns)
         
         
        
         ###############################################################################
         # Import and predict Models
         ###############################################################################
+        num_of_days = weather_data["Day"].nunique()
         
         total_features = []
         # Convert year, month, day, hour to boolean values
@@ -1610,10 +1696,12 @@ class App(customtkinter.CTk):
         # Hour range 0 to 23 (subtract last month for 0 condition)
         months = [*range(1, 12)]
         
-        years = power_data["YEAR"].unique()
+        # Year range depending on weather data columns
+        years_range = weather_data.columns
         
-        for year in years:
-            total_features.append("Year_" + str(year))
+        for year in years_range:
+            if ("Year_" in year):
+                total_features.append(year)
 
         for month in months:
             total_features.append("Month_" + str(month))
@@ -1650,7 +1738,13 @@ class App(customtkinter.CTk):
                 model_name = "LR"
             if model_name == "Scalar Vector Regression":
                 model_name = "SVR" 
-                
+            
+            # Import saved CSV into script as dataframes
+            if model_name == "CNN":
+                X_test = norm_weather_data_cnn[total_features]
+            else:
+                X_test = norm_weather_data[total_features]
+            
             # Load model from gui_pickup folder using joblib
             try:
                 if model_name == "CNN":
@@ -1659,37 +1753,67 @@ class App(customtkinter.CTk):
                     pipe_saved = joblib.load(os.path.join(saved_model_path, (model_name+"_"+input_data_basename+"_Model.pkl")))
             except:
                 continue
-            
-            # Import saved CSV into script as dataframes
-            if model_name == "LR":
-                X_test = weather_data[total_features]
+
+            if (model_name == "CNN"):
+                
+                for feature in X_test.columns:
+                  if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature) or ("Hour_" in feature)):
+                    X_test[feature].astype('bool')
+                  if ("Lag" in feature):
+                    X_test = X_test.drop(columns = [feature])
+                
+                # Create dataframe without humidity and speed
+                data = X_test
+                
+                #window_size = 168  # Last 168 hours (one week)
+                window_size = 24  # Last 24 hours (one day)
+                forecast_horizon = 24  # Next 24 hours
+                
+                
+                # Create input-output pairs using a sliding window
+                Y_pred_saved = pd.DataFrame(columns=['TOTAL_CONSUMPTION'])
+                for day in range(num_of_days):
+                    X_data = []
+
+                    X_data.append(data.iloc[day*24:day*24 + window_size + forecast_horizon].values)  # Collect 24 hours of feature data
+                    
+                    # Convert to numpy arrays
+                    X_data = np.array(X_data, dtype=np.float16)
+                    X_data = np.expand_dims(X_data, axis=-1)
+    
+                    # Predict using loaded model
+                    Y_pred_cnn = pipe_saved.predict(X_data)
+                    Y_pred_cnn = pd.DataFrame(Y_pred_cnn)
+                    
+                    # Ensure Y_pred and Y_test are reshaped correctly
+                    Y_pred_cnn = Y_pred_cnn.values.reshape(-1, 1)
+                    
+                    Y_pred_cnn = pd.DataFrame(Y_pred_cnn, columns=['TOTAL_CONSUMPTION'])
+                    
+                    print(Y_pred_cnn)
+                    Y_pred_saved = pd.concat([Y_pred_saved, Y_pred_cnn], axis=0, ignore_index=True)
+                    print(Y_pred_saved)
+
             else:
-                X_test = norm_weather_data[total_features]
+                # Predict using loaded model
+                Y_pred_saved = pipe_saved.predict(X_test)
+                
+                # Ensure Y_pred and Y_test are reshaped correctly
+                Y_pred_saved = Y_pred_saved.reshape(-1, 1)
             
-            
-            # Predict using loaded model
-            Y_pred_saved = pipe_saved.predict(X_test)
-            
-            if model_name == "CNN":
-                Y_pred_saved = pd.DataFrame(Y_pred_saved)
-            
-            # Ensure Y_pred and Y_test are reshaped correctly
-            Y_pred_saved = Y_pred_saved.reshape(-1, 1)
             
             # Denormalize Y_pred and Y_test with min_max_scaler_y.pkl using joblib
             scaler_path = os.path.join(saved_model_path, "power_scaler_"+input_data_basename+".pkl")
             if not os.path.exists(scaler_path):
                 raise FileNotFoundError(f"Scaler file not found: {scaler_path}")
-            scaler = joblib.load(scaler_path)
+            power_scaler = joblib.load(scaler_path)
             
-            # Denormalize Y_pred_saved and Y_test with min_max_scaler.pkl
-            Y_pred_denorm_saved = scaler.inverse_transform(Y_pred_saved)
-            if model_name == "LR":
-                Y_pred_denorm_saved_df[model_name] = pd.DataFrame(Y_pred_saved, columns=['TOTAL_CONSUMPTION'])
-            else:
-                Y_pred_denorm_saved_df[model_name] = pd.DataFrame(Y_pred_denorm_saved, columns=['TOTAL_CONSUMPTION'])
-            
-            
+            # Inverse Transform power scaler
+            Y_pred_denorm_saved = power_scaler.inverse_transform(Y_pred_saved)
+
+            # Save power scaler to dictionary of models
+            Y_pred_denorm_saved_df[model_name] = pd.DataFrame(Y_pred_denorm_saved, columns=['TOTAL_CONSUMPTION'])
+
             # Convert to MW
             Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name]*0.001
        
@@ -1701,9 +1825,8 @@ class App(customtkinter.CTk):
         table_values_df = pd.DataFrame() 
         
         weather_data["DATE"] = pd.to_datetime(weather_data[["Year", "Month", "Day","Hour"]])
-        
 
-        num_of_days = weather_data["Day"].nunique()
+        
         
         year = str(weather_data["Year"].iloc[0])
         month = str(weather_data["Month"].iloc[0])
@@ -1750,6 +1873,9 @@ class App(customtkinter.CTk):
             if model_name == "Scalar Vector Regression":
                 model_name = "SVR" 
             try:  
+                Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].reset_index(drop = True)
+                weather_data = weather_data.reset_index(drop = True)
+                
                 save_results_dic[model_name] = pd.concat([weather_data[["Year", "Month", "Day", "Hour"]], Y_pred_denorm_saved_df[model_name]], axis=1)
                 save_results_dic[model_name].columns.values[4] = "PREDICTED CONSUMPTION (MW)"
                 save_results_dic[model_name] = save_results_dic[model_name].rename(columns={"Year": "YEAR"})
@@ -1933,7 +2059,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_laptop_run
+    run_student = joseph_pc_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):
@@ -1946,6 +2072,7 @@ if __name__ == "__main__":
         print("ERROR!! NO ELIGIBLE STUDENT!")
         
     dirs_inputs = run_student[0]
+    
 
     #%% Collect actual hourly consumption data that will be used for the model.
 

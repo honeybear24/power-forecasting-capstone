@@ -34,7 +34,7 @@ def save_svr_model(X_df_SVR: pd.DataFrame, Y_df_SVR: pd.DataFrame, power_scaler,
     param_grid = {
         'kernel': ['rbf'],      # Test different kernels
         'C': [0.1, 1],             # Regularization parameter
-        'gamma': [0.001, 0.01, 0.1, 1, 'scale']   # Kernel coefficient for rbf and poly
+        'gamma': [0.001, 0.01, 'scale']   # Kernel coefficient for rbf and poly
     }
     
     #set my SVR model 

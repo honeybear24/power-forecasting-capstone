@@ -34,7 +34,8 @@ def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler,
     # Create dataframe without humidity and speed
     data = X_df_CNN
     
-    window_size = 168  # Last 168 hours (one week)
+    #window_size = 168  # Last 168 hours (one week)
+    window_size = 168  # Last 24 hours (one day)
     forecast_horizon = 24  # Next 24 hours
     
     X_data = []
@@ -51,6 +52,8 @@ def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler,
     X_data = np.expand_dims(X_data, axis=-1)
     
     X_train, X_test, Y_train, Y_test = train_test_split(X_data, y_data, test_size=730/(61320), shuffle=False, random_state=42)
+    print(X_test.shape)
+    print(X_test)
     
     gc.collect()
   

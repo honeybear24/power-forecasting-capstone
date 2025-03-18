@@ -21,7 +21,7 @@ import canada_holiday
 # calculate_windchill - Calculate windchill given temperature and wind speed
 def calculate_windchill(weather_data: pd.DataFrame):
 
-    # Calculate Windchill + Retunr Dataframe
+    # Calculate Windchill + Return Dataframe
     weather_data['Windchill'] = 13.12 + 0.6215 * weather_data['Temperature'] - 11.37 * np.power(weather_data['Wind Speed'], 0.16) + 0.3965 * weather_data['Temperature'] * np.power(weather_data['Wind Speed'], 0.16)    
 
     return weather_data
@@ -47,9 +47,12 @@ def add_calendar_columns(data: pd.DataFrame):
     # Add Weekend Column to dataframe (0 = Weekday, 1 = Weekend) - // = Floor Division (returns integer and drops remainder)
     data['Weekend'] = data['DATE'].dt.dayofweek // 5  # Wekdays = 0 - 4, Weekends = 5 - 6
 
-    # Add Season Column to dataframe (1 = Winter, 2 = Spring, 3 = Summer, 4 = Fall) - NO MAKE 0 OR 1 
-    data['Season'] = (data['Month'] % 12 + 3) // 3 
-    
+    # Add Season Column to dataframe
+    # Winter(1) = November (Including) to April (Including)
+    # Summer(0) = May (Including) to October (Including)
+    data['Season'] = ((data['Month'] <5) | (data['Month']>10))
+    data['Season'] =  data['Season'].astype(int)
+
     # Add Holiday Column
     data['Holiday'] = 0 # Initialize Holiday Column
     holiday_array = []
@@ -267,127 +270,44 @@ async def get_data_for_time_range(data_path, start_date: datetime, end_date: dat
 # normalize_data - Normalize data using MinMaxScaler
 def normalize_data(weather_data: pd.DataFrame, power_data: pd.DataFrame, scaler=None):
     
+    weather_data = weather_data.drop(columns = ["Year", "Month", "Day","Hour"])
+    
     # Initialize Scaler if not provided
     if not scaler:
-        scaler = preprocessing.MinMaxScaler()
+        weather_scaler = preprocessing.MinMaxScaler()
+        power_scaler = preprocessing.MinMaxScaler()
+        
         #scaler = preprocessing.StandardScaler()
 
     # Normalize Weather Data
     weather_data_normalized = weather_data.copy()
     
-    weather_data_normalized
-    
     # Do not normalize the categorical variables
     features = weather_data_normalized.columns
-    normalized_features = []
-    for feature in features:
-        if (feature == "Weekend" or feature == "Season" or ("Year" in feature) or ("Month" in feature) or ("Day" in feature) or ("Hour" in feature)):
-            continue
-        else:
-            normalized_features.append(feature)
+    # normalized_features = []
+    # for feature in features:
+    #     if (feature == "Weekend" or feature == "Season" or ("Year" in feature) or ("Month" in feature) or ("Day" in feature) or ("Hour" in feature)):
+    #         continue
+    #     else:
+    #         normalized_features.append(feature)
         
-    weather_data_normalized[normalized_features] = scaler.fit_transform(weather_data_normalized[normalized_features])
+    weather_data_normalized[features] = weather_scaler.fit_transform(weather_data_normalized[features])
 
     # Normalize Power Data - Only TOTAL_CONSUMPTION column
     power_data_normalized = power_data.copy()
-    power_data_normalized['TOTAL_CONSUMPTION'] = scaler.fit_transform(power_data_normalized['TOTAL_CONSUMPTION'].values.reshape(-1, 1))
+    power_data_normalized['TOTAL_CONSUMPTION'] = power_scaler.fit_transform(power_data_normalized['TOTAL_CONSUMPTION'].values.reshape(-1, 1))
 
-    return weather_data_normalized, power_data_normalized, scaler
+    return weather_data_normalized, power_data_normalized, weather_scaler, power_scaler
 
-
-
-
-# ### Set Up ###
-# # Student Directory
-# hanad_run = ["c:/Users/hanad/capstone_github/power-forecasting-capstone/data", 1]
-# clover_run = ["./data", 2]
-# joseph_laptop_run = ["C:\\Users\\sposa\\Documents\\GitHub\\power-forecasting-capstone\\data", 3]
-# joseph_pc_run = ["D:\\Users\\Joseph\\Documents\\GitHub\\power-forecasting-capstone\\data", 3]
-# janna_run = ["./data", 4]
-
-# # Paste student name_run for whoever is running the code
-# run_student = hanad_run
-# if (run_student[1] == joseph_laptop_run[1]):
-#     print("JOSEPH IS RUNNING!")
-# elif (run_student[1] == hanad_run[1]):
-#     print("HANAD IS RUNNING!")
-# elif (run_student[1] == janna_run[1]):
-#     print("JANNA IS RUNNING!")
-# elif (run_student[1] == clover_run[1]):
-#     print("CLOVER IS RUNNING!")
-# else:
-#     print("ERROR!! NO ELIGIBLE STUDENT!")
-#     sys.exit() # Kill script
-
-# # Set Up data direcotry path for data collection
-# data_path = run_student[0]
-# target_dir = data_path + "/raw_data"
-# norm_dir = data_path + "/normalized_data"
-
-# if not os.path.exists(target_dir): # Create directory if it does not exist
-#     os.makedirs(target_dir)
-
-# if not os.path.exists(norm_dir): # Create directory if it does not exist
-#     os.makedirs(norm_dir)
-
-# Set up FSA Dictionary that will map FSA names to a latitude and longitude
-fsa_map = {
-    "L9G": {"lat": 43.27, "lon": -79.95}, # Target FSA for Tests
-    "L7G": {"lat": 43.27, "lon": -79.95}, # Ancaster
-    "M9M": {"lat": 43.74, "lon": -79.54}, # Jane and Finch
-    "L9H": {"lat": 43.32, "lon": -79.98}, # Dundas
-    "K0K": {"lat": 44.18, "lon": -77.38}, # Belleville
-    "M2M": {"lat": 43.79, "lon": -79.41}, # Willowdale
-}
-
-
-# # Link - f'https://api.weather.gc.ca/collections/climate-hourly/items?bbox={bbox}&datetime={current_date.isoformat()}/{next_date.isoformat()}'
-# # bbox = boubding box around a given latitude and longitude, gets all data within bbox given
-# # datetime = start_date.isoformat() / end_date.isoformat() - gets all data within the given time frame
-
-# ### Calling Data ###
-# # Choose FSA for data collection + Get latitude and longitude of chosen fsa
-# fsa = "L9G"
-# lat = fsa_map[fsa]["lat"]
-# lon = fsa_map[fsa]["lon"]
-
-# # Choose date range for data collection
-# start_year = 2018
-# start_month = 1
-# start_day = 1
-# start_hour = 0
-
-# end_year = 2023
-# end_month = 12
-# end_day = 31
-# end_hour = 23
-
-# # Making datetime objects for start and end dates
-# start_date = datetime(start_year, start_month, start_day, start_hour,0,0)
-# end_date = datetime(end_year, end_month, end_day, end_hour,0,0)
-
-# # Collect data - Using asynchronous functions
-# weather_data, power_data = asyncio.run(get_data_for_time_range(data_path, start_date, end_date, fsa, lat, lon))
-
-# # Save data (preform normalizations) to CSV
-# weather_data.to_csv(f'{target_dir}/weather_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
-# power_data.to_csv(f'{target_dir}/power_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
-
-
-# ### Normalizing Data - Flow Integration Test ###
-# # Normalize Data
-# norm_weather_data, norm_power_data, power_scaler = normalize_data(weather_data, power_data)
-
-# # Save Normalized Data to CSV
-# norm_weather_data.to_csv(f'{norm_dir}/norm_weather_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
-# norm_power_data.to_csv(f'{norm_dir}/norm_power_data_{fsa}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
-
-# # Save Scaler
-# joblib.dump(power_scaler, f'{norm_dir}/power_scaler_{fsa}.pkl')
-
-# # Denomalize nomalized power data to check and see if matching with original data
-# power_data_denormalized = norm_power_data.copy()
-# power_data_denormalized['TOTAL_CONSUMPTION'] = power_scaler.inverse_transform(power_data_denormalized['TOTAL_CONSUMPTION'].values.reshape(-1, 1))
-
-# # Save Denormalized Data to CSV
-# power_data_denormalized.to_csv(f'{norm_dir}/denorm_power_data_{fsa}.csv', index=False)
+def setup_fsa_map(fsa_map_path: str):
+    #Set up FSA Dictionary that will map FSA names to a latitude and longitude
+    #Set up file path to FSA Map
+    
+    #Open file and read in data into a dataframe
+    fsa_map_df = pd.read_csv(fsa_map_path)
+    
+    #Create dictionary
+    fsa_map = {}
+    for index, row in fsa_map_df.iterrows():
+        fsa_map[row["FSA"]] = {"lat": row["LATITUDE"], "lon": row["LONGITUDE"]}
+    return(fsa_map)
