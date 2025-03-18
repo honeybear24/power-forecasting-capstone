@@ -20,7 +20,7 @@ from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error,
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-def save_knn_model(X_df_knn: pd.DataFrame, Y_df_knn: pd.DataFrame, power_scaler, fsa, file_path):
+def save_knn_model(X_df_knn: pd.DataFrame, Y_df_knn: pd.DataFrame, power_scaler, fsa, file_path, selected_features):
     
     X_train, X_test, Y_train, Y_test = train_test_split(X_df_knn, Y_df_knn['TOTAL_CONSUMPTION'], test_size=730/(61320), shuffle = False)
     
@@ -36,7 +36,7 @@ def save_knn_model(X_df_knn: pd.DataFrame, Y_df_knn: pd.DataFrame, power_scaler,
     knn_model.fit(X_train, Y_train)
     
     # Save model
-    file_path_model = os.path.join(file_path, "KNN_" + fsa + "_Model.pkl")
+    file_path_model = os.path.join(file_path, "KNN_" + fsa + "_Model_" + "_".join(selected_features) + ".pkl")
     joblib.dump(knn_model, file_path_model)
 
     # Get metric evaluation
@@ -66,7 +66,7 @@ def save_knn_model(X_df_knn: pd.DataFrame, Y_df_knn: pd.DataFrame, power_scaler,
                                 "RMSE (MW)" : [rmse*0.001],  
                                     })
     
-    file_path_metrics = os.path.join(file_path, "KNN_" + fsa + "_Metrics.csv")   
+    file_path_metrics = os.path.join(file_path, "KNN_" + fsa + "_Metrics_" + "_".join(selected_features) + ".csv")   
     metrix_evaluation.to_csv(file_path_metrics, index=False)
 
 

@@ -8,7 +8,7 @@ Created on Wed Jan  8 14:18:11 2025
 import Power_Forecasting_dataCollectionAndPreprocessingFlow
 import Power_Forecasting_KNN_Saver
 import Power_Forecasting_LR_Saver
-import Power_Forecasting_SVR_Saver
+import Power_Forecasting_XGB_Saver
 import Power_Forecasting_CNN_Saver
 import asyncio  # Import asyncio library for async operations
 import aiohttp # Import aiohttp library for making HTTP requests
@@ -163,6 +163,7 @@ class App(customtkinter.CTk):
         self.navigation_frame = customtkinter.CTkFrame(self, corner_radius=0, bg_color="#34495E",fg_color="#05122d", height = 50)
         self.navigation_frame.grid_rowconfigure(7, weight=1)
         
+        global my_text_font
         my_text_font = customtkinter.CTkFont(family="Roboto Condensed", size=16)
         
         # Create all labels and buttons on navigation frame
@@ -180,7 +181,7 @@ class App(customtkinter.CTk):
                                                        anchor="w", font = my_text_font, command=self.model_1_button_event)
         self.model_1_button.grid(row=2, column=0, padx = (0, 2), sticky="ew")
 
-        self.model_2_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Model: Scalar Vector Regression",
+        self.model_2_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Model: X Gradient Boost",
                                                       fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
                                                       anchor="w", font = my_text_font, command=self.model_2_button_event)
         self.model_2_button.grid(row=3, column=0, padx = (0, 2), sticky="ew")
@@ -236,7 +237,7 @@ class App(customtkinter.CTk):
         self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
         
         # Fonts
-        global my_button_font
+        global my_button_font, padding_x_option1
         my_text_font = customtkinter.CTkFont(family="Roboto Condensed", size=16)
         my_button_font = customtkinter.CTkFont(family="Roboto Condensed", size=18, weight="bold")
         my_title_font = customtkinter.CTkFont(family="Roboto Condensed", size=30)
@@ -253,6 +254,19 @@ class App(customtkinter.CTk):
                                                              bg_color='#05122d', text_color=("white"))
         self.home_frame_Label_Title.grid(row=0, column=0, padx = padding_x, pady = 20, columnspan=4)
         
+        # Get FSA List
+        fsa_predict_list = ["No Models"]
+        for fsa_str in os.listdir(saved_model_path):
+            if ("power_scaler" in fsa_str):
+                if ("power_scaler_Input" not in fsa_str):
+                    fsa_str = os.path.basename(fsa_str)
+                    fsa_str = os.path.splitext(fsa_str)
+                    fsa_str = fsa_str[0]
+                    fsa_str = fsa_str[-3:]
+                    if "No Models" in fsa_predict_list:
+                        fsa_predict_list.remove("No Models")
+                    fsa_predict_list.append(fsa_str)
+                    
         # Create selected option frames
         self.option1_frame = customtkinter.CTkFrame(self.home_frame, fg_color = '#05122d', bg_color = '#05122d')
         self.option2_frame = customtkinter.CTkFrame(self.home_frame, fg_color = '#05122d',bg_color = '#05122d')
@@ -283,7 +297,7 @@ class App(customtkinter.CTk):
         self.home_frame_Label_Selection.grid(row=2, column=3, padx = padding_x, pady = (0,1), sticky = "w")
         
         # Create scrollable check box of models
-        model_names_list = ["Linear Regression", "Scalar Vector Regression", "K-Nearest Neighbors", "Convolutional Neural Network"]
+        model_names_list = ["Linear Regression", "X Gradient Boost", "K-Nearest Neighbors", "Convolutional Neural Network"]
         selected_models = model_names_list
         self.scrollable_models_checkbox_frame = ScrollableCheckBoxFrame(self.home_frame, height = 130, width=130, command=self.models_checkbox_event,
                                                          item_list=model_names_list, 
@@ -325,23 +339,8 @@ class App(customtkinter.CTk):
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option1_frame, text="Number of Days", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
         self.home_frame_Label_Selection.grid(row=1, column=2, padx = padding_x_option1, sticky = "ew")
         
-        # FSA
-        fsa_predict_list = []
-        for fsa_str in os.listdir(saved_model_path):
-            if ("power_scaler" in fsa_str):
-                if ("power_scaler_Input" not in fsa_str):
-                    fsa_str = os.path.basename(fsa_str)
-                    fsa_str = os.path.splitext(fsa_str)
-                    fsa_str = fsa_str[0]
-                    fsa_str = fsa_str[-3:]
-                    fsa_predict_list.append(fsa_str)
-        self.home_frame_fsa_option_menu = customtkinter.CTkOptionMenu(self.option1_frame, values=fsa_predict_list, command = self.fsa_option_menu_event,
-         fg_color="#14206d",button_color="#14206d",
-         dropdown_fg_color="#05122d", 
-         bg_color="#05122d", 
-         font=my_text_font)
-        self.home_frame_fsa_option_menu.set("L9G")
-        self.home_frame_fsa_option_menu.grid(row=2, column=0, padx = padding_x_option1, pady= 5,sticky = "n")
+        # FSA (LOOK IN OPTION 1 FUNCTION)
+        
         
         
         # Calendar
@@ -594,14 +593,27 @@ class App(customtkinter.CTk):
             self.option1_frame.grid()
             self.option2_frame.grid_remove()
             self.option3_frame.grid_remove()
+            
+            # Update FSA List for predicting
+            self.home_frame_fsa_option_menu = customtkinter.CTkOptionMenu(self.option1_frame, values=fsa_predict_list, command = self.fsa_option_menu_event,
+             fg_color="#14206d",button_color="#14206d",
+             dropdown_fg_color="#05122d", 
+             bg_color="#05122d", 
+             font=my_text_font)
+            if fsa_predict_list:
+                self.home_frame_fsa_option_menu.set(fsa_predict_list[0])
+            self.home_frame_fsa_option_menu.grid(row=2, column=0, padx = padding_x_option1, pady= 5,sticky = "n")
+            
         elif option == options_list[1]:
             self.option1_frame.grid_remove()
             self.option2_frame.grid()
             self.option3_frame.grid_remove()
+            self.home_frame_fsa_option_menu.grid_forget()
         elif option == options_list[2]:
             self.option1_frame.grid_remove()
             self.option2_frame.grid_remove()
             self.option3_frame.grid()
+            self.home_frame_fsa_option_menu.grid_forget()
     
     
     ###############################################################################
@@ -612,7 +624,7 @@ class App(customtkinter.CTk):
         self.start_button.configure(fg_color=("gray75", "gray25") if name == "Start" else "transparent")
         self.home_button.configure(fg_color=("gray75", "gray25") if name == "Home" else "transparent")
         self.model_1_button.configure(fg_color=("gray75", "gray25") if name == "Model: Linear Regression" else "transparent")
-        self.model_2_button.configure(fg_color=("gray75", "gray25") if name == "Model: Scalar Vector Regression" else "transparent")
+        self.model_2_button.configure(fg_color=("gray75", "gray25") if name == "Model: X Gradient Boost" else "transparent")
         self.model_3_button.configure(fg_color=("gray75", "gray25") if name == "Model: K-Nearest Neighbors" else "transparent")
         self.model_4_button.configure(fg_color=("gray75", "gray25") if name == "Model: Convolutional Neural Network" else "transparent")
         self.summary_button.configure(fg_color=("gray75", "gray25") if name == "Summary" else "transparent")
@@ -638,7 +650,7 @@ class App(customtkinter.CTk):
             self.navigation_visible = False
         else:
             self.model_1_frame.grid_forget()
-        if name == "Model: Scalar Vector Regression":
+        if name == "Model: X Gradient Boost":
             self.model_2_frame.grid(row=0, column=1, sticky="nsew")
             self.navigation_frame.grid_forget()
             self.navigation_visible = False
@@ -679,7 +691,7 @@ class App(customtkinter.CTk):
         self.toggle_navigation()
 
     def model_2_button_event(self):
-        self.select_frame_by_name("Model: Scalar Vector Regression")
+        self.select_frame_by_name("Model: X Gradient Boost")
         self.navigation_frame.grid_forget()
         self.navigation_visible = True
         self.toggle_navigation()
@@ -752,9 +764,9 @@ class App(customtkinter.CTk):
                     if model_name == "Linear Regression":
                         color_name = "violet"
                         model_name = "LR"
-                    if model_name == "Scalar Vector Regression":
+                    if model_name == "X Gradient Boost":
                         color_name = "darkviolet"
-                        model_name = "SVR" 
+                        model_name = "XGB" 
                     try:
                         ax.plot(hourly_data_month_day_saved["DATE"], Y_pred_denorm_saved_df_saved[model_name]["PREDICTED CONSUMPTION (MW)"], 'o-', label = model_name + " Predicted Consumption", color = color_name)
                         ax.legend(loc = "best", facecolor='#34495E', edgecolor='pink', labelcolor='white')
@@ -1024,8 +1036,8 @@ class App(customtkinter.CTk):
                 model_name = "CNN" 
             if model_name == "Linear Regression":
                 model_name = "LR"
-            if model_name == "Scalar Vector Regression":
-                model_name = "SVR" 
+            if model_name == "X Gradient Boost":
+                model_name = "XGB" 
             
             if model_name == "CNN":
                 X_test = norm_weather_data_cnn[total_features]
@@ -1086,7 +1098,7 @@ class App(customtkinter.CTk):
                 
                 # Ensure Y_pred and Y_test are reshaped correctly
                 Y_pred_saved = Y_pred_saved.reshape(-1, 1)
-
+                
             # Denormalize Y_pred and Y_test with min_max_scaler_y.pkl using joblib
             scaler_path = os.path.join(saved_model_path, "power_scaler_"+fsa_chosen+".pkl")
             if not os.path.exists(scaler_path):
@@ -1191,8 +1203,8 @@ class App(customtkinter.CTk):
                     model_name = "CNN" 
                 if model_name == "Linear Regression":
                     model_name = "LR"
-                if model_name == "Scalar Vector Regression":
-                    model_name = "SVR" 
+                if model_name == "X Gradient Boost":
+                    model_name = "XGB" 
                 try:
                     if (day_num == 0):
                         hourly_data_month_day_error_df["HOUR_NEW"] = (hourly_data_month_day.index%24)
@@ -1219,8 +1231,8 @@ class App(customtkinter.CTk):
                 model_name = "CNN" 
             if model_name == "Linear Regression":
                 model_name = "LR"
-            if model_name == "Scalar Vector Regression":
-                model_name = "SVR" 
+            if model_name == "X Gradient Boost":
+                model_name = "XGB" 
             try:    
                 Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].reset_index(drop = True)
                 hourly_data_month_day_saved = hourly_data_month_day_saved.reset_index(drop = True)
@@ -1256,7 +1268,7 @@ class App(customtkinter.CTk):
             count_no_models = count_no_models + 1
             
         try:
-            plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df["SVR"], metrics_values["SVR"], hourly_data_month_day_error["SVR"], self.model_2_frame, self.model_3_button_event, self.model_1_button_event, model_names_list[1])        
+            plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df["XGB"], metrics_values["XGB"], hourly_data_month_day_error["XGB"], self.model_2_frame, self.model_3_button_event, self.model_1_button_event, model_names_list[1])        
         except:
             plot_no_model(self, self.model_2_frame, self.model_3_button_event, self.model_1_button_event, "No Saved Model For " + model_names_list[1])
             count_no_models = count_no_models + 1
@@ -1289,7 +1301,7 @@ class App(customtkinter.CTk):
         nest_asyncio.apply() # Apply nest_asyncio to allow for nested asyncio operations
         
         fsa_typed = self.fsa_search_bar.get()
-
+        
         ### Calling Data ###
         # Choose FSA for data collection + Get latitude and longitude of chosen fsa
         lat = fsa_map[fsa_typed]["lat"]
@@ -1376,16 +1388,18 @@ class App(customtkinter.CTk):
         # Train and Save KNN Model
         for model in selected_models:
             if model == "K-Nearest Neighbors":
-                Power_Forecasting_KNN_Saver.save_knn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
+                Power_Forecasting_KNN_Saver.save_knn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
             if model == "Linear Regression":
-                Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
-            if model == "Scalar Vector Regression":
-                Power_Forecasting_SVR_Saver.save_svr_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
+                Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
+            if model == "X Gradient Boost":
+                Power_Forecasting_XGB_Saver.save_XGB_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
             if model == "Convolutional Neural Network":
-                Power_Forecasting_CNN_Saver.save_cnn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path)
+                Power_Forecasting_CNN_Saver.save_cnn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
         
         # Append FSA to drop down menu list
         fsa_predict_list.append(fsa_typed)
+        if "No Models" in fsa_predict_list:
+            fsa_predict_list.remove("No Models")
             
         #Progress Bar Function for Ontartio training dataset
         def update_progress():
@@ -1459,13 +1473,13 @@ class App(customtkinter.CTk):
         # Train and Save Models
         for model in selected_models:
             if model == "K-Nearest Neighbors":
-                Power_Forecasting_KNN_Saver.save_knn_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path)
+                Power_Forecasting_KNN_Saver.save_knn_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)
             if model == "Linear Regression":
-                Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path)
-            if model == "Scalar Vector Regression":
-                Power_Forecasting_SVR_Saver.save_svr_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path)   
+                Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)
+            if model == "X Gradient Boost":
+                Power_Forecasting_XGB_Saver.save_XGB_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)   
             if model == "Convolutional Neural Network":
-                Power_Forecasting_CNN_Saver.save_cnn_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path)
+                Power_Forecasting_CNN_Saver.save_cnn_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)
                 
         #Progress Bar Function for any training dataset
         def update_progress():
@@ -1525,9 +1539,9 @@ class App(customtkinter.CTk):
                     if model_name == "Linear Regression":
                         color_name = "violet"
                         model_name = "LR"
-                    if model_name == "Scalar Vector Regression":
+                    if model_name == "X Gradient Boost":
                         color_name = "darkviolet"
-                        model_name = "SVR" 
+                        model_name = "XGB" 
                     try:
                         ax.plot(weather_data["DATE"], Y_pred_denorm_saved_df_saved[model_name]["PREDICTED CONSUMPTION (MW)"], 'o-', label = model_name + " Predicted Consumption", color = color_name)
                         ax.legend(loc = "best", facecolor='#34495E', edgecolor='pink', labelcolor='white')
@@ -1736,8 +1750,8 @@ class App(customtkinter.CTk):
                 model_name = "CNN" 
             if model_name == "Linear Regression":
                 model_name = "LR"
-            if model_name == "Scalar Vector Regression":
-                model_name = "SVR" 
+            if model_name == "X Gradient Boost":
+                model_name = "XGB" 
             
             # Import saved CSV into script as dataframes
             if model_name == "CNN":
@@ -1846,8 +1860,8 @@ class App(customtkinter.CTk):
                     model_name = "CNN" 
                 if model_name == "Linear Regression":
                     model_name = "LR"
-                if model_name == "Scalar Vector Regression":
-                    model_name = "SVR" 
+                if model_name == "X Gradient Boost":
+                    model_name = "XGB" 
 
                 try:
                 
@@ -1870,8 +1884,8 @@ class App(customtkinter.CTk):
                 model_name = "CNN" 
             if model_name == "Linear Regression":
                 model_name = "LR"
-            if model_name == "Scalar Vector Regression":
-                model_name = "SVR" 
+            if model_name == "X Gradient Boost":
+                model_name = "XGB" 
             try:  
                 Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].reset_index(drop = True)
                 weather_data = weather_data.reset_index(drop = True)
@@ -1906,7 +1920,7 @@ class App(customtkinter.CTk):
             plot_no_model_2(self, self.model_1_frame, self.model_2_button_event, "N/A", "NO SAVED MODEL FOR " + model_names_list[0])
             count_no_models = count_no_models + 1
         try:
-            plot_figures_model_2(self, weather_data, Y_pred_denorm_saved_df["SVR"], metrics_values["SVR"], table_values["SVR"], self.model_2_frame, self.model_3_button_event, self.model_1_button_event, model_names_list[1])
+            plot_figures_model_2(self, weather_data, Y_pred_denorm_saved_df["XGB"], metrics_values["XGB"], table_values["XGB"], self.model_2_frame, self.model_3_button_event, self.model_1_button_event, model_names_list[1])
         except:
             plot_no_model_2(self, self.model_2_frame, self.model_3_button_event, self.model_1_button_event, "NO SAVED MODEL FOR " + model_names_list[1])
             count_no_models = count_no_models + 1
@@ -1961,8 +1975,8 @@ class App(customtkinter.CTk):
                 model_name = "CNN" 
             if model_name == "Linear Regression":
                 model_name = "LR"
-            if model_name == "Scalar Vector Regression":
-                model_name = "SVR" 
+            if model_name == "X Gradient Boost":
+                model_name = "XGB" 
             try:
                 save_results_dic[model_name].to_excel(writer, sheet_name = (model_name + "_Model_Results"), index = False)
                 workbook  = writer.book
@@ -2013,9 +2027,21 @@ class App(customtkinter.CTk):
         #print("optionmenu dropdown clicked:", choice)
     
     def features_checkbox_event(self):
-        global selected_features
+        global selected_features, selected_features_3_digits
         selected_features = self.scrollable_features_checkbox_frame.get_checked_items()
+        
+        # Create 3 digit subset of string for saving models
+        selected_features_3_digits = []
+        for selected_features_str in selected_features:
+            if selected_features_str == "Wind Speed":
+                selected_features_3_digits.append("Wsd")
+            elif selected_features_str == "Windchill":
+                selected_features_3_digits.append("Wch")
+            else:
+                selected_features_3_digits.append(selected_features_str[:3])
+        
         print("checkbox frame modified: ", selected_features)
+        print("checkbox frame modified: ", selected_features_3_digits)
         
     def models_checkbox_event(self):
         global selected_models
@@ -2059,7 +2085,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_pc_run
+    run_student = joseph_laptop_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):

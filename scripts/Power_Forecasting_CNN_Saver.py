@@ -21,7 +21,7 @@ from tensorflow import keras
 from keras import models, layers, optimizers, callbacks
 import gc
 
-def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler, fsa, file_path):
+def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler, fsa, file_path, selected_features):
 
     Y_df_CNN = Y_df_CNN['TOTAL_CONSUMPTION']
     
@@ -123,7 +123,7 @@ def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler,
 
     
     # Save model
-    file_path_model = os.path.join(file_path, "CNN_" + fsa + "_Model.keras")
+    file_path_model = os.path.join(file_path, "CNN_" + fsa + "_Model_" + "_".join(selected_features) + ".keras")
     cnn_model.save(file_path_model)
     
     # Get metric evaluation
@@ -153,7 +153,7 @@ def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler,
                                 "RMSE (MW)" : [rmse*0.001],  
                                     })
     
-    file_path_metrics = os.path.join(file_path, "CNN_" + fsa + "_Metrics.csv")   
+    file_path_metrics = os.path.join(file_path, "CNN_" + fsa + "_Metrics_" + "_".join(selected_features) + ".csv")   
     metrix_evaluation.to_csv(file_path_metrics, index=False)
 
 

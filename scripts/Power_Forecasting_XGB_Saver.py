@@ -20,12 +20,12 @@ from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error,
 from sklearn.model_selection import GridSearchCV
 import joblib
 
-def save_svr_model(X_df_SVR: pd.DataFrame, Y_df_SVR: pd.DataFrame, power_scaler, fsa, file_path):
+def save_xgb_model(X_df_XGB: pd.DataFrame, Y_df_XGB: pd.DataFrame, power_scaler, fsa, file_path, selected_features):
     
     # Split data into training and testing sets (80-20 split)
     X_train, X_test, Y_train, Y_test = train_test_split(
-        X_df_SVR, 
-        Y_df_SVR["TOTAL_CONSUMPTION"],
+        X_df_XGB, 
+        Y_df_XGB["TOTAL_CONSUMPTION"],
         test_size=730/(61320),
         shuffle=False  # Keep time series order
     )
@@ -54,7 +54,7 @@ def save_svr_model(X_df_SVR: pd.DataFrame, Y_df_SVR: pd.DataFrame, power_scaler,
     best_svr.fit(X_train, Y_train)
 
     # Save model
-    file_path_model = os.path.join(file_path, "SVR_" + fsa + "_Model.pkl")
+    file_path_model = os.path.join(file_path, "XGB_" + fsa + "_Model_" + "_".join(selected_features) + ".pkl")
     joblib.dump(best_svr, file_path_model)
     
     # Make predictions
@@ -76,7 +76,7 @@ def save_svr_model(X_df_SVR: pd.DataFrame, Y_df_SVR: pd.DataFrame, power_scaler,
     
     # #%% Export metrix evaluation to csv
     metrix_evaluation = pd.DataFrame({
-                                "Model": ["SVR"],
+                                "Model": ["XGB"],
                                 "MAPE (%)": [mape*100],
                                 "MAE (MW)": [mae*0.001],
                                 "r2": [r2],
@@ -84,7 +84,7 @@ def save_svr_model(X_df_SVR: pd.DataFrame, Y_df_SVR: pd.DataFrame, power_scaler,
                                 "RMSE (MW)" : [rmse*0.001],  
                                     })
     
-    file_path_metrics = os.path.join(file_path, "SVR_" + fsa + "_Metrics.csv")   
+    file_path_metrics = os.path.join(file_path, "XGB_" + fsa + "_Metrics_" + "_".join(selected_features) + ".csv")   
     metrix_evaluation.to_csv(file_path_metrics, index=False)
 
 
