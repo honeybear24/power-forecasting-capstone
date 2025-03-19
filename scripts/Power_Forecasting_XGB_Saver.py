@@ -6,19 +6,18 @@ This is a temporary script file.
 """
 
 #%% Libraries
-import pandas as pd
-import datetime
-from datetime import datetime, date, timedelta
-import matplotlib.pyplot as plt
+import sys
 import os
-import math
+import pandas as pd
 import numpy as np
-from sklearn.svm import SVR
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
+from datetime import datetime, timedelta, date
+import requests
+
+from sklearn import preprocessing # Import preprocessing library for data normalization
+import joblib # Import joblib to save and load models
 from sklearn.metrics import mean_absolute_percentage_error, mean_absolute_error, mean_squared_error, r2_score, root_mean_squared_error
-from sklearn.model_selection import GridSearchCV
-import joblib
+import xgboost as xgb # model 
+from sklearn.model_selection import train_test_split
 
 def save_xgb_model(X_df_XGB: pd.DataFrame, Y_df_XGB: pd.DataFrame, power_scaler, fsa, file_path, selected_features):
     
@@ -30,35 +29,25 @@ def save_xgb_model(X_df_XGB: pd.DataFrame, Y_df_XGB: pd.DataFrame, power_scaler,
         shuffle=False  # Keep time series order
     )
 
-    #Implement grid search     
-    param_grid = {
-        'kernel': ['rbf'],      # Test different kernels
-        'C': [0.1, 1],             # Regularization parameter
-        'gamma': [0.001, 0.01, 'scale']   # Kernel coefficient for rbf and poly
-    }
-    
-    #set my SVR model 
-    svr = SVR()
-    
-    #get the best parameters 
-    
-    grid_search = GridSearchCV(estimator=svr, param_grid=param_grid, cv=10, scoring='neg_mean_absolute_percentage_error')
-    grid_search.fit(X_train, Y_train)
-    
-    best_params = grid_search.best_params_
-    best_svr = grid_search.best_estimator_
-    
-    print("Best Parameters:", best_params)
-    
-    # Train SVR model with optimized parameters
-    best_svr.fit(X_train, Y_train)
+    # Create and train the XGBoost model
+    xgb_model = xgb.XGBRegressor(
+        n_estimators=1500,
+        learning_rate=0.01,
+        max_depth=9,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        random_state=42
+    )
+
+    # Train XGB model with optimized parameters
+    xgb_model.fit(X_train, Y_train)
 
     # Save model
     file_path_model = os.path.join(file_path, "XGB_" + fsa + "_Model_" + "_".join(selected_features) + ".pkl")
-    joblib.dump(best_svr, file_path_model)
+    joblib.dump(xgb_model, file_path_model)
     
     # Make predictions
-    Y_pred = best_svr.predict(X_test)
+    Y_pred = xgb_model.predict(X_test)
     
     # Denomalize nomalized power data to check and see if matching with original data
     Y_pred_denormalized = Y_pred.copy()

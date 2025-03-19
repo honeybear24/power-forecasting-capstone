@@ -266,6 +266,7 @@ class App(customtkinter.CTk):
                     if "No Models" in fsa_predict_list:
                         fsa_predict_list.remove("No Models")
                     fsa_predict_list.append(fsa_str)
+        fsa_predict_list = list(dict.fromkeys(fsa_predict_list))
                     
         # Create selected option frames
         self.option1_frame = customtkinter.CTkFrame(self.home_frame, fg_color = '#05122d', bg_color = '#05122d')
@@ -309,6 +310,18 @@ class App(customtkinter.CTk):
         # Create scrollable check box of features 
         column_names = pd.read_csv(os.path.join(x_y_input_path, "Features_Column_Template.csv"), nrows = 0)
         selected_features = column_names.columns.tolist()
+        
+        # Create 3 digit subset of string for saving models
+        global selected_features_3_digits
+        selected_features_3_digits = []
+        for selected_features_str in selected_features:
+            if selected_features_str == "Wind Speed":
+                selected_features_3_digits.append("Wsd")
+            elif selected_features_str == "Windchill":
+                selected_features_3_digits.append("Wch")
+            else:
+                selected_features_3_digits.append(selected_features_str[:3])
+                
         self.scrollable_features_checkbox_frame = ScrollableCheckBoxFrame(self.home_frame, height = 130, width=150, command=self.features_checkbox_event,
                                                          item_list=column_names.columns, 
                                                          fg_color="#05122d",
@@ -1047,9 +1060,9 @@ class App(customtkinter.CTk):
             # Load model from gui_pickup folder using joblib
             try:
                 if model_name == "CNN":
-                    pipe_saved = models.load_model(os.path.join(saved_model_path, (model_name+"_"+fsa_chosen+"_Model.keras")))
+                    pipe_saved = models.load_model(os.path.join(saved_model_path, (model_name+"_"+fsa_chosen+"_Model_" + "_".join(selected_features_3_digits) + ".keras")))
                 else:
-                    pipe_saved = joblib.load(os.path.join(saved_model_path, (model_name+"_"+fsa_chosen+"_Model.pkl"))) 
+                    pipe_saved = joblib.load(os.path.join(saved_model_path, (model_name+"_"+fsa_chosen+"_Model_" + "_".join(selected_features_3_digits) + ".pkl"))) 
             except:
                 continue
             
@@ -1113,6 +1126,13 @@ class App(customtkinter.CTk):
             
             # Convert to MW
             Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name]*0.001
+            
+            # Convert to float64
+            Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].astype(float)
+            
+            # Round to 4 decimal places
+            Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].round(decimals = 4)
+            
             print(Y_pred_denorm_saved_df[model_name])
         
         # Dictionary for model prediction dataframes error 
@@ -1212,7 +1232,6 @@ class App(customtkinter.CTk):
                         hourly_data_month_day_error[model_name] = hourly_data_month_day_error[model_name].rename(columns={"HOUR_NEW": "Hour"})
                        
                     Y_pred_denorm_saved_df_day = Y_pred_denorm_saved_df[model_name].iloc[(24*day_num):(24*day_num + 24)]
-                    
                     # Find Error
                     if (self.detailed_table_checkbox_var.get() == 1):
                         hourly_data_month_day_error[model_name]["Actual Consumption: Day " + str(day_num+1) + " (MW)"] = hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
@@ -1246,7 +1265,7 @@ class App(customtkinter.CTk):
                 save_results_dic[model_name].columns.values[4] = "ACTUAL CONSUMPTION (MW)"
                 save_results_dic[model_name].columns.values[5] = "PREDICTED CONSUMPTION (MW)"
                 
-                metrics_model_path = os.path.join(saved_model_path, model_name+"_"+fsa_chosen+"_Metrics.csv") 
+                metrics_model_path = os.path.join(saved_model_path, model_name+"_"+fsa_chosen+"_Metrics_" + "_".join(selected_features_3_digits) + ".csv") 
                 metrics_values[model_name] = pd.read_csv(metrics_model_path, header=0)
                 metrics_values[model_name] = metrics_values[model_name].round(decimals = 4)
                 
@@ -1392,14 +1411,17 @@ class App(customtkinter.CTk):
             if model == "Linear Regression":
                 Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
             if model == "X Gradient Boost":
-                Power_Forecasting_XGB_Saver.save_XGB_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
+                Power_Forecasting_XGB_Saver.save_xgb_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
             if model == "Convolutional Neural Network":
                 Power_Forecasting_CNN_Saver.save_cnn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
         
         # Append FSA to drop down menu list
+        global fsa_predict_list
         fsa_predict_list.append(fsa_typed)
         if "No Models" in fsa_predict_list:
             fsa_predict_list.remove("No Models")
+
+        fsa_predict_list = list(dict.fromkeys(fsa_predict_list))
             
         #Progress Bar Function for Ontartio training dataset
         def update_progress():
@@ -1477,7 +1499,7 @@ class App(customtkinter.CTk):
             if model == "Linear Regression":
                 Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)
             if model == "X Gradient Boost":
-                Power_Forecasting_XGB_Saver.save_XGB_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)   
+                Power_Forecasting_XGB_Saver.save_xgb_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)   
             if model == "Convolutional Neural Network":
                 Power_Forecasting_CNN_Saver.save_cnn_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)
                 
@@ -1762,9 +1784,9 @@ class App(customtkinter.CTk):
             # Load model from gui_pickup folder using joblib
             try:
                 if model_name == "CNN":
-                    pipe_saved = models.load_model(os.path.join(saved_model_path, (model_name+"_"+input_data_basename+"_Model.keras")))
+                    pipe_saved = models.load_model(os.path.join(saved_model_path, (model_name+"_"+input_data_basename+"_Model_" + "_".join(selected_features_3_digits) + ".keras")))
                 else:
-                    pipe_saved = joblib.load(os.path.join(saved_model_path, (model_name+"_"+input_data_basename+"_Model.pkl")))
+                    pipe_saved = joblib.load(os.path.join(saved_model_path, (model_name+"_"+input_data_basename+"_Model_" + "_".join(selected_features_3_digits) + ".pkl")))
             except:
                 continue
 
@@ -1897,7 +1919,7 @@ class App(customtkinter.CTk):
                 save_results_dic[model_name] = save_results_dic[model_name].rename(columns={"Day": "DAY"})
                 save_results_dic[model_name] = save_results_dic[model_name].rename(columns={"Hour": "HOUR"})
                 
-                metrics_model_path = os.path.join(saved_model_path, model_name+"_"+input_data_basename+"_Metrics.csv") 
+                metrics_model_path = os.path.join(saved_model_path, model_name+"_"+input_data_basename+"_Metrics_" + "_".join(selected_features_3_digits) + ".csv") 
                 metrics_values[model_name] = pd.read_csv(metrics_model_path, header=0)
                 metrics_values[model_name] = metrics_values[model_name].round(decimals = 4)
                 
@@ -2085,7 +2107,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_laptop_run
+    run_student = joseph_pc_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):
