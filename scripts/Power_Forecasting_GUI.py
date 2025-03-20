@@ -439,7 +439,7 @@ class App(customtkinter.CTk):
         self.textbox_1.grid(row=6, column=1, columnspan=3, padx = padding_x_option1,  sticky = "ew")
         
         # Last line is first line in GUI
-        self.textbox_1.insert("0.0", "Once complete, forecast for each model will appear. If model is selected and forecast does not show up, then\nthere is no saved model for this FSA and combination of input features. To see forecast of selected model, please train desired model.\n")
+        self.textbox_1.insert("0.0", "Once complete, forecast for each model will appear. If model is selected and forecast does not show \nup, then there is no saved model for this FSA and combination of input features. To see forecast of \nselected model, please train desired model.\n")
         self.textbox_1.insert("0.0", " \n")
         self.textbox_1.insert("0.0", "Loading screen may be unresponsive while forecasting. This is meant to happen.\n")
         
@@ -987,7 +987,7 @@ class App(customtkinter.CTk):
         try:
             fsa_chosen = fsa_chosen_option_menu
         except NameError:
-            fsa_chosen = "L9G"
+            fsa_chosen = fsa_predict_list[0]
         
         try:
             num_of_days = int(number_of_days_chosen_option_menu)
@@ -1232,20 +1232,9 @@ class App(customtkinter.CTk):
             # new date
             new_date = selected_date_datetime + timedelta(days=day_num) 
     
-            try:
-                year = str(new_date.year)
-            except NameError:
-                year = "2024"
-                
-            try:
-                month = months[(new_date.month-1)]
-            except NameError:
-                month = "01"
-                
-            try:
-                day = str(new_date.day)
-            except NameError:
-                day = "01"
+            year = str(new_date.year)
+            month = months[(new_date.month-1)]
+            day = str(new_date.day)
 
             ###############################################################################
             # Dictionary for reading in hourly consumption by FSA
