@@ -169,7 +169,6 @@ async def get_weather_data(session: aiohttp.ClientSession, current_date: datetim
             
             weather_data_df_temp = pd.DataFrame(weather_data)
             hour_unique_count = weather_data_df_temp['Hour'].nunique()
-            print(hour_unique_count)
             if(hour_unique_count>23):
                 break # Break loop if enough data is found
 
