@@ -126,7 +126,10 @@ class App(customtkinter.CTk):
         fsa_map_path = os.path.join(fsa_conversion_path, "ontario_fsas.csv")
         global fsa_map
         fsa_map = Power_Forecasting_dataCollectionAndPreprocessingFlow.setup_fsa_map(fsa_map_path)
-
+        
+        global cnn_days_back
+        # Get X dates behind for CNN model Lags
+        cnn_days_back = 2
         ###############################################################################
         # Create Start Frame (all code for desired frame is in here)
         ###############################################################################
@@ -245,7 +248,7 @@ class App(customtkinter.CTk):
         
         # Set X padding for all frames
         padding_x = 10
-        padding_x_option1 = 50
+        padding_x_option1 = 0
         padding_x_option2 = 50
         padding_x_option3 = 30
         pad_home = 50
@@ -287,6 +290,7 @@ class App(customtkinter.CTk):
             frame.rowconfigure(3,weight=1)
             frame.rowconfigure(4,weight=1)
             frame.rowconfigure(5,weight=1)
+            frame.rowconfigure(6,weight=1)
             frame.grid_remove()
         
         # Create titles for selecting models, features, and option
@@ -353,10 +357,10 @@ class App(customtkinter.CTk):
         self.home_frame_Label_Selection.grid(row=0, column=1, padx = padding_x_option1, pady = (10, 40), columnspan=3)
         
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option1_frame, text="Postal Code", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=1, column=1, padx = padding_x_option1, sticky = "ew")
+        self.home_frame_Label_Selection.grid(row=1, column=2, padx = padding_x_option1, sticky = "ew")
 
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option1_frame, text="Number of Days", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=1, column=2, padx = padding_x_option1, sticky = "ew")
+        self.home_frame_Label_Selection.grid(row=3, column=2, padx = padding_x_option1, sticky = "ew")
         
         # FSA (LOOK IN OPTION 1 FUNCTION)
         
@@ -374,10 +378,6 @@ class App(customtkinter.CTk):
           foreground=[('active', '#ffffff')],  # White text when the button is active (hovered)
           relief=[('pressed', 'groove'), ('!pressed', 'ridge')])
 
-        # Add calendar frame for Date
-        #self.calendar_frame = customtkinter.CTkFrame(self.home_frame, corner_radius=0, fg_color='#05122d')
-        #self.calendar_frame.grid(row=2, column=1, padx = padding_x_option1, sticky = "ew", rowspan = 2)
-
         # Set minimum date
         min_date = date(2024, 11, 1)
         
@@ -394,7 +394,7 @@ class App(customtkinter.CTk):
                     othermonthforeground='#7F8C8D',  # Medium Gray Text for Other Month's Days
                     hover_color=("gray70", "gray30"),
                     othermonthweforeground='#7F8C8D')
-        self.calendar.grid(row=3, column=1, padx = padding_x_option1, pady = (20, 0), sticky = "ew", columnspan = 2)
+        self.calendar.grid(row=1, column=1, padx = padding_x_option1, sticky = "nsew", rowspan = 4)
         
         # Number of Days
         self.home_frame_number_of_days_option_menu = customtkinter.CTkOptionMenu(self.option1_frame, values=["1", "2", "3"], command = self.number_of_days_option_menu_event,
@@ -403,7 +403,7 @@ class App(customtkinter.CTk):
             dropdown_fg_color="#05122d",
             bg_color="#05122d")
         self.home_frame_number_of_days_option_menu.set("1")
-        self.home_frame_number_of_days_option_menu.grid(row=2, column=2, padx = padding_x_option1, sticky ='n')
+        self.home_frame_number_of_days_option_menu.grid(row=4, column=2, padx = padding_x_option1, sticky ='n')
 
         
         
@@ -429,14 +429,14 @@ class App(customtkinter.CTk):
         
         # Create title for textbox
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option1_frame, text="Guide:", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=4, column=1, padx = padding_x_option1, pady = (20, 0), columnspan=3, sticky = "w")
+        self.home_frame_Label_Selection.grid(row=5, column=1, padx = padding_x_option1, pady = (20, 0), columnspan=3, sticky = "w")
         
         
         # Create textbox
         self.textbox_1 = customtkinter.CTkTextbox(self.option1_frame, height = 100, 
                                                   font=my_textbox_font,
                                                   fg_color = '#05122d')
-        self.textbox_1.grid(row=5, column=1, columnspan=3, padx = padding_x_option1,  sticky = "ew")
+        self.textbox_1.grid(row=6, column=1, columnspan=3, padx = padding_x_option1,  sticky = "ew")
         
         # Last line is first line in GUI
         self.textbox_1.insert("0.0", "Once complete, forecast for each model will appear. If model is selected and forecast does not show up, then\nthere is no saved model for this FSA and combination of input features. To see forecast of selected model, please train desired model.\n")
@@ -688,7 +688,7 @@ class App(customtkinter.CTk):
              font=my_text_font)
             if fsa_predict_list:
                 self.home_frame_fsa_option_menu.set(fsa_predict_list[0])
-            self.home_frame_fsa_option_menu.grid(row=2, column=1, padx = padding_x_option1, pady= 5,sticky = "n")
+            self.home_frame_fsa_option_menu.grid(row=2, column=2, padx = padding_x_option1, pady= 5,sticky = "n")
             
         elif option == options_list[1]:
             self.option1_frame.grid_remove()
@@ -859,7 +859,7 @@ class App(customtkinter.CTk):
                     except:
                         continue
             else:
-                ax.plot(hourly_data_month_day_saved["DATE"], Y_pred_denorm_saved_df_saved["TOTAL_CONSUMPTION"], 'o-', label = "FORECASTED Consumption", color = "purple")
+                ax.plot(hourly_data_month_day_saved["DATE"], Y_pred_denorm_saved_df_saved["TOTAL_CONSUMPTION"], 'o-', label = "Forecasted Consumption", color = "purple")
                 ax.legend(loc = "upper left", facecolor='#34495E', edgecolor='pink', labelcolor='white')
      
             
@@ -1008,8 +1008,7 @@ class App(customtkinter.CTk):
         old_month = months[(old_date.month-1)]
         old_day = str(old_date.day)
         
-        # Get X dates behind for CNN model Lags
-        cnn_days_back = 2
+        
         old_date_cnn = selected_date_datetime - timedelta(days=cnn_days_back)
         old_year_cnn = str(old_date_cnn.year)
         old_month_cnn = months[(old_date_cnn.month-1)]
@@ -1772,12 +1771,12 @@ class App(customtkinter.CTk):
         
         weather_data_cnn = weather_data.copy()
 
-        # Remove first day because of lags
+        # Remove X days because of lags
         weather_data = weather_data.reset_index(drop = True)
-
-        index_first_day = weather_data[(weather_data['Day'] == weather_data["Day"].iloc[0])].index
         
-        weather_data = weather_data.drop(index_first_day, axis='index', inplace = False).reset_index(drop=True)
+        for day in range(cnn_days_back):
+            index_remove_day = weather_data[(weather_data['Day'] == weather_data["Day"].iloc[0])].index     
+            weather_data = weather_data.drop(index_remove_day, axis='index', inplace = False).reset_index(drop=True)
     
         # Open weather scaler
         scaler_path = os.path.join(saved_model_path, "weather_scaler_"+input_data_basename+".pkl")
@@ -1938,6 +1937,12 @@ class App(customtkinter.CTk):
 
             # Convert to MW
             Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name]*0.001
+            
+            # Convert to float64
+            Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].astype(float)
+            
+            # Round to 4 decimal places
+            Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].round(decimals = 4)
        
         # Dictionary for model prediction dataframes error 
         # model -> Value
