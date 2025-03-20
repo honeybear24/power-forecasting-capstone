@@ -935,6 +935,13 @@ class App(customtkinter.CTk):
         old_month = months[(old_date.month-1)]
         old_day = str(old_date.day)
         
+        # Get X dates behind for CNN model Lags
+        cnn_days_back = 2
+        old_date_cnn = selected_date_datetime - timedelta(days=cnn_days_back)
+        old_year_cnn = str(old_date_cnn.year)
+        old_month_cnn = months[(old_date_cnn.month-1)]
+        old_day_cnn = str(old_date_cnn.day)
+        
         year = str(new_date.year)
         month = months[(new_date.month-1)]
         day = str(new_date.day)
@@ -946,11 +953,19 @@ class App(customtkinter.CTk):
         lon = fsa_map[fsa_chosen]["lon"]
 
         # Choose date range for data collection
+        # All models
         start_year = int(old_year)
         start_month = int(old_month)
         start_day = int(old_day)
         start_hour = 0
-
+        
+        # CNN Model
+        start_year_cnn = int(old_year_cnn)
+        start_month_cnn = int(old_month_cnn)
+        start_day_cnn = int(old_day_cnn)
+        start_hour_cnn = 0
+        
+        # End date
         end_year = int(year)
         end_month = int(month)
         end_day = int(day)
@@ -958,18 +973,20 @@ class App(customtkinter.CTk):
 
         # Making datetime objects for start and end dates
         start_date = datetime(start_year, start_month, start_day, start_hour,0,0)
+        start_date_cnn = datetime(start_year_cnn, start_month_cnn, start_day_cnn, start_hour_cnn,0,0)
         end_date = datetime(end_year, end_month, end_day, end_hour,0,0)
 
         # # Collect data - Using asynchronous functions
         # 
         weather_data, dummy_hourly_data_month_day = asyncio.run(Power_Forecasting_dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date, end_date, fsa_chosen, lat, lon))
         
+        # CNN weather data
+        weather_data_cnn, dummy_hourly_data_month_day = asyncio.run(Power_Forecasting_dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date_cnn, end_date, fsa_chosen, lat, lon))
         
         dummy_hourly_data_month_day = dummy_hourly_data_month_day.reset_index(drop = True) 
         weather_data = weather_data.reset_index(drop = True)
         
-        # CNN weather data
-        weather_data_cnn = weather_data.copy()
+        
 
         index_first_day = weather_data[(weather_data['Day'] == start_day)].index
         
@@ -995,10 +1012,6 @@ class App(customtkinter.CTk):
         norm_weather_data_cnn = weather_scaler.transform(weather_data_cnn)
         norm_weather_data_cnn = pd.DataFrame(norm_weather_data_cnn, columns = weather_data_cnn.columns)
         
-        weather_data.to_csv(f'{power_weather_data_path}/YYYYweather_data_{fsa_chosen}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
-        norm_weather_data.to_csv(f'{power_weather_data_path}/YYYYnorm_weather_data_{fsa_chosen}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
-        
-        weather_data_cnn.to_csv(f'{power_weather_data_path}/YYYYweather_data_cnn_{fsa_chosen}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
         
         ###############################################################################
         # Import and predict Models
@@ -1078,7 +1091,7 @@ class App(customtkinter.CTk):
                 data = X_test
                 
                 #window_size = 168  # Last 168 hours (one week)
-                window_size = 24  # Last 24 hours (one day)
+                window_size = 24*cnn_days_back # Last 24 hours (one day)
                 forecast_horizon = 24  # Next 24 hours
                 
                 
@@ -1363,10 +1376,8 @@ class App(customtkinter.CTk):
         joblib.dump(weather_scaler, file_path_scalar)
         
         # # Save Normalized Data to CSV
-        norm_power_data.to_csv(f'{x_y_input_path}/YYYYnorm_power_data_{fsa_typed}.csv', index=False)
-        norm_weather_data.to_csv(f'{x_y_input_path}/YYYYnorm_weather_data_{fsa_typed}.csv', index=False)
-        weather_data.to_csv(f'{x_y_input_path}/YYYYweather_data_{fsa_typed}.csv', index=False)
-        # norm_power_data.to_csv(f'{x_y_input_path}/norm_power_data_{fsa_typed}.csv', index=False)
+        norm_weather_data.to_csv(f'{x_y_input_path}/norm_weather_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
+        norm_power_data.to_csv(f'{x_y_input_path}/norm_power_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
         
         total_features = []
         # Convert year, month, day, hour to boolean values
@@ -1686,9 +1697,8 @@ class App(customtkinter.CTk):
         weather_data = Power_Forecasting_dataCollectionAndPreprocessingFlow.add_calendar_columns(weather_data)
         weather_data = Power_Forecasting_dataCollectionAndPreprocessingFlow.add_lags_to_weather_data(weather_data, 23)
         
-        
         weather_data_cnn = weather_data.copy()
-        
+
         # Remove first day because of lags
         weather_data = weather_data.reset_index(drop = True)
 
@@ -1716,6 +1726,9 @@ class App(customtkinter.CTk):
         norm_weather_data_cnn = weather_scaler.transform(weather_data_cnn_dropped)
         norm_weather_data_cnn = pd.DataFrame(norm_weather_data_cnn, columns = weather_data_cnn_dropped.columns)
         
+        for feature in norm_weather_data_cnn.columns:
+          if ("Lag" in feature):
+            norm_weather_data_cnn = norm_weather_data_cnn.drop(columns = [feature])
         
        
         ###############################################################################

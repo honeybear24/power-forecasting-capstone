@@ -167,10 +167,14 @@ async def get_weather_data(session: aiohttp.ClientSession, current_date: datetim
                     'Windchill': data_point['properties'].get('WINDCHILL'),
                 })
             
-            break # Break loop if enough data is found
+            weather_data_df_temp = pd.DataFrame(weather_data)
+            hour_unique_count = weather_data_df_temp['Hour'].nunique()
+            print(hour_unique_count)
+            if(hour_unique_count>23):
+                break # Break loop if enough data is found
 
         else: # If not enough data is found, increase the bounding box to get more data
-            bbox_limit += 0.05
+            bbox_limit += 0.15
             await asyncio.sleep(0.5) # Add a slight delay to avoid overloading the server
 
     # Turn list of dictionaries into a pandas dataframe

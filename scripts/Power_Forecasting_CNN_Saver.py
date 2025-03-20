@@ -35,7 +35,7 @@ def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler,
     data = X_df_CNN
     
     #window_size = 168  # Last 168 hours (one week)
-    window_size = 24  # Last 24 hours (one day)
+    window_size = 48  # Last 24 hours (one day)
     forecast_horizon = 24  # Next 24 hours
     
     X_data = []
@@ -115,7 +115,7 @@ def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler,
     history = cnn_model.fit(
         X_train,
         Y_train,
-        epochs=20,
+        epochs=15,
         batch_size=32,
         validation_split=0.2,
         callbacks=[early_stopping],
