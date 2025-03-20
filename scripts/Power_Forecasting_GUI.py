@@ -241,6 +241,7 @@ class App(customtkinter.CTk):
         my_text_font = customtkinter.CTkFont(family="Roboto Condensed", size=16)
         my_button_font = customtkinter.CTkFont(family="Roboto Condensed", size=18, weight="bold")
         my_title_font = customtkinter.CTkFont(family="Roboto Condensed", size=30)
+        my_textbox_font = customtkinter.CTkFont(family="Roboto Condensed", size=18)
         
         # Set X padding for all frames
         padding_x = 10
@@ -273,22 +274,27 @@ class App(customtkinter.CTk):
         self.option2_frame = customtkinter.CTkFrame(self.home_frame, fg_color = '#05122d',bg_color = '#05122d')
         self.option3_frame = customtkinter.CTkFrame(self.home_frame, fg_color = '#05122d', bg_color = '#05122d')
         for frame in [self.option1_frame, self.option2_frame, self.option3_frame]:
-            frame.grid(row=4, column=0, rowspan=10, columnspan=4, sticky="nsew", padx=50, pady=100)
-            frame.grid_columnconfigure(0,weight=1)
+            frame.grid(row=4, column=0, rowspan=10, columnspan=5, sticky="nsew", padx=50, pady=60)
+            frame.grid_columnconfigure(0,weight=10)
             frame.grid_columnconfigure(1,weight=1)
             frame.grid_columnconfigure(2,weight=1)
             frame.grid_columnconfigure(3,weight=1)
-            frame.rowconfigure(0)
-            frame.rowconfigure(1)
-            frame.rowconfigure(2)
+            frame.grid_columnconfigure(4,weight=10)
+            
+            frame.rowconfigure(0,weight=1)
+            frame.rowconfigure(1,weight=1)
+            frame.rowconfigure(2,weight=1)
+            frame.rowconfigure(3,weight=1)
+            frame.rowconfigure(4,weight=1)
+            frame.rowconfigure(5,weight=1)
             frame.grid_remove()
         
         # Create titles for selecting models, features, and option
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select models to train/predict and select corresponding features.", font=my_title_font,
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select models to train/forecast and select corresponding features.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
         self.home_frame_Label_Selection.grid(row=1, column=0, padx = padding_x, pady = (40, 10), columnspan=4)
         
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Models to Train/Predict", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Models to Train/Forecast", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
         self.home_frame_Label_Selection.grid(row=2, column=1, padx = padding_x,  pady = (0,1), sticky = "ew")
         
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Training Features      ", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
@@ -304,7 +310,7 @@ class App(customtkinter.CTk):
                                                          item_list=model_names_list, 
                                                          fg_color="#05122d",
                                                          bg_color= "#05122d")
-        self.scrollable_models_checkbox_frame.grid(row=3, column=1, padx = padding_x, pady = (10, 15), sticky = "ew")
+        self.scrollable_models_checkbox_frame.grid(row=3, column=1, padx = padding_x, pady = (10, 0), sticky = "ew")
         self.scrollable_models_checkbox_frame._scrollbar.configure(height=0)
         
         # Create scrollable check box of features 
@@ -326,15 +332,15 @@ class App(customtkinter.CTk):
                                                          item_list=column_names.columns, 
                                                          fg_color="#05122d",
                                                          bg_color= "#05122d")
-        self.scrollable_features_checkbox_frame.grid(row=3, column=2, padx = padding_x, pady = (10, 15), sticky = "ew")
+        self.scrollable_features_checkbox_frame.grid(row=3, column=2, padx = padding_x, pady = (10, 0), sticky = "ew")
         self.scrollable_features_checkbox_frame._scrollbar.configure(height=0)
         
         # Create drop down menu for options
-        options_list = ["Predict Ontario Models", "Train Ontario Models", "Train/Predict Excel Dataset Models"]
+        options_list = ["Forecast Ontario Models", "Train Ontario Models", "Train/Forecast Excel Dataset Models"]
         self.options_dropdown_menu = customtkinter.CTkOptionMenu(self.home_frame, values=options_list, command=self.show_frame_based_on_option,
             fg_color="#14206d", button_color="#14206d", dropdown_fg_color="#05122d", bg_color="#05122d", font=my_text_font)
         self.options_dropdown_menu.set(options_list[0])
-        self.options_dropdown_menu.grid(row=3, column=3, padx=padding_x, pady= 20, sticky ='nw')
+        self.options_dropdown_menu.grid(row=3, column=3, padx=padding_x, sticky ='nw')
         
         self.show_frame_based_on_option(options_list[0])
         
@@ -342,12 +348,12 @@ class App(customtkinter.CTk):
         # Create Option 1 (Predict Ontario Models) Widgets
         
         
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option1_frame, text="OPTION 1: Make predictions using saved Ontario located models.", font=my_title_font,
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option1_frame, text="OPTION 1: Forecast using saved Ontario located models.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=0, column=0, padx = padding_x_option1, pady = (10, 40), columnspan=4)
+        self.home_frame_Label_Selection.grid(row=0, column=1, padx = padding_x_option1, pady = (10, 40), columnspan=3)
         
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option1_frame, text="Postal Code", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=1, column=0, padx = padding_x_option1, sticky = "ew")
+        self.home_frame_Label_Selection.grid(row=1, column=1, padx = padding_x_option1, sticky = "ew")
 
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option1_frame, text="Number of Days", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
         self.home_frame_Label_Selection.grid(row=1, column=2, padx = padding_x_option1, sticky = "ew")
@@ -388,7 +394,7 @@ class App(customtkinter.CTk):
                     othermonthforeground='#7F8C8D',  # Medium Gray Text for Other Month's Days
                     hover_color=("gray70", "gray30"),
                     othermonthweforeground='#7F8C8D')
-        self.calendar.grid(row=1, column=1, padx = padding_x_option1, sticky = "ew", rowspan = 2)
+        self.calendar.grid(row=3, column=1, padx = padding_x_option1, pady = (20, 0), sticky = "ew", columnspan = 2)
         
         # Number of Days
         self.home_frame_number_of_days_option_menu = customtkinter.CTkOptionMenu(self.option1_frame, values=["1", "2", "3"], command = self.number_of_days_option_menu_event,
@@ -397,7 +403,7 @@ class App(customtkinter.CTk):
             dropdown_fg_color="#05122d",
             bg_color="#05122d")
         self.home_frame_number_of_days_option_menu.set("1")
-        self.home_frame_number_of_days_option_menu.grid(row=2, column=2, rowspan = 2, padx = padding_x_option1, sticky ='n')
+        self.home_frame_number_of_days_option_menu.grid(row=2, column=2, padx = padding_x_option1, sticky ='n')
 
         
         
@@ -408,7 +414,7 @@ class App(customtkinter.CTk):
                                                       checkmark_color="#14206d",  
                                                       bg_color= "#05122d",
                                                       command = self.show_table_checkbox_event)
-        self.detailed_table_checkbox.grid(row=2, column=3, padx = padding_x_option1, sticky = "nwe")
+        self.detailed_table_checkbox.grid(row=3, column=3, padx = padding_x_option1, pady = (20, 0), sticky = "new")
         
         # Create Generate Forecasts Button
         self.generate_models_button = customtkinter.CTkButton(self.option1_frame, corner_radius=20, height=40, border_spacing=10, text="Generate Forecasts",
@@ -417,14 +423,32 @@ class App(customtkinter.CTk):
                                                       hover_color="#560067", 
                                                       bg_color= "#05122d",
                                                       anchor="center", command=self.predict_models_button_event, font=my_button_font)
-        self.generate_models_button.grid(row=1, column=3, padx = padding_x_option1, sticky = "ew")
+        self.generate_models_button.grid(row=2, column=3, padx = padding_x_option1, sticky = "ew")
+        
+        # Create textbox 1 for guide
+        
+        # Create title for textbox
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option1_frame, text="Guide:", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
+        self.home_frame_Label_Selection.grid(row=4, column=1, padx = padding_x_option1, pady = (20, 0), columnspan=3, sticky = "w")
+        
+        
+        # Create textbox
+        self.textbox_1 = customtkinter.CTkTextbox(self.option1_frame, height = 100, 
+                                                  font=my_textbox_font,
+                                                  fg_color = '#05122d')
+        self.textbox_1.grid(row=5, column=1, columnspan=3, padx = padding_x_option1,  sticky = "ew")
+        
+        # Last line is first line in GUI
+        self.textbox_1.insert("0.0", "Once complete, forecast for each model will appear. If model is selected and forecast does not show up, then\nthere is no saved model for this FSA and combination of input features. To see forecast of selected model, please train desired model.\n")
+        self.textbox_1.insert("0.0", " \n")
+        self.textbox_1.insert("0.0", "Loading screen may be unresponsive while forecasting. This is meant to happen.\n")
         
         ###############################################################################
         # Create Option 2 (Train Ontario Models) Widgets
         
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option2_frame, text="OPTION 2: Train models with ANY postal code in Ontario.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=0, column=0, padx = padding_x_option2, pady = (10, 10), columnspan=4)
+        self.home_frame_Label_Selection.grid(row=0, column=1, padx = padding_x_option2, pady = (10, 10), columnspan=3)
    
         # Create search bar for FSA
         self.fsa_search_bar = customtkinter.CTkEntry(self.option2_frame, placeholder_text ="Enter first three digits of postal code. (ex. 'LOH', 'M5B', etc.)",
@@ -432,7 +456,7 @@ class App(customtkinter.CTk):
                               bg_color="#05122d",  # Background color (frame background)
                               text_color="#ffffff",  # Text color
                               font=my_text_font)
-        self.fsa_search_bar.grid(row=1, column=0, padx = padding_x_option2, pady = (10, 10), columnspan = 3, sticky = "new")
+        self.fsa_search_bar.grid(row=1, column=2, padx = padding_x_option2, pady = (10, 10), sticky = "new")
         
         # Create Train button
         self.train_models_button = customtkinter.CTkButton(self.option2_frame, corner_radius=20, height=40, border_spacing=10, text="Train Ontario Located Models",
@@ -442,20 +466,45 @@ class App(customtkinter.CTk):
                                                       text_color=("gray10", "gray90"),
                                                       font = my_button_font,
                                                       anchor="center", command=self.train_models_button_event)
-        self.train_models_button.grid(row=1, column=3, padx = padding_x_option2, pady = (10, 10), sticky = "new")
+        self.train_models_button.grid(row=2, column=2, padx = padding_x_option2, pady = (10, 10), sticky = "new")
         
         # Create progress bar for training Ontario data
         self.progress_bar_train_ontario = customtkinter.CTkProgressBar(self.option2_frame, width=300, fg_color="#14206d")
-        self.progress_bar_train_ontario.grid(row=2, column=3, padx = padding_x_option2, pady=0, sticky="new")
+        self.progress_bar_train_ontario.grid(row=3, column=2, padx = padding_x_option2, pady=0, sticky="new")
         self.progress_bar_train_ontario.set(0)  # Initialize the progress bar to 0
         
+        # Create textbox 2 for guide
+        
+        # Create title for textbox
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option2_frame, text="Guide:", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
+        self.home_frame_Label_Selection.grid(row=4, column=1, padx = padding_x_option1, columnspan = 3, pady = (20, 0), sticky = "w")
+        
+        
+        # Create textbox
+        self.textbox_2 = customtkinter.CTkTextbox(self.option2_frame, height = 200, 
+                                                  font=my_textbox_font,
+                                                  fg_color = '#05122d')
+        self.textbox_2.grid(row=5, column=1, columnspan=3, padx = padding_x_option1,  sticky = "ew")
+        
+        # Last line is first line in GUI
+        self.textbox_2.insert("0.0", "    -May be a problem with Environment Canada Weather API server, please close program and try\n     again.\n")
+        self.textbox_2.insert("0.0", " \n")
+        self.textbox_2.insert("0.0", "    -FSA not registered within program (FSA in Ontario changes every few years).\n")
+        self.textbox_2.insert("0.0", " \n")
+        self.textbox_2.insert("0.0", "  Second: If typed FSA is valid there are two situations:\n")
+        self.textbox_2.insert("0.0", " \n")
+        self.textbox_2.insert("0.0", "  First: Ensure Correct FSA.\n")
+        self.textbox_2.insert("0.0", " \n")
+        self.textbox_2.insert("0.0", "If models fail to train (loading bar is not filled):\n")
+        self.textbox_2.insert("0.0", " \n")
+        self.textbox_2.insert("0.0", "Loading screen may be unresponsive while training. This is meant to happen.\n")
         
         ###############################################################################
         # Create Option 3 (Train/Predict Excel Dataset Models) Widgets
         
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option3_frame, text="OPTION 3: Train/Predict models with ANY input dataset.", font=my_title_font,
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option3_frame, text="OPTION 3: Train/Forecast models with ANY input dataset.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=0, column=0, padx = padding_x_option3, pady = (10, 10), columnspan=4)
+        self.home_frame_Label_Selection.grid(row=0, column=1, padx = padding_x_option3, pady = (10, 10), columnspan=3)
         
         # Open excel file template
         self.open_file_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Open Excel Dataset File Template",
@@ -465,7 +514,7 @@ class App(customtkinter.CTk):
                                                       text_color=("gray10", "gray90"),
                                                       font = my_button_font,
                                                       anchor="center", command=self.open_file_button_event)
-        self.open_file_button.grid(row=1, column=0, padx = padding_x_option3, pady = 20, sticky = "new")
+        self.open_file_button.grid(row=1, column=1, padx = padding_x_option3, pady = 20, sticky = "new")
         
         # Upload excel file template
         self.upload_file_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Upload Excel Dataset File",
@@ -475,7 +524,7 @@ class App(customtkinter.CTk):
                                                       text_color=("gray10", "gray90"),
                                                       font = my_button_font,
                                                       anchor="center", command=self.upload_file_button_event)
-        self.upload_file_button.grid(row=1, column=1, padx = padding_x_option3, pady = 20, sticky = "new")
+        self.upload_file_button.grid(row=1, column=3, padx = padding_x_option3, pady = 20, sticky = "new")
         
         # Create Train button
         self.train_models_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Train Excel Dataset Models",
@@ -485,24 +534,48 @@ class App(customtkinter.CTk):
                                                       text_color=("gray10", "gray90"),
                                                       font = my_button_font,
                                                       anchor="center", command=self.train_input_excel_models_button_event)
-        self.train_models_button.grid(row=1, column=2, padx = padding_x_option3, pady = 20, sticky = "sew")
+        self.train_models_button.grid(row=2, column=1, padx = padding_x_option3, pady = 20, sticky = "sew")
         
         # Create progress bar for training Ontario data
         self.progress_bar_train_any = customtkinter.CTkProgressBar(self.option3_frame, width=300, fg_color="#14206d")
-        self.progress_bar_train_any.grid(row=2, column=2, padx = padding_x_option3, pady=0, sticky="new")
+        self.progress_bar_train_any.grid(row=3, column=1, padx = padding_x_option3, pady=0, sticky="new")
         self.progress_bar_train_any.set(0)  # Initialize the progress bar to 0
         
         # Create Predict button
-        self.predict_models_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Predict Excel Dataset Models",
+        self.predict_models_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Forecast Excel Dataset Models",
                                                       fg_color="#14206d",
                                                       bg_color= "#05122d",
                                                       hover_color="#560067",
                                                       text_color=("gray10", "gray90"),
                                                       font = my_button_font,
                                                       anchor="center", command=self.predict_input_excel_models_button_event)
-        self.predict_models_button.grid(row=1, column=3, padx = padding_x_option3, pady = 20, sticky = "new")
+        self.predict_models_button.grid(row=2, column=3, padx = padding_x_option3, pady = 20, sticky = "new")
  
-    
+        # Create textbox 3 for guide
+        
+        # Create title for textbox
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option3_frame, text="Guide:", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
+        self.home_frame_Label_Selection.grid(row=4, column=1, padx = padding_x_option1, columnspan = 3, pady = (20, 0), sticky = "w")
+        
+        
+        # Create textbox
+        self.textbox_3 = customtkinter.CTkTextbox(self.option3_frame, height = 175, 
+                                                  font=my_textbox_font,
+                                                  fg_color = '#05122d')
+        self.textbox_3.grid(row=5, column=1, columnspan=3, padx = padding_x_option1,  sticky = "ew")
+        
+        # Last line is first line in GUI
+        self.textbox_3.insert("0.0", "Fifth: Forecast using selected models with selected feature.\n")
+        self.textbox_3.insert("0.0", " \n")
+        self.textbox_3.insert("0.0", "Fourth: Train selected models with selected features.\n")
+        self.textbox_3.insert("0.0", " \n")
+        self.textbox_3.insert("0.0", "Third: Upload the saved Excel dataset file to be used for training models and forecasting.\n")
+        self.textbox_3.insert("0.0", " \n")
+        self.textbox_3.insert("0.0", "Second: After inputted all data, save the file.\n")
+        self.textbox_3.insert("0.0", " \n")
+        self.textbox_3.insert("0.0", "First: Open Excel dataset file template and read “README” sheet for instructions.\n")
+        self.textbox_3.insert("0.0", " \n")
+        self.textbox_3.insert("0.0", "Loading screen may be unresponsive while training or predicting. This is meant to happen.\n")
         ###############################################################################        
         # Create second frame (Model 1) (all code for desired frame is in here)
         ###############################################################################
@@ -615,7 +688,7 @@ class App(customtkinter.CTk):
              font=my_text_font)
             if fsa_predict_list:
                 self.home_frame_fsa_option_menu.set(fsa_predict_list[0])
-            self.home_frame_fsa_option_menu.grid(row=2, column=0, padx = padding_x_option1, pady= 5,sticky = "n")
+            self.home_frame_fsa_option_menu.grid(row=2, column=1, padx = padding_x_option1, pady= 5,sticky = "n")
             
         elif option == options_list[1]:
             self.option1_frame.grid_remove()
@@ -781,12 +854,12 @@ class App(customtkinter.CTk):
                         color_name = "darkviolet"
                         model_name = "XGB" 
                     try:
-                        ax.plot(hourly_data_month_day_saved["DATE"], Y_pred_denorm_saved_df_saved[model_name]["PREDICTED CONSUMPTION (MW)"], 'o-', label = model_name + " Predicted Consumption", color = color_name)
+                        ax.plot(hourly_data_month_day_saved["DATE"], Y_pred_denorm_saved_df_saved[model_name]["FORECASTED CONSUMPTION (MW)"], 'o-', label = model_name + " FORECASTED Consumption", color = color_name)
                         ax.legend(loc = "best", facecolor='#34495E', edgecolor='pink', labelcolor='white')
                     except:
                         continue
             else:
-                ax.plot(hourly_data_month_day_saved["DATE"], Y_pred_denorm_saved_df_saved["TOTAL_CONSUMPTION"], 'o-', label = "Predicted Consumption", color = "purple")
+                ax.plot(hourly_data_month_day_saved["DATE"], Y_pred_denorm_saved_df_saved["TOTAL_CONSUMPTION"], 'o-', label = "FORECASTED Consumption", color = "purple")
                 ax.legend(loc = "upper left", facecolor='#34495E', edgecolor='pink', labelcolor='white')
      
             
@@ -1248,7 +1321,7 @@ class App(customtkinter.CTk):
                     # Find Error
                     if (self.detailed_table_checkbox_var.get() == 1):
                         hourly_data_month_day_error[model_name]["Actual Consumption: Day " + str(day_num+1) + " (MW)"] = hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
-                        hourly_data_month_day_error[model_name]["Predicted Consumption: Day " + str(day_num+1) + " (MW)"] = Y_pred_denorm_saved_df_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
+                        hourly_data_month_day_error[model_name]["Forecasted Consumption: Day " + str(day_num+1) + " (MW)"] = Y_pred_denorm_saved_df_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
                     hourly_data_month_day_error[model_name]["Error: Day " + str(day_num+1) + " (%)"] = 100*abs(Y_pred_denorm_saved_df_day["TOTAL_CONSUMPTION"].reset_index(drop = True) - hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True))/hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
                     hourly_data_month_day_error[model_name] = hourly_data_month_day_error[model_name].round(decimals = 4)
  
@@ -1271,12 +1344,12 @@ class App(customtkinter.CTk):
                 
                 # save_results_dic[model_name] = hourly_data_month_day_saved[["YEAR", "MONTH", "DAY", "HOUR", "TOTAL_CONSUMPTION"]]
                 # save_results_dic[model_name].columns.values[4] = "ACTUAL CONSUMPTION (MW)"
-                # save_results_dic[model_name]["PREDICTED CONSUMPTION (MW)"] = Y_pred_denorm_saved_df[model_name]
+                # save_results_dic[model_name]["FORECASTED CONSUMPTION (MW)"] = Y_pred_denorm_saved_df[model_name]
                 
                 save_results_dic[model_name] = pd.concat([hourly_data_month_day_saved[["YEAR", "MONTH", "DAY", "HOUR", "TOTAL_CONSUMPTION"]], Y_pred_denorm_saved_df[model_name]], axis=1)
                 save_results_dic[model_name]["HOUR"] = save_results_dic[model_name]["HOUR"] + 1
                 save_results_dic[model_name].columns.values[4] = "ACTUAL CONSUMPTION (MW)"
-                save_results_dic[model_name].columns.values[5] = "PREDICTED CONSUMPTION (MW)"
+                save_results_dic[model_name].columns.values[5] = "FORECASTED CONSUMPTION (MW)"
                 
                 metrics_model_path = os.path.join(saved_model_path, model_name+"_"+fsa_chosen+"_Metrics_" + "_".join(selected_features_3_digits) + ".csv") 
                 metrics_values[model_name] = pd.read_csv(metrics_model_path, header=0)
@@ -1576,12 +1649,12 @@ class App(customtkinter.CTk):
                         color_name = "darkviolet"
                         model_name = "XGB" 
                     try:
-                        ax.plot(weather_data["DATE"], Y_pred_denorm_saved_df_saved[model_name]["PREDICTED CONSUMPTION (MW)"], 'o-', label = model_name + " Predicted Consumption", color = color_name)
+                        ax.plot(weather_data["DATE"], Y_pred_denorm_saved_df_saved[model_name]["FORECASTED CONSUMPTION (MW)"], 'o-', label = model_name + " Forecasted Consumption", color = color_name)
                         ax.legend(loc = "best", facecolor='#34495E', edgecolor='pink', labelcolor='white')
                     except:
                         continue
             else:
-                ax.plot(weather_data["DATE"], Y_pred_denorm_saved_df_saved["TOTAL_CONSUMPTION"], 'o-', label = "Predicted Consumption", color = "purple")
+                ax.plot(weather_data["DATE"], Y_pred_denorm_saved_df_saved["TOTAL_CONSUMPTION"], 'o-', label = "Forecasted Consumption", color = "purple")
                 ax.legend(loc = "upper left", facecolor='#34495E', edgecolor='pink', labelcolor='white')
             
             ax.set_title(title, color="white")     
@@ -1906,7 +1979,7 @@ class App(customtkinter.CTk):
                         table_values_df["Hour"] = (Y_pred_denorm_saved_df_day.index%24)
                         table_values[model_name] = table_values_df
                        
-                    table_values[model_name]["Predicted Consumption: Day " + str(day_num+1) + " (MW)"] = Y_pred_denorm_saved_df_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
+                    table_values[model_name]["Forecasted Consumption: Day " + str(day_num+1) + " (MW)"] = Y_pred_denorm_saved_df_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
                     table_values[model_name] = table_values[model_name].round(decimals = 4)
 
                 except:
@@ -1926,7 +1999,7 @@ class App(customtkinter.CTk):
                 weather_data = weather_data.reset_index(drop = True)
                 
                 save_results_dic[model_name] = pd.concat([weather_data[["Year", "Month", "Day", "Hour"]], Y_pred_denorm_saved_df[model_name]], axis=1)
-                save_results_dic[model_name].columns.values[4] = "PREDICTED CONSUMPTION (MW)"
+                save_results_dic[model_name].columns.values[4] = "FORECASTED CONSUMPTION (MW)"
                 save_results_dic[model_name] = save_results_dic[model_name].rename(columns={"Year": "YEAR"})
                 save_results_dic[model_name] = save_results_dic[model_name].rename(columns={"Month": "MONTH"})
                 save_results_dic[model_name] = save_results_dic[model_name].rename(columns={"Day": "DAY"})
@@ -2115,12 +2188,13 @@ if __name__ == "__main__":
     joseph_laptop_run = ["C:\\Users\\sposa\\Documents\\GitHub\\power-forecasting-capstone\\data", 3]
     joseph_pc_run = ["D:\\Users\\Joseph\\Documents\\GitHub\\power-forecasting-capstone\\data", 3]
     janna_run = ["./data", 4]
+    user_run = ["C:\\power-forecasting-capstone\\data", 5]
 
     ###############################################################################
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_pc_run
+    run_student = user_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):
@@ -2129,6 +2203,8 @@ if __name__ == "__main__":
         print("JANNA IS RUNNING!")
     elif (run_student[1] == clover_run[1]):
         print("CLOVER IS RUNNING!")
+    elif (run_student[1] == user_run[1]):
+        print("USER IS RUNNING!")
     else:
         print("ERROR!! NO ELIGIBLE STUDENT!")
         
