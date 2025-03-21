@@ -48,7 +48,7 @@ def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler,
         y_data.append(Y_df_CNN.iloc[i + window_size:i + window_size + forecast_horizon].values.flatten())  # Flatten to ensure it's 1D
     
     # Convert to numpy arrays
-    X_data, y_data = np.array(X_data, dtype=np.float16), np.array(y_data, dtype=np.float16)
+    X_data, y_data = np.array(X_data, dtype=np.float64), np.array(y_data, dtype=np.float64)
     X_data = np.expand_dims(X_data, axis=-1)
     
     X_train, X_test, Y_train, Y_test = train_test_split(X_data, y_data, test_size=730/(61320), shuffle=False, random_state=42)

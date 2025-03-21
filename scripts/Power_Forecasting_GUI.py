@@ -108,7 +108,7 @@ class App(customtkinter.CTk):
         
         customtkinter.set_default_color_theme("blue") # change the colour theme of the application
         super().__init__()    
-        self.title("Power System Forecasting.py")
+        self.title("Power Forecasting.py")
         self.geometry("1920x1080")
         
         # Set grid layout 1x2
@@ -170,7 +170,7 @@ class App(customtkinter.CTk):
         my_text_font = customtkinter.CTkFont(family="Roboto Condensed", size=16)
         
         # Create all labels and buttons on navigation frame
-        self.navigation_frame_label = customtkinter.CTkLabel(self.navigation_frame, text="        Power System Forecasting", 
+        self.navigation_frame_label = customtkinter.CTkLabel(self.navigation_frame, text="        BV05 -- Power Forecasting", 
                                                              compound="left", font=customtkinter.CTkFont(size=15, weight="bold"))
         self.navigation_frame_label.grid(row=0, column=0, padx=20, pady=20)
 
@@ -179,22 +179,22 @@ class App(customtkinter.CTk):
                                                     anchor="w", font = my_text_font, command=self.home_button_event)
         self.home_button.grid(row=1, column=0, padx = (0, 2), sticky="ew")
 
-        self.model_1_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Model: Linear Regression",
+        self.model_1_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Linear Regression",
                                                       fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
                                                        anchor="w", font = my_text_font, command=self.model_1_button_event)
         self.model_1_button.grid(row=2, column=0, padx = (0, 2), sticky="ew")
 
-        self.model_2_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Model: X Gradient Boost",
+        self.model_2_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="X Gradient Boost",
                                                       fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
                                                       anchor="w", font = my_text_font, command=self.model_2_button_event)
         self.model_2_button.grid(row=3, column=0, padx = (0, 2), sticky="ew")
         
-        self.model_3_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Model: K-Nearest Neighbors",
+        self.model_3_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="K-Nearest Neighbors",
                                                       fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
                                                        anchor="w", font = my_text_font, command=self.model_3_button_event)
         self.model_3_button.grid(row=4, column=0, padx = (0, 2), sticky="ew")
 
-        self.model_4_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Model: Convolutional Neural Network",
+        self.model_4_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Convolutional Neural Network",
                                                       fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
                                                       anchor="w", font = my_text_font, command=self.model_4_button_event)
         self.model_4_button.grid(row=5, column=0, padx = (0, 2), sticky="ew")
@@ -228,9 +228,9 @@ class App(customtkinter.CTk):
         # Create frame
         self.home_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
         self.home_frame.grid_columnconfigure(0, weight=2)
-        self.home_frame.grid_columnconfigure(1, weight=2)
-        self.home_frame.grid_columnconfigure(2, weight=1)
-        self.home_frame.grid_columnconfigure(3, weight=2)
+        self.home_frame.grid_columnconfigure(1, weight=1)
+        self.home_frame.grid_columnconfigure(2, weight=2)
+        self.home_frame.grid_columnconfigure(3, weight=3)
 
 
         # Insert background image
@@ -249,7 +249,7 @@ class App(customtkinter.CTk):
         # Set X padding for all frames
         padding_x = 10
         padding_x_option1 = 0
-        padding_x_option2 = 50
+        padding_x_option2 = 20
         padding_x_option3 = 30
         pad_home = 50
         
@@ -294,17 +294,17 @@ class App(customtkinter.CTk):
             frame.grid_remove()
         
         # Create titles for selecting models, features, and option
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select models to train/forecast and select corresponding features.", font=my_title_font,
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select models to train and forecast, and corresponding features.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
         self.home_frame_Label_Selection.grid(row=1, column=0, padx = padding_x, pady = (40, 10), columnspan=4)
         
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Models to Train/Forecast", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=2, column=1, padx = padding_x,  pady = (0,1), sticky = "ew")
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Models to Train and Forecast", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
+        self.home_frame_Label_Selection.grid(row=2, column=1, padx = padding_x,  pady = (0,1), sticky = "w")
         
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Training Features      ", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=2, column=2, padx = padding_x, pady = (0,1), sticky = "ew")
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Training Features", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
+        self.home_frame_Label_Selection.grid(row=2, column=2, padx = padding_x, pady = (0,1), sticky = "w")
 
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Main Options           ", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Option", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
         self.home_frame_Label_Selection.grid(row=2, column=3, padx = padding_x, pady = (0,1), sticky = "w")
         
         # Create scrollable check box of models
@@ -344,7 +344,7 @@ class App(customtkinter.CTk):
         self.options_dropdown_menu = customtkinter.CTkOptionMenu(self.home_frame, values=options_list, command=self.show_frame_based_on_option,
             fg_color="#14206d", button_color="#14206d", dropdown_fg_color="#05122d", bg_color="#05122d", font=my_text_font)
         self.options_dropdown_menu.set(options_list[0])
-        self.options_dropdown_menu.grid(row=3, column=3, padx=padding_x, sticky ='nw')
+        self.options_dropdown_menu.grid(row=3, column=3, padx=padding_x, pady = (10, 0), sticky ='nw')
         
         self.show_frame_based_on_option(options_list[0])
         
@@ -352,11 +352,11 @@ class App(customtkinter.CTk):
         # Create Option 1 (Predict Ontario Models) Widgets
         
         
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option1_frame, text="OPTION 1: Forecast using saved Ontario located models.", font=my_title_font,
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option1_frame, text="Forecast using saved Ontario located models.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
         self.home_frame_Label_Selection.grid(row=0, column=1, padx = padding_x_option1, pady = (10, 40), columnspan=3)
         
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option1_frame, text="Postal Code", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option1_frame, text="FSA", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
         self.home_frame_Label_Selection.grid(row=1, column=2, padx = padding_x_option1, sticky = "ew")
 
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option1_frame, text="Number of Days", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
@@ -439,19 +439,21 @@ class App(customtkinter.CTk):
         self.textbox_1.grid(row=6, column=1, columnspan=3, padx = padding_x_option1,  sticky = "ew")
         
         # Last line is first line in GUI
-        self.textbox_1.insert("0.0", "Once complete, forecast for each model will appear. If model is selected and forecast does not show \nup, then there is no saved model for this FSA and combination of input features. To see forecast of \nselected model, please train desired model.\n")
+        self.textbox_1.insert("0.0", "Once complete, forecast for each model will appear. If model is selected and forecast does \nnot show up, then there is no saved model for this FSA and combination of input features. To\nsee forecast of selected model, please train desired model.")
         self.textbox_1.insert("0.0", " \n")
         self.textbox_1.insert("0.0", "Loading screen may be unresponsive while forecasting. This is meant to happen.\n")
+        self.textbox_1.insert("0.0", "\n")
+        self.textbox_1.insert("0.0", "FSA stands for Forward Sortation Area (i.e. first three characters of postal code).\n")
         
         ###############################################################################
         # Create Option 2 (Train Ontario Models) Widgets
         
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option2_frame, text="OPTION 2: Train models with ANY postal code in Ontario.", font=my_title_font,
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option2_frame, text="Train models with ANY postal code in Ontario.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
         self.home_frame_Label_Selection.grid(row=0, column=1, padx = padding_x_option2, pady = (10, 10), columnspan=3)
    
         # Create search bar for FSA
-        self.fsa_search_bar = customtkinter.CTkEntry(self.option2_frame, placeholder_text ="Enter first three digits of postal code. (ex. 'LOH', 'M5B', etc.)",
+        self.fsa_search_bar = customtkinter.CTkEntry(self.option2_frame, placeholder_text ="Enter first three characters of postal code (ex. 'LOH', 'M5B', etc.)",
                                 fg_color="#14206d",  # Foreground color (entry background)
                               bg_color="#05122d",  # Background color (frame background)
                               text_color="#ffffff",  # Text color
@@ -459,7 +461,7 @@ class App(customtkinter.CTk):
         self.fsa_search_bar.grid(row=1, column=2, padx = padding_x_option2, pady = (10, 10), sticky = "new")
         
         # Create Train button
-        self.train_models_button = customtkinter.CTkButton(self.option2_frame, corner_radius=20, height=40, border_spacing=10, text="Train Ontario Located Models",
+        self.train_models_button = customtkinter.CTkButton(self.option2_frame, corner_radius=20, height=40, border_spacing=10, text="Train Models",
                                                       fg_color="#14206d",  
                                                       
                                                       bg_color= "#05122d",hover_color="#560067",
@@ -487,13 +489,13 @@ class App(customtkinter.CTk):
         self.textbox_2.grid(row=5, column=1, columnspan=3, padx = padding_x_option1,  sticky = "ew")
         
         # Last line is first line in GUI
-        self.textbox_2.insert("0.0", "    -May be a problem with Environment Canada Weather API server, please close program and try\n     again.\n")
+        self.textbox_2.insert("0.0", "            -May be a problem with Environment Canada Weather API server. Please close program\n             and try again.")
         self.textbox_2.insert("0.0", " \n")
-        self.textbox_2.insert("0.0", "    -FSA not registered within program (FSA in Ontario changes every few years).\n")
+        self.textbox_2.insert("0.0", "            -FSA is not registered within the program (FSA in Ontario changes every few years).\n")
         self.textbox_2.insert("0.0", " \n")
-        self.textbox_2.insert("0.0", "  Second: If typed FSA is valid there are two situations:\n")
+        self.textbox_2.insert("0.0", "    2. If typed FSA is valid there are two cases:\n")
         self.textbox_2.insert("0.0", " \n")
-        self.textbox_2.insert("0.0", "  First: Ensure Correct FSA.\n")
+        self.textbox_2.insert("0.0", "    1. Ensure Correct FSA.\n")
         self.textbox_2.insert("0.0", " \n")
         self.textbox_2.insert("0.0", "If models fail to train (loading bar is not filled):\n")
         self.textbox_2.insert("0.0", " \n")
@@ -502,12 +504,12 @@ class App(customtkinter.CTk):
         ###############################################################################
         # Create Option 3 (Train/Predict Excel Dataset Models) Widgets
         
-        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option3_frame, text="OPTION 3: Train/Forecast models with ANY input dataset.", font=my_title_font,
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option3_frame, text="Train and forecast models with ANY input dataset.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
         self.home_frame_Label_Selection.grid(row=0, column=1, padx = padding_x_option3, pady = (10, 10), columnspan=3)
         
         # Open excel file template
-        self.open_file_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Open Excel Dataset File Template",
+        self.open_file_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Open Template",
                                                       bg_color='#05122d',
                                                       fg_color="#4B0082",
                                                       hover_color="#560067",
@@ -517,7 +519,7 @@ class App(customtkinter.CTk):
         self.open_file_button.grid(row=1, column=1, padx = padding_x_option3, pady = 20, sticky = "new")
         
         # Upload excel file template
-        self.upload_file_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Upload Excel Dataset File",
+        self.upload_file_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Upload Saved File",
                                                       bg_color='#05122d',
                                                       fg_color="#4B0082",
                                                       hover_color="#560067",
@@ -527,7 +529,7 @@ class App(customtkinter.CTk):
         self.upload_file_button.grid(row=1, column=3, padx = padding_x_option3, pady = 20, sticky = "new")
         
         # Create Train button
-        self.train_models_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Train Excel Dataset Models",
+        self.train_models_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Train Models",
                                                       fg_color="#14206d",
                                                       bg_color= "#05122d",
                                                       hover_color="#560067",
@@ -537,12 +539,12 @@ class App(customtkinter.CTk):
         self.train_models_button.grid(row=2, column=1, padx = padding_x_option3, pady = 20, sticky = "sew")
         
         # Create progress bar for training Ontario data
-        self.progress_bar_train_any = customtkinter.CTkProgressBar(self.option3_frame, width=300, fg_color="#14206d")
+        self.progress_bar_train_any = customtkinter.CTkProgressBar(self.option3_frame, width=200, fg_color="#14206d")
         self.progress_bar_train_any.grid(row=3, column=1, padx = padding_x_option3, pady=0, sticky="new")
         self.progress_bar_train_any.set(0)  # Initialize the progress bar to 0
         
         # Create Predict button
-        self.predict_models_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Forecast Excel Dataset Models",
+        self.predict_models_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Forecast Models",
                                                       fg_color="#14206d",
                                                       bg_color= "#05122d",
                                                       hover_color="#560067",
@@ -565,17 +567,17 @@ class App(customtkinter.CTk):
         self.textbox_3.grid(row=5, column=1, columnspan=3, padx = padding_x_option1,  sticky = "ew")
         
         # Last line is first line in GUI
-        self.textbox_3.insert("0.0", "Fifth: Forecast using selected models with selected feature.\n")
+        self.textbox_3.insert("0.0", "Loading screen may be unresponsive while training or predicting. This is meant to happen.")
         self.textbox_3.insert("0.0", " \n")
-        self.textbox_3.insert("0.0", "Fourth: Train selected models with selected features.\n")
+        self.textbox_3.insert("0.0", "5. Click “Forecast Models” button to generate forecasts with saved models.\n")
         self.textbox_3.insert("0.0", " \n")
-        self.textbox_3.insert("0.0", "Third: Upload the saved Excel dataset file to be used for training models and forecasting.\n")
+        self.textbox_3.insert("0.0", "4. Click “Train Models” button to train selected models with selected features.\n")
         self.textbox_3.insert("0.0", " \n")
-        self.textbox_3.insert("0.0", "Second: After inputted all data, save the file.\n")
+        self.textbox_3.insert("0.0", "3. Upload the saved file.\n")
         self.textbox_3.insert("0.0", " \n")
-        self.textbox_3.insert("0.0", "First: Open Excel dataset file template and read “README” sheet for instructions.\n")
+        self.textbox_3.insert("0.0", "2. After inputting all data, save the file.\n")
         self.textbox_3.insert("0.0", " \n")
-        self.textbox_3.insert("0.0", "Loading screen may be unresponsive while training or predicting. This is meant to happen.\n")
+        self.textbox_3.insert("0.0", "1. Open template and navigate to “README” sheet for instructions.\n")
         ###############################################################################        
         # Create second frame (Model 1) (all code for desired frame is in here)
         ###############################################################################
@@ -2188,7 +2190,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = user_run
+    run_student = joseph_pc_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):
