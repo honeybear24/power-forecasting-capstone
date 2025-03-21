@@ -856,7 +856,7 @@ class App(customtkinter.CTk):
                         color_name = "darkviolet"
                         model_name = "XGB" 
                     try:
-                        ax.plot(hourly_data_month_day_saved["DATE"], Y_pred_denorm_saved_df_saved[model_name]["FORECASTED CONSUMPTION (MW)"], 'o-', label = model_name + " FORECASTED Consumption", color = color_name)
+                        ax.plot(hourly_data_month_day_saved["DATE"], Y_pred_denorm_saved_df_saved[model_name]["FORECASTED CONSUMPTION (MW)"], 'o-', label = model_name + " Forecast", color = color_name)
                         ax.legend(loc = "best", facecolor='#34495E', edgecolor='pink', labelcolor='white')
                     except:
                         continue
@@ -867,8 +867,8 @@ class App(customtkinter.CTk):
             
             ax.set_title(title, color="white")     
             
-            ax.set_xlabel("HOUR", color = "white")
-            ax.set_ylabel("CONSUMPTION in MW",color = "white")
+            ax.set_xlabel("Hour", color = "white")
+            ax.set_ylabel("Consumption [MW]",color = "white")
         
             # Customize the x and y axis lines and text color
             ax.spines['bottom'].set_color('white')
@@ -1287,7 +1287,7 @@ class App(customtkinter.CTk):
             
             # Append next day to another dataframe to plot on same figure
             if (day_num == 0):
-                title = "Hourly Power Consumption Beginning: " + year + "/" + month + "/" + day
+                title = "Hourly Power Consumption"
                 hourly_data_month_day_saved = hourly_data_month_day[["YEAR", "MONTH", "DAY", "HOUR", "DATE", "TOTAL_CONSUMPTION"]].copy()
             else:
                 hourly_data_month_day_saved = pd.concat([hourly_data_month_day_saved, hourly_data_month_day], axis=0, ignore_index=True)
@@ -1639,7 +1639,7 @@ class App(customtkinter.CTk):
                         color_name = "darkviolet"
                         model_name = "XGB" 
                     try:
-                        ax.plot(weather_data["DATE"], Y_pred_denorm_saved_df_saved[model_name]["FORECASTED CONSUMPTION (MW)"], 'o-', label = model_name + " Forecasted Consumption", color = color_name)
+                        ax.plot(weather_data["DATE"], Y_pred_denorm_saved_df_saved[model_name]["FORECASTED CONSUMPTION (MW)"], 'o-', label = model_name + " Forecast", color = color_name)
                         ax.legend(loc = "best", facecolor='#34495E', edgecolor='pink', labelcolor='white')
                     except:
                         continue
@@ -1648,8 +1648,8 @@ class App(customtkinter.CTk):
                 ax.legend(loc = "upper left", facecolor='#34495E', edgecolor='pink', labelcolor='white')
             
             ax.set_title(title, color="white")     
-            ax.set_xlabel("HOUR", color = "white")
-            ax.set_ylabel("CONSUMPTION in MW",color = "white")
+            ax.set_xlabel("Hour", color = "white")
+            ax.set_ylabel("Consumption [MW]",color = "white")
             
             
             # Customize the x and y axis lines and text color
@@ -1955,7 +1955,7 @@ class App(customtkinter.CTk):
         for day_num in range (num_of_days):
             # Append next day to another dataframe to plot on same figure
             if (day_num == 0):
-                title = "Input Excel File: Hourly Power Consumption Beginning: " + year + "/" + month + "/" + day
+                title = "Hourly Power Consumption"
     
             for model_name in selected_models:
                 if model_name == "K-Nearest Neighbors":
@@ -2190,7 +2190,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_pc_run
+    run_student = user_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):
