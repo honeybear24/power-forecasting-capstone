@@ -353,7 +353,7 @@ class App(customtkinter.CTk):
         self.scrollable_features_checkbox_frame._scrollbar.configure(height=0)
         
         # Create drop down menu for options
-        options_list = ["Forecast Ontario Models", "Train Ontario Models", "Train/Forecast Excel Dataset Models"]
+        options_list = ["Forecast Ontario Models", "Train Ontario Models", "Train and Forecast Provided Dataset Models"]
         self.options_dropdown_menu = customtkinter.CTkOptionMenu(self.home_frame, values=options_list, command=self.show_frame_based_on_option,
             fg_color="#14206d", button_color="#14206d", dropdown_fg_color="#05122d", bg_color="#05122d", font=my_text_font)
         self.options_dropdown_menu.set(options_list[0])
@@ -513,7 +513,7 @@ class App(customtkinter.CTk):
         self.textbox_2.insert("0.0", "Loading screen may be unresponsive while training. This is meant to happen.\n")
         
         ###############################################################################
-        # Create Option 3 (Train/Predict Excel Dataset Models) Widgets
+        # Create Option 3 (Train and Forecaste Provided Dataset Models) Widgets
         
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.option3_frame, text="Train and forecast models with ANY input dataset.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
