@@ -10,6 +10,7 @@ import Power_Forecasting_KNN_Saver
 import Power_Forecasting_LR_Saver
 import Power_Forecasting_XGB_Saver
 import Power_Forecasting_CNN_Saver
+import Power_Forecasting_Corsair_RGB
 import asyncio  # Import asyncio library for async operations
 import aiohttp # Import aiohttp library for making HTTP requests
 import nest_asyncio # Allows for asyncio to be nested
@@ -45,6 +46,9 @@ import threading
 
 import joblib
 import gc
+
+from pyrgbdev import Corsair
+
 
 
 
@@ -122,6 +126,13 @@ class App(customtkinter.CTk):
         image = PIL.Image.open(start_menu_image_path)
         background_image = customtkinter.CTkImage(image, size=(1920, 1080))
         
+        # Initialize Corsair RGB
+        try:
+            global rgb_lights    
+            rgb_lights = Corsair.sdk()
+        except:
+            pass
+        
         # Get FSA Map
         fsa_map_path = os.path.join(fsa_conversion_path, "ontario_fsas.csv")
         global fsa_map
@@ -130,6 +141,8 @@ class App(customtkinter.CTk):
         global cnn_days_back
         # Get X dates behind for CNN model Lags
         cnn_days_back = 2
+        
+        
         ###############################################################################
         # Create Start Frame (all code for desired frame is in here)
         ###############################################################################
@@ -363,8 +376,6 @@ class App(customtkinter.CTk):
         self.home_frame_Label_Selection.grid(row=3, column=2, padx = padding_x_option1, sticky = "ew")
         
         # FSA (LOOK IN OPTION 1 FUNCTION)
-        
-        
         
         # Calendar
         # FOR buttons on the calendar
@@ -803,495 +814,337 @@ class App(customtkinter.CTk):
        
     def predict_models_button_event(self):
 
-        
-        # Function to plot the model figures
-        def plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df_saved, metrics_values, hourly_data_month_day_error, model_frame, model_event_next, model_event_back, model_name):
-        
+        try:
+            # Function to plot the model figures
+            def plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df_saved, metrics_values, hourly_data_month_day_error, model_frame, model_event_next, model_event_back, model_name):
             
-            
-            model_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
-            # Create background image
-            image = PIL.Image.open(model_menu_image_path)
-            background_image_model = customtkinter.CTkImage(image, size=(1920, 1080))
-            
-            
-            self.background_label = customtkinter.CTkLabel(model_frame,
-                                                         image=background_image_model,
-                                                         text="")  # Empty text
-            self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
+                
+                
+                model_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
+                # Create background image
+                image = PIL.Image.open(model_menu_image_path)
+                background_image_model = customtkinter.CTkImage(image, size=(1920, 1080))
+                
+                
+                self.background_label = customtkinter.CTkLabel(model_frame,
+                                                             image=background_image_model,
+                                                             text="")  # Empty text
+                self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
+             
+                my_title_font = customtkinter.CTkFont(family="RobotoCondensed-ExtraBoldItalic", size=50, weight="bold", slant = "italic")
+                self.model_frame_Label_Title = customtkinter.CTkLabel(model_frame, text=model_name, font=my_title_font, 
+                                                                     bg_color='#05122d', text_color=("white"))
+                self.model_frame_Label_Title.grid(row=0, column=0, padx=20, pady=(40, 10), columnspan=2, sticky = "n")  
+    
+                
+                if (model_frame != self.summary_frame):
+                    self.next_button = customtkinter.CTkButton(model_frame, text="→", command=model_event_next, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
+                    self.next_button.grid(row=4, column=1, padx=20, pady=20,  sticky = "se")  
+    
+                    if (model_frame != self.model_1_frame):
+                        self.next_button = customtkinter.CTkButton(model_frame, text="←", command=model_event_back, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
+                        self.next_button.grid(row=4, column=0, padx=20, pady=20,  sticky = "sw") 
+                
+                
+                # Plot models on same graph
+                fig, ax = plt.subplots(figsize = (15, 5))
+                fig.patch.set_facecolor('#05122d')  # Set the figure background color
+                ax.set_facecolor('#05122d')  # Set the axes background color
+                
+                ax.plot(hourly_data_month_day_saved["DATE"], hourly_data_month_day_saved["TOTAL_CONSUMPTION"], 'o-', label = "Actual Consumption", color = "pink")
+                if (model_frame == self.summary_frame): 
+                    for model_name in selected_models:
+                        if model_name == "K-Nearest Neighbors":
+                            color_name = "purple"
+                            model_name = "KNN"
+                        if model_name == "Convolutional Neural Network":
+                            color_name = "indigo"
+                            model_name = "CNN" 
+                        if model_name == "Linear Regression":
+                            color_name = "violet"
+                            model_name = "LR"
+                        if model_name == "X Gradient Boost":
+                            color_name = "darkviolet"
+                            model_name = "XGB" 
+                        try:
+                            ax.plot(hourly_data_month_day_saved["DATE"], Y_pred_denorm_saved_df_saved[model_name]["FORECASTED CONSUMPTION (MW)"], 'o-', label = model_name + " Forecast", color = color_name)
+                            ax.legend(loc = "best", facecolor='#34495E', edgecolor='pink', labelcolor='white')
+                        except:
+                            continue
+                else:
+                    ax.plot(hourly_data_month_day_saved["DATE"], Y_pred_denorm_saved_df_saved["TOTAL_CONSUMPTION"], 'o-', label = "Forecasted Consumption", color = "purple")
+                    ax.legend(loc = "upper left", facecolor='#34495E', edgecolor='pink', labelcolor='white')
          
-            my_title_font = customtkinter.CTkFont(family="RobotoCondensed-ExtraBoldItalic", size=50, weight="bold", slant = "italic")
-            self.model_frame_Label_Title = customtkinter.CTkLabel(model_frame, text=model_name, font=my_title_font, 
-                                                                 bg_color='#05122d', text_color=("white"))
-            self.model_frame_Label_Title.grid(row=0, column=0, padx=20, pady=(40, 10), columnspan=2, sticky = "n")  
-
+                
+                ax.set_title(title, color="white")     
+                
+                ax.set_xlabel("Hour", color = "white")
+                ax.set_ylabel("Consumption [MW]",color = "white")
             
-            if (model_frame != self.summary_frame):
-                self.next_button = customtkinter.CTkButton(model_frame, text="→", command=model_event_next, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
-                self.next_button.grid(row=4, column=1, padx=20, pady=20,  sticky = "se")  
-
-                if (model_frame != self.model_1_frame):
-                    self.next_button = customtkinter.CTkButton(model_frame, text="←", command=model_event_back, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
-                    self.next_button.grid(row=4, column=0, padx=20, pady=20,  sticky = "sw") 
-            
-            
-            # Plot models on same graph
-            fig, ax = plt.subplots(figsize = (15, 5))
-            fig.patch.set_facecolor('#05122d')  # Set the figure background color
-            ax.set_facecolor('#05122d')  # Set the axes background color
-            
-            ax.plot(hourly_data_month_day_saved["DATE"], hourly_data_month_day_saved["TOTAL_CONSUMPTION"], 'o-', label = "Actual Consumption", color = "pink")
-            if (model_frame == self.summary_frame): 
-                for model_name in selected_models:
-                    if model_name == "K-Nearest Neighbors":
-                        color_name = "purple"
-                        model_name = "KNN"
-                    if model_name == "Convolutional Neural Network":
-                        color_name = "indigo"
-                        model_name = "CNN" 
-                    if model_name == "Linear Regression":
-                        color_name = "violet"
-                        model_name = "LR"
-                    if model_name == "X Gradient Boost":
-                        color_name = "darkviolet"
-                        model_name = "XGB" 
-                    try:
-                        ax.plot(hourly_data_month_day_saved["DATE"], Y_pred_denorm_saved_df_saved[model_name]["FORECASTED CONSUMPTION (MW)"], 'o-', label = model_name + " Forecast", color = color_name)
-                        ax.legend(loc = "best", facecolor='#34495E', edgecolor='pink', labelcolor='white')
-                    except:
-                        continue
-            else:
-                ax.plot(hourly_data_month_day_saved["DATE"], Y_pred_denorm_saved_df_saved["TOTAL_CONSUMPTION"], 'o-', label = "Forecasted Consumption", color = "purple")
-                ax.legend(loc = "upper left", facecolor='#34495E', edgecolor='pink', labelcolor='white')
+                # Customize the x and y axis lines and text color
+                ax.spines['bottom'].set_color('white')
+                ax.spines['left'].set_color('white')
+                ax.tick_params(axis='x', colors='white')
+                ax.tick_params(axis='y', colors='white')
+                ax.spines['top'].set_color('#05122d')
+                ax.spines['right'].set_color('#05122d')
+    
+                ax.xaxis.set_major_formatter(mdates.DateFormatter('%b-%d, %H:%M'))
+                plot_svg =  os.path.join(image_path, "Predicted_Actual_Graph.png")
+                plt.savefig(plot_svg)
+                plt.close()
+                
+                # Positining of Figure
+                self.model_image = customtkinter.CTkImage(Image.open(os.path.join(image_path, "Predicted_Actual_Graph.png")), size=(1500, 500))
+                
+                self.model_frame_image_label = customtkinter.CTkLabel(model_frame, text="", image=self.model_image)
+                self.model_frame_image_label.grid(row=1, column=0, padx=20, pady=10, columnspan=2)
+                
+                if (model_frame != self.summary_frame):
+                    # Display Table of Error
+                    hourly_data_month_day_saved_table_tp = hourly_data_month_day_error.transpose()
+                    
+                    # Positining of model table
+                    self.model_table = CTkTable(model_frame, width=1, height=1, values=hourly_data_month_day_saved_table_tp.values.tolist(), 
+                                fg_color='#05122d',       # Foreground color (table background)
+                                bg_color='#05122d',       # Background color (frame background)
+                                text_color='white',     # Text color
+                                header_color='#560067',
+                                hover_color=("gray70", "gray30"), anchor="w",
+                                 font = customtkinter.CTkFont(family="Roboto Condensed", size=12))
+                    self.model_table.grid(row=2, column=0, padx=20, pady=10, columnspan=2)
+                
+                
+                    # Positining of metrix table
+                    self.metrix_table = CTkTable(model_frame, width=1, height=1, values=metrics_values.values.tolist(), 
+                                fg_color='#05122d',       # Foreground color (table background)
+                                bg_color='#05122d',       # Background color (frame background)
+                                text_color='white',     # Text color
+                                header_color='#560067',
+                                hover_color=("gray70", "gray30"), anchor="w",
+                                 font = customtkinter.CTkFont(family="Roboto Condensed", size=12))
+                    self.metrix_table.grid(row=3, column=0, padx=20, pady=10, columnspan=2)
+                else:
+                    self.save_results_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Save Results (Most Recent Run)",
+                                                                  bg_color='#05122d',
+                                                                  fg_color="#4B0082",
+                                                                  hover_color="#560067",
+                                                                  text_color=("gray10", "gray90"),
+                                                                  font = my_button_font,
+                                                                  anchor="center", command=self.save_results_button_event)
+                    self.save_results_button.grid(row=2, column=0, padx = 100, pady = 30, sticky = "new")
+                    
+                    self.restart_program_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
+                                                                  bg_color='#05122d',
+                                                                  fg_color="#4B0082",
+                                                                  hover_color="#560067",
+                                                                  text_color=("gray10", "gray90"),
+                                                                  font = my_button_font,
+                                                                  anchor="center", command=self.restart_program_button_event)
+                    self.restart_program_button.grid(row=2, column=1, padx = 100, pady = 30, sticky = "new")
      
-            
-            ax.set_title(title, color="white")     
-            
-            ax.set_xlabel("Hour", color = "white")
-            ax.set_ylabel("Consumption [MW]",color = "white")
-        
-            # Customize the x and y axis lines and text color
-            ax.spines['bottom'].set_color('white')
-            ax.spines['left'].set_color('white')
-            ax.tick_params(axis='x', colors='white')
-            ax.tick_params(axis='y', colors='white')
-            ax.spines['top'].set_color('#05122d')
-            ax.spines['right'].set_color('#05122d')
-
-            ax.xaxis.set_major_formatter(mdates.DateFormatter('%b-%d, %H:%M'))
-            plot_svg =  os.path.join(image_path, "Predicted_Actual_Graph.png")
-            plt.savefig(plot_svg)
-            plt.close()
-            
-            # Positining of Figure
-            self.model_image = customtkinter.CTkImage(Image.open(os.path.join(image_path, "Predicted_Actual_Graph.png")), size=(1500, 500))
-            
-            self.model_frame_image_label = customtkinter.CTkLabel(model_frame, text="", image=self.model_image)
-            self.model_frame_image_label.grid(row=1, column=0, padx=20, pady=10, columnspan=2)
-            
-            if (model_frame != self.summary_frame):
-                # Display Table of Error
-                hourly_data_month_day_saved_table_tp = hourly_data_month_day_error.transpose()
-                
-                # Positining of model table
-                self.model_table = CTkTable(model_frame, width=1, height=1, values=hourly_data_month_day_saved_table_tp.values.tolist(), 
-                            fg_color='#05122d',       # Foreground color (table background)
-                            bg_color='#05122d',       # Background color (frame background)
-                            text_color='white',     # Text color
-                            header_color='#560067',
-                            hover_color=("gray70", "gray30"), anchor="w",
-                             font = customtkinter.CTkFont(family="Roboto Condensed", size=12))
-                self.model_table.grid(row=2, column=0, padx=20, pady=10, columnspan=2)
-            
-            
-                # Positining of metrix table
-                self.metrix_table = CTkTable(model_frame, width=1, height=1, values=metrics_values.values.tolist(), 
-                            fg_color='#05122d',       # Foreground color (table background)
-                            bg_color='#05122d',       # Background color (frame background)
-                            text_color='white',     # Text color
-                            header_color='#560067',
-                            hover_color=("gray70", "gray30"), anchor="w",
-                             font = customtkinter.CTkFont(family="Roboto Condensed", size=12))
-                self.metrix_table.grid(row=3, column=0, padx=20, pady=10, columnspan=2)
-            else:
-                self.save_results_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Save Results (Most Recent Run)",
-                                                              bg_color='#05122d',
-                                                              fg_color="#4B0082",
-                                                              hover_color="#560067",
-                                                              text_color=("gray10", "gray90"),
-                                                              font = my_button_font,
-                                                              anchor="center", command=self.save_results_button_event)
-                self.save_results_button.grid(row=2, column=0, padx = 100, pady = 30, sticky = "new")
-                
-                self.restart_program_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
-                                                              bg_color='#05122d',
-                                                              fg_color="#4B0082",
-                                                              hover_color="#560067",
-                                                              text_color=("gray10", "gray90"),
-                                                              font = my_button_font,
-                                                              anchor="center", command=self.restart_program_button_event)
-                self.restart_program_button.grid(row=2, column=1, padx = 100, pady = 30, sticky = "new")
- 
-            
-            
-        # Function to display when no model is saved
-        def plot_no_model(self, model_frame, model_event_next, model_event_back, model_name):
-            
-            
-            model_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
-            # Create background image
-            image = PIL.Image.open(model_menu_image_path)
-            background_image_model = customtkinter.CTkImage(image, size=(1920, 1080))
-            
-            
-            self.background_label = customtkinter.CTkLabel(model_frame,
-                                                         image=background_image_model,
-                                                         text="")  # Empty text
-            self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
-         
-
-            self.model_frame_Label_Title = customtkinter.CTkLabel(model_frame, text=model_name, font=customtkinter.CTkFont(family="RobotoCondensed-ExtraBoldItalic", size=50, weight="bold", slant = "italic"), 
-                                                                 bg_color='#05122d', text_color=("white"))
-            self.model_frame_Label_Title.grid(row=0, column=0, padx=20, pady=(40, 10), columnspan=2, sticky = "n")  
-            
-            if (model_frame != self.summary_frame):
-                self.next_button = customtkinter.CTkButton(model_frame, text="→", command=model_event_next, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
-                self.next_button.grid(row=4, column=1, padx=20, pady=20,  sticky = "se")  
                 
                 
-                if (model_frame != self.model_1_frame):
-                    self.next_button = customtkinter.CTkButton(model_frame, text="←", command=model_event_back, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
-                    self.next_button.grid(row=4, column=0, padx=20, pady=20,  sticky = "sw") 
-            else:
+            # Function to display when no model is saved
+            def plot_no_model(self, model_frame, model_event_next, model_event_back, model_name):
                 
-                self.restart_program_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
-                                                              bg_color='#05122d',
-                                                              fg_color="#4B0082",
-                                                              hover_color="#560067",
-                                                              text_color=("gray10", "gray90"),
-                                                              font = my_button_font,
-                                                              anchor="center", command=self.restart_program_button_event)
-                self.restart_program_button.grid(row=1, column=0, columnspan = 2, padx = 100, pady = 30, sticky = "new")
-        
-        
-        months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-        
-        
-        selected_date = self.calendar.get_date()
-
-        selected_date_datetime = datetime.strptime(selected_date, '%m/%d/%y')
-        
-        for widget in self.model_1_frame.winfo_children():
-            if (widget.winfo_exists()):
-                widget.destroy()  # deleting widget
-        
-
-        try:
-            fsa_chosen = fsa_chosen_option_menu
-        except NameError:
-            fsa_chosen = fsa_predict_list[0]
-        
-        try:
-            num_of_days = int(number_of_days_chosen_option_menu)
-        except NameError:
-            num_of_days = 1
-
-        dirs_hourly_consumption_demand = os.path.join(dirs_inputs, "Hourly_Demand_Data")
+                
+                model_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
+                # Create background image
+                image = PIL.Image.open(model_menu_image_path)
+                background_image_model = customtkinter.CTkImage(image, size=(1920, 1080))
+                
+                
+                self.background_label = customtkinter.CTkLabel(model_frame,
+                                                             image=background_image_model,
+                                                             text="")  # Empty text
+                self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
+             
     
-        
-
-        # Define dataframes
-        hourly_data_month_day_saved = pd.DataFrame(columns = ['HOUR', 'TOTAL_CONSUMPTION'])
-        
-        # Get one date behind so that lags can be propoerly incorporated
-        new_date = selected_date_datetime + timedelta(num_of_days-1) 
-        old_date = selected_date_datetime - timedelta(days=1)
-        old_year = str(old_date.year)
-        old_month = months[(old_date.month-1)]
-        old_day = str(old_date.day)
-        
-        
-        old_date_cnn = selected_date_datetime - timedelta(days=cnn_days_back)
-        old_year_cnn = str(old_date_cnn.year)
-        old_month_cnn = months[(old_date_cnn.month-1)]
-        old_day_cnn = str(old_date_cnn.day)
-        
-        year = str(new_date.year)
-        month = months[(new_date.month-1)]
-        day = str(new_date.day)
-
-
-        ### Calling Data ###
-        # Choose FSA for data collection + Get latitude and longitude of chosen fsa
-        lat = fsa_map[fsa_chosen]["lat"]
-        lon = fsa_map[fsa_chosen]["lon"]
-
-        # Choose date range for data collection
-        # All models
-        start_year = int(old_year)
-        start_month = int(old_month)
-        start_day = int(old_day)
-        start_hour = 0
-        
-        # CNN Model
-        start_year_cnn = int(old_year_cnn)
-        start_month_cnn = int(old_month_cnn)
-        start_day_cnn = int(old_day_cnn)
-        start_hour_cnn = 0
-        
-        # End date
-        end_year = int(year)
-        end_month = int(month)
-        end_day = int(day)
-        end_hour = 23
-
-        # Making datetime objects for start and end dates
-        start_date = datetime(start_year, start_month, start_day, start_hour,0,0)
-        start_date_cnn = datetime(start_year_cnn, start_month_cnn, start_day_cnn, start_hour_cnn,0,0)
-        end_date = datetime(end_year, end_month, end_day, end_hour,0,0)
-
-        # # Collect data - Using asynchronous functions
-        # 
-        weather_data, dummy_hourly_data_month_day = asyncio.run(Power_Forecasting_dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date, end_date, fsa_chosen, lat, lon))
-        
-        # CNN weather data
-        weather_data_cnn, dummy_hourly_data_month_day = asyncio.run(Power_Forecasting_dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date_cnn, end_date, fsa_chosen, lat, lon))
-        
-        dummy_hourly_data_month_day = dummy_hourly_data_month_day.reset_index(drop = True) 
-        weather_data = weather_data.reset_index(drop = True)
-        
-        
-
-        index_first_day = weather_data[(weather_data['Day'] == start_day)].index
-        
-        dummy_hourly_data_month_day = dummy_hourly_data_month_day.drop(index_first_day, axis='index', inplace = False).reset_index(drop=True)
-        weather_data = weather_data.drop(index_first_day, axis='index', inplace = False).reset_index(drop=True)
-        
-        # Drop temporary year month day hour columns
-        weather_data = weather_data.drop(columns=['Year', 'Month', 'Day', 'Hour'])
-        # Drop temporary year month day hour columns
-        weather_data_cnn = weather_data_cnn.drop(columns=['Year', 'Month', 'Day', 'Hour'])
-        
-        # Open weather scaler
-        scaler_path = os.path.join(saved_model_path, "weather_scaler_"+fsa_chosen+".pkl")
-        if not os.path.exists(scaler_path):
-            raise FileNotFoundError(f"Scaler file not found: {scaler_path}")
-        weather_scaler = joblib.load(scaler_path)
-        
-        # Normalize Weather
-        norm_weather_data = weather_scaler.transform(weather_data)
-        norm_weather_data = pd.DataFrame(norm_weather_data, columns = weather_data.columns)
-        
-        # Normalize CNN Weather
-        norm_weather_data_cnn = weather_scaler.transform(weather_data_cnn)
-        norm_weather_data_cnn = pd.DataFrame(norm_weather_data_cnn, columns = weather_data_cnn.columns)
-        
-        
-        ###############################################################################
-        # Import and predict Models
-        ###############################################################################
-        
-        total_features = []
-        # Convert year, month, day, hour to boolean values
-        # Day range 1 to 31 (subtract last day for 0 condition)
-        days_range = [*range(1, 31)]
-        # Hour range 0 to 23 (subtract last hour for 0 condition)
-        hours_range = [*range(0, 23)]
-        # Hour range 0 to 23 (subtract last month for 0 condition)
-        months_range = [*range(1, 12)]
-        # Year range depending on weather data columns
-        years_range = weather_data.columns
-        
-        for year in years_range:
-            if ("Year_" in year):
-                total_features.append(year)
-        for month in months_range:
-            total_features.append("Month_" + str(month))
-
-        for day in days_range:
-            total_features.append("Day_" + str(day))
-        
-        for hour in hours_range:
-            total_features.append("Hour_" + str(hour))
-                     
-        for feature in selected_features:
-            total_features.append(feature)
-            
-        total_features_temp = total_features.copy()
-        for lag in range (1, 24):
-            for feature in total_features_temp:
-                if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
-                    continue
-                else:
-                    total_features.append(feature+"_Lag_"+str(lag))
-        
-        # Dictionary for model prediction dataframes
-        # model -> Value
-        Y_pred_denorm_saved_df = {}
-        
-        for model_name in selected_models:
-            if model_name == "K-Nearest Neighbors":
-                model_name = "KNN"
-            if model_name == "Convolutional Neural Network":
-                model_name = "CNN" 
-            if model_name == "Linear Regression":
-                model_name = "LR"
-            if model_name == "X Gradient Boost":
-                model_name = "XGB" 
-            
-            if model_name == "CNN":
-                X_test = norm_weather_data_cnn[total_features]
-            else:
-                X_test = norm_weather_data[total_features]
+                self.model_frame_Label_Title = customtkinter.CTkLabel(model_frame, text=model_name, font=customtkinter.CTkFont(family="RobotoCondensed-ExtraBoldItalic", size=50, weight="bold", slant = "italic"), 
+                                                                     bg_color='#05122d', text_color=("white"))
+                self.model_frame_Label_Title.grid(row=0, column=0, padx=20, pady=(40, 10), columnspan=2, sticky = "n")  
                 
-            # Load model from gui_pickup folder using joblib
+                if (model_frame != self.summary_frame):
+                    self.next_button = customtkinter.CTkButton(model_frame, text="→", command=model_event_next, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
+                    self.next_button.grid(row=4, column=1, padx=20, pady=20,  sticky = "se")  
+                    
+                    
+                    if (model_frame != self.model_1_frame):
+                        self.next_button = customtkinter.CTkButton(model_frame, text="←", command=model_event_back, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
+                        self.next_button.grid(row=4, column=0, padx=20, pady=20,  sticky = "sw") 
+                else:
+                    
+                    self.restart_program_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
+                                                                  bg_color='#05122d',
+                                                                  fg_color="#4B0082",
+                                                                  hover_color="#560067",
+                                                                  text_color=("gray10", "gray90"),
+                                                                  font = my_button_font,
+                                                                  anchor="center", command=self.restart_program_button_event)
+                    self.restart_program_button.grid(row=1, column=0, columnspan = 2, padx = 100, pady = 30, sticky = "new")
+            
+            # Begin RGB waiting sequence
             try:
-                if model_name == "CNN":
-                    pipe_saved = models.load_model(os.path.join(saved_model_path, (model_name+"_"+fsa_chosen+"_Model_" + "_".join(selected_features_3_digits) + ".keras")))
-                else:
-                    pipe_saved = joblib.load(os.path.join(saved_model_path, (model_name+"_"+fsa_chosen+"_Model_" + "_".join(selected_features_3_digits) + ".pkl"))) 
+                Power_Forecasting_Corsair_RGB.waiting(rgb_lights)
             except:
-                continue
+                pass
             
-            if (model_name == "CNN"):
-                
-                for feature in X_test.columns:
-                  if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature) or ("Hour_" in feature)):
-                    X_test[feature].astype('bool')
-                  if ("Lag" in feature):
-                    X_test = X_test.drop(columns = [feature])
-                
-                # Create dataframe without humidity and speed
-                data = X_test
-                
-                #window_size = 168  # Last 168 hours (one week)
-                window_size = 24*cnn_days_back # Last 24 hours (one day)
-                forecast_horizon = 24  # Next 24 hours
-                
-                
-                # Create input-output pairs using a sliding window
-                Y_pred_saved = pd.DataFrame(columns=['TOTAL_CONSUMPTION'])
-                for day in range(num_of_days):
-                    X_data = []
-
-                    X_data.append(data.iloc[day*24:day*24 + window_size + forecast_horizon].values)  # Collect 24 hours of feature data
-                    
-                    # Convert to numpy arrays
-                    X_data = np.array(X_data, dtype=np.float16)
-                    X_data = np.expand_dims(X_data, axis=-1)
+            months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+            
+            
+            selected_date = self.calendar.get_date()
     
-                    # Predict using loaded model
-                    Y_pred_cnn = pipe_saved.predict(X_data)
-                    Y_pred_cnn = pd.DataFrame(Y_pred_cnn)
-                    
-                    # Ensure Y_pred and Y_test are reshaped correctly
-                    Y_pred_cnn = Y_pred_cnn.values.reshape(-1, 1)
-                    
-                    Y_pred_cnn = pd.DataFrame(Y_pred_cnn, columns=['TOTAL_CONSUMPTION'])
-
-                    Y_pred_saved = pd.concat([Y_pred_saved, Y_pred_cnn], axis=0, ignore_index=True)
-                
-
-            else:
-                # Predict using loaded model
-                Y_pred_saved = pipe_saved.predict(X_test)
-                
-                # Ensure Y_pred and Y_test are reshaped correctly
-                Y_pred_saved = Y_pred_saved.reshape(-1, 1)
-                
-            # Denormalize Y_pred and Y_test with min_max_scaler_y.pkl using joblib
-            scaler_path = os.path.join(saved_model_path, "power_scaler_"+fsa_chosen+".pkl")
-            if not os.path.exists(scaler_path):
-                raise FileNotFoundError(f"Scaler file not found: {scaler_path}")
-            power_scaler = joblib.load(scaler_path)
+            selected_date_datetime = datetime.strptime(selected_date, '%m/%d/%y')
             
-            # Inverse Transform power scaler
-            Y_pred_denorm_saved = power_scaler.inverse_transform(Y_pred_saved)
-
-            # Save power scaler to dictionary of models
-            Y_pred_denorm_saved_df[model_name] = pd.DataFrame(Y_pred_denorm_saved, columns=['TOTAL_CONSUMPTION'])
+            for widget in self.model_1_frame.winfo_children():
+                if (widget.winfo_exists()):
+                    widget.destroy()  # deleting widget
             
-            # Convert to MW
-            Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name]*0.001
-            
-            # Convert to float64
-            Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].astype(float)
-            
-            # Round to 4 decimal places
-            Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].round(decimals = 4)
-            
-            print(Y_pred_denorm_saved_df[model_name])
-        
-        # Dictionary for model prediction dataframes error 
-        # model -> Value
-        hourly_data_month_day_error = {}
-        hourly_data_month_day_error_df = pd.DataFrame()
-        metrics_values = {}
-        save_results_dic.clear()
-        
-        for day_num in range (num_of_days):
-            
-            # new date
-            new_date = selected_date_datetime + timedelta(days=day_num) 
     
+            try:
+                fsa_chosen = fsa_chosen_option_menu
+            except NameError:
+                fsa_chosen = fsa_predict_list[0]
+            
+            try:
+                num_of_days = int(number_of_days_chosen_option_menu)
+            except NameError:
+                num_of_days = 1
+    
+            dirs_hourly_consumption_demand = os.path.join(dirs_inputs, "Hourly_Demand_Data")
+        
+            
+    
+            # Define dataframes
+            hourly_data_month_day_saved = pd.DataFrame(columns = ['HOUR', 'TOTAL_CONSUMPTION'])
+            
+            # Get one date behind so that lags can be propoerly incorporated
+            new_date = selected_date_datetime + timedelta(num_of_days-1) 
+            old_date = selected_date_datetime - timedelta(days=1)
+            old_year = str(old_date.year)
+            old_month = months[(old_date.month-1)]
+            old_day = str(old_date.day)
+            
+            
+            old_date_cnn = selected_date_datetime - timedelta(days=cnn_days_back)
+            old_year_cnn = str(old_date_cnn.year)
+            old_month_cnn = months[(old_date_cnn.month-1)]
+            old_day_cnn = str(old_date_cnn.day)
+            
             year = str(new_date.year)
             month = months[(new_date.month-1)]
             day = str(new_date.day)
-
+    
+    
+            ### Calling Data ###
+            # Choose FSA for data collection + Get latitude and longitude of chosen fsa
+            lat = fsa_map[fsa_chosen]["lat"]
+            lon = fsa_map[fsa_chosen]["lon"]
+    
+            # Choose date range for data collection
+            # All models
+            start_year = int(old_year)
+            start_month = int(old_month)
+            start_day = int(old_day)
+            start_hour = 0
+            
+            # CNN Model
+            start_year_cnn = int(old_year_cnn)
+            start_month_cnn = int(old_month_cnn)
+            start_day_cnn = int(old_day_cnn)
+            start_hour_cnn = 0
+            
+            # End date
+            end_year = int(year)
+            end_month = int(month)
+            end_day = int(day)
+            end_hour = 23
+    
+            # Making datetime objects for start and end dates
+            start_date = datetime(start_year, start_month, start_day, start_hour,0,0)
+            start_date_cnn = datetime(start_year_cnn, start_month_cnn, start_day_cnn, start_hour_cnn,0,0)
+            end_date = datetime(end_year, end_month, end_day, end_hour,0,0)
+    
+            # # Collect data - Using asynchronous functions
+            # 
+            weather_data, dummy_hourly_data_month_day = asyncio.run(Power_Forecasting_dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date, end_date, fsa_chosen, lat, lon))
+            
+            # CNN weather data
+            weather_data_cnn, dummy_hourly_data_month_day = asyncio.run(Power_Forecasting_dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date_cnn, end_date, fsa_chosen, lat, lon))
+            
+            dummy_hourly_data_month_day = dummy_hourly_data_month_day.reset_index(drop = True) 
+            weather_data = weather_data.reset_index(drop = True)
+            
+            
+    
+            index_first_day = weather_data[(weather_data['Day'] == start_day)].index
+            
+            dummy_hourly_data_month_day = dummy_hourly_data_month_day.drop(index_first_day, axis='index', inplace = False).reset_index(drop=True)
+            weather_data = weather_data.drop(index_first_day, axis='index', inplace = False).reset_index(drop=True)
+            
+            # Drop temporary year month day hour columns
+            weather_data = weather_data.drop(columns=['Year', 'Month', 'Day', 'Hour'])
+            # Drop temporary year month day hour columns
+            weather_data_cnn = weather_data_cnn.drop(columns=['Year', 'Month', 'Day', 'Hour'])
+            
+            # Open weather scaler
+            scaler_path = os.path.join(saved_model_path, "weather_scaler_"+fsa_chosen+".pkl")
+            if not os.path.exists(scaler_path):
+                raise FileNotFoundError(f"Scaler file not found: {scaler_path}")
+            weather_scaler = joblib.load(scaler_path)
+            
+            # Normalize Weather
+            norm_weather_data = weather_scaler.transform(weather_data)
+            norm_weather_data = pd.DataFrame(norm_weather_data, columns = weather_data.columns)
+            
+            # Normalize CNN Weather
+            norm_weather_data_cnn = weather_scaler.transform(weather_data_cnn)
+            norm_weather_data_cnn = pd.DataFrame(norm_weather_data_cnn, columns = weather_data_cnn.columns)
+            
+            
             ###############################################################################
-            # Dictionary for reading in hourly consumption by FSA
+            # Import and predict Models
             ###############################################################################
-            hourly_consumption_data_dic_by_month = pd.DataFrame()
             
-            # Initialize dataframes to be used
-            hourly_data_res = pd.DataFrame()
-            hourly_data_res_fsa = pd.DataFrame()
-            hourly_data_hour_sum = pd.DataFrame()
+            total_features = []
+            # Convert year, month, day, hour to boolean values
+            # Day range 1 to 31 (subtract last day for 0 condition)
+            days_range = [*range(1, 31)]
+            # Hour range 0 to 23 (subtract last hour for 0 condition)
+            hours_range = [*range(0, 23)]
+            # Hour range 0 to 23 (subtract last month for 0 condition)
+            months_range = [*range(1, 12)]
+            # Year range depending on weather data columns
+            years_range = weather_data.columns
             
-            hourly_data_string = "PUB_HourlyConsumptionByFSA_"+year+month+"_v1.csv"
+            for year in years_range:
+                if ("Year_" in year):
+                    total_features.append(year)
+            for month in months_range:
+                total_features.append("Month_" + str(month))
+    
+            for day in days_range:
+                total_features.append("Day_" + str(day))
             
-            # Use try and catch if problems reading input data
-            try:
-                # Not cooked yet, we are going to let it COOK below
-                file_path = os.path.join(dirs_hourly_consumption_demand, hourly_data_string)
-                hourly_data_raw = pd.read_csv(file_path, skiprows=3, header = 0, usecols= ['FSA', 'DATE', 'HOUR', 'CUSTOMER_TYPE', 'TOTAL_CONSUMPTION'])
-            except ValueError: # skiprows=x does not match the "normal sequence" of 3. For example, 2023 08 data had a different skip_row value
-                hourly_data_raw = pd.read_csv(file_path, skiprows=7, header = 0, usecols= ['FSA', 'DATE', 'HOUR', 'CUSTOMER_TYPE', 'TOTAL_CONSUMPTION'])
-           
-            # Convert Date into year, month, day
-            hourly_data_fix_date = hourly_data_raw
-            hourly_data_fix_date['DATE'] = pd.to_datetime(hourly_data_raw['DATE'])
-            hourly_data_fix_date['YEAR'] = hourly_data_fix_date['DATE'].dt.year
-            hourly_data_fix_date['MONTH'] = hourly_data_fix_date['DATE'].dt.month
-            hourly_data_fix_date['DAY'] = hourly_data_fix_date['DATE'].dt.day
+            for hour in hours_range:
+                total_features.append("Hour_" + str(hour))
+                         
+            for feature in selected_features:
+                total_features.append(feature)
+                
+            total_features_temp = total_features.copy()
+            for lag in range (1, 24):
+                for feature in total_features_temp:
+                    if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
+                        continue
+                    else:
+                        total_features.append(feature+"_Lag_"+str(lag))
             
-            # Filter out only residential data
-            hourly_data_res = hourly_data_fix_date.loc[hourly_data_fix_date['CUSTOMER_TYPE'] == "Residential"].reset_index(drop=True)
+            # Dictionary for model prediction dataframes
+            # model -> Value
+            Y_pred_denorm_saved_df = {}
             
-            # Then filter out by the fsa
-            hourly_data_res_fsa = hourly_data_res.loc[hourly_data_res['FSA'] == fsa_chosen].reset_index(drop=True)
-            
-            # Take the sum if fsa has more than 1 date (this is because there are different pay codes in residential loads)
-            hourly_data_hour_sum = hourly_data_res_fsa.groupby(["FSA", "CUSTOMER_TYPE", "YEAR", "MONTH", "DAY", "HOUR", "DATE"]).TOTAL_CONSUMPTION.sum().reset_index()
-            
-            
-            hourly_consumption_data_dic_by_month = hourly_data_hour_sum
-            hourly_data_month_day = hourly_consumption_data_dic_by_month[hourly_consumption_data_dic_by_month['DAY'] == int(day)]
-            
-            # Convert to MW
-            hourly_data_month_day.loc[:, "TOTAL_CONSUMPTION"] = hourly_data_month_day["TOTAL_CONSUMPTION"]*0.001
-            
-            # Add column for date and time
-            hourly_data_month_day.loc[:, "HOUR"] = hourly_data_month_day["HOUR"] - 1
-            hourly_data_month_day.loc[:, "DATE"] = pd.to_datetime(hourly_data_month_day[["YEAR", "MONTH", "DAY","HOUR"]])
-            
-            # Append next day to another dataframe to plot on same figure
-            if (day_num == 0):
-                title = "Hourly Power Consumption"
-                hourly_data_month_day_saved = hourly_data_month_day[["YEAR", "MONTH", "DAY", "HOUR", "DATE", "TOTAL_CONSUMPTION"]].copy()
-            else:
-                hourly_data_month_day_saved = pd.concat([hourly_data_month_day_saved, hourly_data_month_day], axis=0, ignore_index=True)
-
             for model_name in selected_models:
                 if model_name == "K-Nearest Neighbors":
                     model_name = "KNN"
@@ -1301,661 +1154,904 @@ class App(customtkinter.CTk):
                     model_name = "LR"
                 if model_name == "X Gradient Boost":
                     model_name = "XGB" 
+                
+                if model_name == "CNN":
+                    X_test = norm_weather_data_cnn[total_features]
+                else:
+                    X_test = norm_weather_data[total_features]
+                    
+                # Load model from gui_pickup folder using joblib
                 try:
-                    if (day_num == 0):
-                        hourly_data_month_day_error_df["HOUR_NEW"] = (hourly_data_month_day.index%24)
-                        hourly_data_month_day_error[model_name] = hourly_data_month_day_error_df
-                        hourly_data_month_day_error[model_name] = hourly_data_month_day_error[model_name].rename(columns={"HOUR_NEW": "Hour"})
-                       
-                    Y_pred_denorm_saved_df_day = Y_pred_denorm_saved_df[model_name].iloc[(24*day_num):(24*day_num + 24)]
-                    # Find Error
-                    if (self.detailed_table_checkbox_var.get() == 1):
-                        hourly_data_month_day_error[model_name]["Actual Consumption: Day " + str(day_num+1) + " (MW)"] = hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
-                        hourly_data_month_day_error[model_name]["Forecasted Consumption: Day " + str(day_num+1) + " (MW)"] = Y_pred_denorm_saved_df_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
-                    hourly_data_month_day_error[model_name]["Error: Day " + str(day_num+1) + " (%)"] = 100*abs(Y_pred_denorm_saved_df_day["TOTAL_CONSUMPTION"].reset_index(drop = True) - hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True))/hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
-                    hourly_data_month_day_error[model_name] = hourly_data_month_day_error[model_name].round(decimals = 4)
- 
+                    if model_name == "CNN":
+                        pipe_saved = models.load_model(os.path.join(saved_model_path, (model_name+"_"+fsa_chosen+"_Model_" + "_".join(selected_features_3_digits) + ".keras")))
+                    else:
+                        pipe_saved = joblib.load(os.path.join(saved_model_path, (model_name+"_"+fsa_chosen+"_Model_" + "_".join(selected_features_3_digits) + ".pkl"))) 
                 except:
                     continue
+                
+                if (model_name == "CNN"):
+                    
+                    for feature in X_test.columns:
+                      if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature) or ("Hour_" in feature)):
+                        X_test[feature].astype('bool')
+                      if ("Lag" in feature):
+                        X_test = X_test.drop(columns = [feature])
+                    
+                    # Create dataframe without humidity and speed
+                    data = X_test
+                    
+                    #window_size = 168  # Last 168 hours (one week)
+                    window_size = 24*cnn_days_back # Last 24 hours (one day)
+                    forecast_horizon = 24  # Next 24 hours
+                    
+                    
+                    # Create input-output pairs using a sliding window
+                    Y_pred_saved = pd.DataFrame(columns=['TOTAL_CONSUMPTION'])
+                    for day in range(num_of_days):
+                        X_data = []
+    
+                        X_data.append(data.iloc[day*24:day*24 + window_size + forecast_horizon].values)  # Collect 24 hours of feature data
+                        
+                        # Convert to numpy arrays
+                        X_data = np.array(X_data, dtype=np.float16)
+                        X_data = np.expand_dims(X_data, axis=-1)
         
+                        # Predict using loaded model
+                        Y_pred_cnn = pipe_saved.predict(X_data)
+                        Y_pred_cnn = pd.DataFrame(Y_pred_cnn)
+                        
+                        # Ensure Y_pred and Y_test are reshaped correctly
+                        Y_pred_cnn = Y_pred_cnn.values.reshape(-1, 1)
+                        
+                        Y_pred_cnn = pd.DataFrame(Y_pred_cnn, columns=['TOTAL_CONSUMPTION'])
+    
+                        Y_pred_saved = pd.concat([Y_pred_saved, Y_pred_cnn], axis=0, ignore_index=True)
+                    
+    
+                else:
+                    # Predict using loaded model
+                    Y_pred_saved = pipe_saved.predict(X_test)
+                    
+                    # Ensure Y_pred and Y_test are reshaped correctly
+                    Y_pred_saved = Y_pred_saved.reshape(-1, 1)
+                    
+                # Denormalize Y_pred and Y_test with min_max_scaler_y.pkl using joblib
+                scaler_path = os.path.join(saved_model_path, "power_scaler_"+fsa_chosen+".pkl")
+                if not os.path.exists(scaler_path):
+                    raise FileNotFoundError(f"Scaler file not found: {scaler_path}")
+                power_scaler = joblib.load(scaler_path)
+                
+                # Inverse Transform power scaler
+                Y_pred_denorm_saved = power_scaler.inverse_transform(Y_pred_saved)
+    
+                # Save power scaler to dictionary of models
+                Y_pred_denorm_saved_df[model_name] = pd.DataFrame(Y_pred_denorm_saved, columns=['TOTAL_CONSUMPTION'])
+                
+                # Convert to MW
+                Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name]*0.001
+                
+                # Convert to float64
+                Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].astype(float)
+                
+                # Round to 4 decimal places
+                Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].round(decimals = 4)
+                
+                print(Y_pred_denorm_saved_df[model_name])
+            
+            # Dictionary for model prediction dataframes error 
+            # model -> Value
+            hourly_data_month_day_error = {}
+            hourly_data_month_day_error_df = pd.DataFrame()
+            metrics_values = {}
+            save_results_dic.clear()
+            
+            for day_num in range (num_of_days):
+                
+                # new date
+                new_date = selected_date_datetime + timedelta(days=day_num) 
         
-        for model_name in selected_models:
-            if model_name == "K-Nearest Neighbors":
-                model_name = "KNN"
-            if model_name == "Convolutional Neural Network":
-                model_name = "CNN" 
-            if model_name == "Linear Regression":
-                model_name = "LR"
-            if model_name == "X Gradient Boost":
-                model_name = "XGB" 
-            try:    
-                Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].reset_index(drop = True)
-                hourly_data_month_day_saved = hourly_data_month_day_saved.reset_index(drop = True)
+                year = str(new_date.year)
+                month = months[(new_date.month-1)]
+                day = str(new_date.day)
+    
+                ###############################################################################
+                # Dictionary for reading in hourly consumption by FSA
+                ###############################################################################
+                hourly_consumption_data_dic_by_month = pd.DataFrame()
                 
-                # save_results_dic[model_name] = hourly_data_month_day_saved[["YEAR", "MONTH", "DAY", "HOUR", "TOTAL_CONSUMPTION"]]
-                # save_results_dic[model_name].columns.values[4] = "ACTUAL CONSUMPTION (MW)"
-                # save_results_dic[model_name]["FORECASTED CONSUMPTION (MW)"] = Y_pred_denorm_saved_df[model_name]
+                # Initialize dataframes to be used
+                hourly_data_res = pd.DataFrame()
+                hourly_data_res_fsa = pd.DataFrame()
+                hourly_data_hour_sum = pd.DataFrame()
                 
-                save_results_dic[model_name] = pd.concat([hourly_data_month_day_saved[["YEAR", "MONTH", "DAY", "HOUR", "TOTAL_CONSUMPTION"]], Y_pred_denorm_saved_df[model_name]], axis=1)
-                save_results_dic[model_name]["HOUR"] = save_results_dic[model_name]["HOUR"] + 1
-                save_results_dic[model_name].columns.values[4] = "ACTUAL CONSUMPTION (MW)"
-                save_results_dic[model_name].columns.values[5] = "FORECASTED CONSUMPTION (MW)"
+                hourly_data_string = "PUB_HourlyConsumptionByFSA_"+year+month+"_v1.csv"
                 
-                metrics_model_path = os.path.join(saved_model_path, model_name+"_"+fsa_chosen+"_Metrics_" + "_".join(selected_features_3_digits) + ".csv") 
-                metrics_values[model_name] = pd.read_csv(metrics_model_path, header=0)
-                metrics_values[model_name] = metrics_values[model_name].round(decimals = 4)
+                # Use try and catch if problems reading input data
+                try:
+                    # Not cooked yet, we are going to let it COOK below
+                    file_path = os.path.join(dirs_hourly_consumption_demand, hourly_data_string)
+                    hourly_data_raw = pd.read_csv(file_path, skiprows=3, header = 0, usecols= ['FSA', 'DATE', 'HOUR', 'CUSTOMER_TYPE', 'TOTAL_CONSUMPTION'])
+                except ValueError: # skiprows=x does not match the "normal sequence" of 3. For example, 2023 08 data had a different skip_row value
+                    hourly_data_raw = pd.read_csv(file_path, skiprows=7, header = 0, usecols= ['FSA', 'DATE', 'HOUR', 'CUSTOMER_TYPE', 'TOTAL_CONSUMPTION'])
+               
+                # Convert Date into year, month, day
+                hourly_data_fix_date = hourly_data_raw
+                hourly_data_fix_date['DATE'] = pd.to_datetime(hourly_data_raw['DATE'])
+                hourly_data_fix_date['YEAR'] = hourly_data_fix_date['DATE'].dt.year
+                hourly_data_fix_date['MONTH'] = hourly_data_fix_date['DATE'].dt.month
+                hourly_data_fix_date['DAY'] = hourly_data_fix_date['DATE'].dt.day
                 
-                save_results_dic[model_name] = pd.concat([save_results_dic[model_name],  metrics_values[model_name][["MAPE (%)", "MAE (MW)", "r2", "MSE (MW Squared)", "RMSE (MW)"]]], axis=1).fillna("")
+                # Filter out only residential data
+                hourly_data_res = hourly_data_fix_date.loc[hourly_data_fix_date['CUSTOMER_TYPE'] == "Residential"].reset_index(drop=True)
                 
-                hourly_data_month_day_error_columns = pd.DataFrame([hourly_data_month_day_error[model_name].columns], columns = hourly_data_month_day_error[model_name].columns)
-                metrics_values_columns = pd.DataFrame([metrics_values[model_name].columns], columns = metrics_values[model_name].columns)
+                # Then filter out by the fsa
+                hourly_data_res_fsa = hourly_data_res.loc[hourly_data_res['FSA'] == fsa_chosen].reset_index(drop=True)
                 
-                hourly_data_month_day_error[model_name] = pd.concat([hourly_data_month_day_error_columns, hourly_data_month_day_error[model_name].iloc[0:]]).reset_index(drop=True)
-                metrics_values[model_name] = pd.concat([metrics_values_columns, metrics_values[model_name].iloc[0:]]).reset_index(drop=True)
+                # Take the sum if fsa has more than 1 date (this is because there are different pay codes in residential loads)
+                hourly_data_hour_sum = hourly_data_res_fsa.groupby(["FSA", "CUSTOMER_TYPE", "YEAR", "MONTH", "DAY", "HOUR", "DATE"]).TOTAL_CONSUMPTION.sum().reset_index()
+                
+                
+                hourly_consumption_data_dic_by_month = hourly_data_hour_sum
+                hourly_data_month_day = hourly_consumption_data_dic_by_month[hourly_consumption_data_dic_by_month['DAY'] == int(day)]
+                
+                # Convert to MW
+                hourly_data_month_day.loc[:, "TOTAL_CONSUMPTION"] = hourly_data_month_day["TOTAL_CONSUMPTION"]*0.001
+                
+                # Add column for date and time
+                hourly_data_month_day.loc[:, "HOUR"] = hourly_data_month_day["HOUR"] - 1
+                hourly_data_month_day.loc[:, "DATE"] = pd.to_datetime(hourly_data_month_day[["YEAR", "MONTH", "DAY","HOUR"]])
+                
+                # Append next day to another dataframe to plot on same figure
+                if (day_num == 0):
+                    title = "Hourly Power Consumption"
+                    hourly_data_month_day_saved = hourly_data_month_day[["YEAR", "MONTH", "DAY", "HOUR", "DATE", "TOTAL_CONSUMPTION"]].copy()
+                else:
+                    hourly_data_month_day_saved = pd.concat([hourly_data_month_day_saved, hourly_data_month_day], axis=0, ignore_index=True)
+    
+                for model_name in selected_models:
+                    if model_name == "K-Nearest Neighbors":
+                        model_name = "KNN"
+                    if model_name == "Convolutional Neural Network":
+                        model_name = "CNN" 
+                    if model_name == "Linear Regression":
+                        model_name = "LR"
+                    if model_name == "X Gradient Boost":
+                        model_name = "XGB" 
+                    try:
+                        if (day_num == 0):
+                            hourly_data_month_day_error_df["HOUR_NEW"] = (hourly_data_month_day.index%24)
+                            hourly_data_month_day_error[model_name] = hourly_data_month_day_error_df
+                            hourly_data_month_day_error[model_name] = hourly_data_month_day_error[model_name].rename(columns={"HOUR_NEW": "Hour"})
+                           
+                        Y_pred_denorm_saved_df_day = Y_pred_denorm_saved_df[model_name].iloc[(24*day_num):(24*day_num + 24)]
+                        # Find Error
+                        if (self.detailed_table_checkbox_var.get() == 1):
+                            hourly_data_month_day_error[model_name]["Actual Consumption: Day " + str(day_num+1) + " (MW)"] = hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
+                            hourly_data_month_day_error[model_name]["Forecasted Consumption: Day " + str(day_num+1) + " (MW)"] = Y_pred_denorm_saved_df_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
+                        hourly_data_month_day_error[model_name]["Error: Day " + str(day_num+1) + " (%)"] = 100*abs(Y_pred_denorm_saved_df_day["TOTAL_CONSUMPTION"].reset_index(drop = True) - hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True))/hourly_data_month_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
+                        hourly_data_month_day_error[model_name] = hourly_data_month_day_error[model_name].round(decimals = 4)
+     
+                    except:
+                        continue
+            
+            
+            for model_name in selected_models:
+                if model_name == "K-Nearest Neighbors":
+                    model_name = "KNN"
+                if model_name == "Convolutional Neural Network":
+                    model_name = "CNN" 
+                if model_name == "Linear Regression":
+                    model_name = "LR"
+                if model_name == "X Gradient Boost":
+                    model_name = "XGB" 
+                try:    
+                    Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].reset_index(drop = True)
+                    hourly_data_month_day_saved = hourly_data_month_day_saved.reset_index(drop = True)
+                    
+                    # save_results_dic[model_name] = hourly_data_month_day_saved[["YEAR", "MONTH", "DAY", "HOUR", "TOTAL_CONSUMPTION"]]
+                    # save_results_dic[model_name].columns.values[4] = "ACTUAL CONSUMPTION (MW)"
+                    # save_results_dic[model_name]["FORECASTED CONSUMPTION (MW)"] = Y_pred_denorm_saved_df[model_name]
+                    
+                    save_results_dic[model_name] = pd.concat([hourly_data_month_day_saved[["YEAR", "MONTH", "DAY", "HOUR", "TOTAL_CONSUMPTION"]], Y_pred_denorm_saved_df[model_name]], axis=1)
+                    save_results_dic[model_name]["HOUR"] = save_results_dic[model_name]["HOUR"] + 1
+                    save_results_dic[model_name].columns.values[4] = "ACTUAL CONSUMPTION (MW)"
+                    save_results_dic[model_name].columns.values[5] = "FORECASTED CONSUMPTION (MW)"
+                    
+                    metrics_model_path = os.path.join(saved_model_path, model_name+"_"+fsa_chosen+"_Metrics_" + "_".join(selected_features_3_digits) + ".csv") 
+                    metrics_values[model_name] = pd.read_csv(metrics_model_path, header=0)
+                    metrics_values[model_name] = metrics_values[model_name].round(decimals = 4)
+                    
+                    save_results_dic[model_name] = pd.concat([save_results_dic[model_name],  metrics_values[model_name][["MAPE (%)", "MAE (MW)", "r2", "MSE (MW Squared)", "RMSE (MW)"]]], axis=1).fillna("")
+                    
+                    hourly_data_month_day_error_columns = pd.DataFrame([hourly_data_month_day_error[model_name].columns], columns = hourly_data_month_day_error[model_name].columns)
+                    metrics_values_columns = pd.DataFrame([metrics_values[model_name].columns], columns = metrics_values[model_name].columns)
+                    
+                    hourly_data_month_day_error[model_name] = pd.concat([hourly_data_month_day_error_columns, hourly_data_month_day_error[model_name].iloc[0:]]).reset_index(drop=True)
+                    metrics_values[model_name] = pd.concat([metrics_values_columns, metrics_values[model_name].iloc[0:]]).reset_index(drop=True)
+                except:
+                    continue
+            
+            count_no_models = 0
+            try:
+                plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df["LR"], metrics_values["LR"], hourly_data_month_day_error["LR"], self.model_1_frame, self.model_2_button_event, "N/A", model_names_list[0])
             except:
-                continue
-        
-        count_no_models = 0
-        try:
-            plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df["LR"], metrics_values["LR"], hourly_data_month_day_error["LR"], self.model_1_frame, self.model_2_button_event, "N/A", model_names_list[0])
-        except:
-            plot_no_model(self, self.model_1_frame, self.model_2_button_event, "N/A", "No Saved Model For " + model_names_list[0])
-            count_no_models = count_no_models + 1
-            
-        try:
-            plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df["XGB"], metrics_values["XGB"], hourly_data_month_day_error["XGB"], self.model_2_frame, self.model_3_button_event, self.model_1_button_event, model_names_list[1])        
-        except:
-            plot_no_model(self, self.model_2_frame, self.model_3_button_event, self.model_1_button_event, "No Saved Model For " + model_names_list[1])
-            count_no_models = count_no_models + 1
-            
-        try:
-            plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df["KNN"], metrics_values["KNN"], hourly_data_month_day_error["KNN"], self.model_3_frame, self.model_4_button_event, self.model_2_button_event, model_names_list[2])
-        except:
-            plot_no_model(self, self.model_3_frame, self.model_4_button_event, self.model_2_button_event, "No Saved Model For " + model_names_list[2])
-            count_no_models = count_no_models + 1
-            
-        try:
-            plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df["CNN"], metrics_values["CNN"], hourly_data_month_day_error["CNN"], self.model_4_frame, self.summary_button_event, self.model_3_button_event, model_names_list[3])
-        except:
-            plot_no_model(self, self.model_4_frame, self.summary_button_event, self.model_3_button_event, "No Saved Model For " + model_names_list[3])
-            count_no_models = count_no_models + 1
-            
-        try:
-            if (count_no_models == 4):
+                plot_no_model(self, self.model_1_frame, self.model_2_button_event, "N/A", "No Saved Model For " + model_names_list[0])
+                count_no_models = count_no_models + 1
+                
+            try:
+                plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df["XGB"], metrics_values["XGB"], hourly_data_month_day_error["XGB"], self.model_2_frame, self.model_3_button_event, self.model_1_button_event, model_names_list[1])        
+            except:
+                plot_no_model(self, self.model_2_frame, self.model_3_button_event, self.model_1_button_event, "No Saved Model For " + model_names_list[1])
+                count_no_models = count_no_models + 1
+                
+            try:
+                plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df["KNN"], metrics_values["KNN"], hourly_data_month_day_error["KNN"], self.model_3_frame, self.model_4_button_event, self.model_2_button_event, model_names_list[2])
+            except:
+                plot_no_model(self, self.model_3_frame, self.model_4_button_event, self.model_2_button_event, "No Saved Model For " + model_names_list[2])
+                count_no_models = count_no_models + 1
+                
+            try:
+                plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df["CNN"], metrics_values["CNN"], hourly_data_month_day_error["CNN"], self.model_4_frame, self.summary_button_event, self.model_3_button_event, model_names_list[3])
+            except:
+                plot_no_model(self, self.model_4_frame, self.summary_button_event, self.model_3_button_event, "No Saved Model For " + model_names_list[3])
+                count_no_models = count_no_models + 1
+                
+            try:
+                if (count_no_models == 4):
+                    plot_no_model(self, self.summary_frame, "N/A","N/A", "No Saved Models")
+                else:
+                    plot_figures_model(self, hourly_data_month_day_saved, save_results_dic, "N/A", "N/A", self.summary_frame, "N/A", "N/A", "Summary of All Models")
+            except:
                 plot_no_model(self, self.summary_frame, "N/A","N/A", "No Saved Models")
-            else:
-                plot_figures_model(self, hourly_data_month_day_saved, save_results_dic, "N/A", "N/A", self.summary_frame, "N/A", "N/A", "Summary of All Models")
-        except:
-            plot_no_model(self, self.summary_frame, "N/A","N/A", "No Saved Models")
-        
-        count_no_models = 0
-        self.select_frame_by_name("Model: Linear Regression")
+            
+            # Complete RGB waiting sequence
+            try:
+                Power_Forecasting_Corsair_RGB.done_waiting(rgb_lights)
+            except:
+                pass
+            
+            count_no_models = 0
+            self.select_frame_by_name("Model: Linear Regression")
+            
+        except Exception as error:
+            print("An exception occurred:", error)
+            # Complete RGB waiting sequence
+            try:
+                Power_Forecasting_Corsair_RGB.done_waiting(rgb_lights)
+            except:
+                pass
         
         
     def train_models_button_event(self):
-        nest_asyncio.apply() # Apply nest_asyncio to allow for nested asyncio operations
-        
-        fsa_typed = self.fsa_search_bar.get()
-        
-        ### Calling Data ###
-        # Choose FSA for data collection + Get latitude and longitude of chosen fsa
-        lat = fsa_map[fsa_typed]["lat"]
-        lon = fsa_map[fsa_typed]["lon"]
-
-        # Choose date range for data collection
-        start_year = 2018
-        start_month = 1
-        start_day = 1
-        start_hour = 0
-
-        end_year = 2024
-        end_month = 11
-        end_day = 30
-        end_hour = 23
-
-        # Making datetime objects for start and end dates
-        start_date = datetime(start_year, start_month, start_day, start_hour,0,0)
-        end_date = datetime(end_year, end_month, end_day, end_hour,0,0)
-
-        # # Collect data - Using asynchronous functions
         try:
-            weather_data = pd.read_csv(f'{power_weather_data_path}/weather_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv')
-            power_data = pd.read_csv(f'{power_weather_data_path}/power_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv')
-        except FileNotFoundError: 
-            weather_data, power_data = asyncio.run(Power_Forecasting_dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date, end_date, fsa_typed, lat, lon))
-            weather_data.to_csv(f'{power_weather_data_path}/weather_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
-            power_data.to_csv(f'{power_weather_data_path}/power_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
-        
-        
-        
-        
-        # Normalize Data
-        norm_weather_data, norm_power_data, weather_scaler, power_scaler = Power_Forecasting_dataCollectionAndPreprocessingFlow.normalize_data(weather_data, power_data)
-        
-        # Save Scalers
-        file_path_scalar = os.path.join(saved_model_path, "power_scaler_" + fsa_typed + ".pkl")
-        joblib.dump(power_scaler, file_path_scalar)
-        file_path_scalar = os.path.join(saved_model_path, "weather_scaler_" + fsa_typed + ".pkl")
-        joblib.dump(weather_scaler, file_path_scalar)
-        
-        # # Save Normalized Data to CSV
-        norm_weather_data.to_csv(f'{x_y_input_path}/norm_weather_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
-        norm_power_data.to_csv(f'{x_y_input_path}/norm_power_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
-        
-        total_features = []
-        # Convert year, month, day, hour to boolean values
-        # Day range 1 to 31 (subtract last day for 0 condition)
-        days_range = [*range(1, 31)]
-        # Hour range 0 to 23 (subtract last hour for 0 condition)
-        hours_range = [*range(0, 23)]
-        # Hour range 0 to 23 (subtract last month for 0 condition)
-        months_range = [*range(1, 12)]
-        # Year range depending on weather data columns
-        years_range = weather_data.columns
-        
-        for year in years_range:
-            if ("Year_" in year):
-                total_features.append(year)
-
-        for month in months_range:
-            total_features.append("Month_" + str(month))
-
-        for day in days_range:
-            total_features.append("Day_" + str(day))
-        
-        for hour in hours_range:
-            total_features.append("Hour_" + str(hour))
-                     
-        for feature in selected_features:
-            total_features.append(feature)
+            # Begin RGB waiting sequence
+            try:
+                Power_Forecasting_Corsair_RGB.waiting(rgb_lights)
+            except:
+                pass
+    
+            nest_asyncio.apply() # Apply nest_asyncio to allow for nested asyncio operations
             
-        total_features_temp = total_features.copy()
-        for lag in range (1, 24):
-            for feature in total_features_temp:
-                if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
-                    continue
-                else:
-                    total_features.append(feature+"_Lag_"+str(lag))
-       
-        
-        # Train and Save KNN Model
-        for model in selected_models:
-            if model == "K-Nearest Neighbors":
-                Power_Forecasting_KNN_Saver.save_knn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
-            if model == "Linear Regression":
-                Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
-            if model == "X Gradient Boost":
-                Power_Forecasting_XGB_Saver.save_xgb_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
-            if model == "Convolutional Neural Network":
-                Power_Forecasting_CNN_Saver.save_cnn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
-        
-        # Append FSA to drop down menu list
-        global fsa_predict_list
-        fsa_predict_list.append(fsa_typed)
-        if "No Models" in fsa_predict_list:
-            fsa_predict_list.remove("No Models")
-
-        fsa_predict_list = list(dict.fromkeys(fsa_predict_list))
+            fsa_typed = self.fsa_search_bar.get()
             
-        #Progress Bar Function for Ontartio training dataset
-        def update_progress():
-            for i in range(101):
-                time.sleep(0.001)  # Simulate work being done
-                self.progress_bar_train_ontario.set(i/100)  # Update the progress bar
-                self.update_idletasks()
-        # Run the update_progress function in a separate thread
-        threading.Thread(target=update_progress).start()
+            ### Calling Data ###
+            # Choose FSA for data collection + Get latitude and longitude of chosen fsa
+            lat = fsa_map[fsa_typed]["lat"]
+            lon = fsa_map[fsa_typed]["lon"]
+    
+            # Choose date range for data collection
+            start_year = 2018
+            start_month = 1
+            start_day = 1
+            start_hour = 0
+    
+            end_year = 2024
+            end_month = 11
+            end_day = 30
+            end_hour = 23
+    
+            # Making datetime objects for start and end dates
+            start_date = datetime(start_year, start_month, start_day, start_hour,0,0)
+            end_date = datetime(end_year, end_month, end_day, end_hour,0,0)
+    
+            # # Collect data - Using asynchronous functions
+            try:
+                weather_data = pd.read_csv(f'{power_weather_data_path}/weather_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv')
+                power_data = pd.read_csv(f'{power_weather_data_path}/power_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv')
+            except FileNotFoundError: 
+                weather_data, power_data = asyncio.run(Power_Forecasting_dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date, end_date, fsa_typed, lat, lon))
+                weather_data.to_csv(f'{power_weather_data_path}/weather_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
+                power_data.to_csv(f'{power_weather_data_path}/power_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
+            
+            
+            
+            
+            # Normalize Data
+            norm_weather_data, norm_power_data, weather_scaler, power_scaler = Power_Forecasting_dataCollectionAndPreprocessingFlow.normalize_data(weather_data, power_data)
+            
+            # Save Scalers
+            file_path_scalar = os.path.join(saved_model_path, "power_scaler_" + fsa_typed + ".pkl")
+            joblib.dump(power_scaler, file_path_scalar)
+            file_path_scalar = os.path.join(saved_model_path, "weather_scaler_" + fsa_typed + ".pkl")
+            joblib.dump(weather_scaler, file_path_scalar)
+            
+            # # Save Normalized Data to CSV
+            norm_weather_data.to_csv(f'{x_y_input_path}/norm_weather_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
+            norm_power_data.to_csv(f'{x_y_input_path}/norm_power_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
+            
+            total_features = []
+            # Convert year, month, day, hour to boolean values
+            # Day range 1 to 31 (subtract last day for 0 condition)
+            days_range = [*range(1, 31)]
+            # Hour range 0 to 23 (subtract last hour for 0 condition)
+            hours_range = [*range(0, 23)]
+            # Hour range 0 to 23 (subtract last month for 0 condition)
+            months_range = [*range(1, 12)]
+            # Year range depending on weather data columns
+            years_range = weather_data.columns
+            
+            for year in years_range:
+                if ("Year_" in year):
+                    total_features.append(year)
+    
+            for month in months_range:
+                total_features.append("Month_" + str(month))
+    
+            for day in days_range:
+                total_features.append("Day_" + str(day))
+            
+            for hour in hours_range:
+                total_features.append("Hour_" + str(hour))
+                         
+            for feature in selected_features:
+                total_features.append(feature)
+                
+            total_features_temp = total_features.copy()
+            for lag in range (1, 24):
+                for feature in total_features_temp:
+                    if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
+                        continue
+                    else:
+                        total_features.append(feature+"_Lag_"+str(lag))
+           
+            
+            # Train and Save KNN Model
+            for model in selected_models:
+                if model == "K-Nearest Neighbors":
+                    Power_Forecasting_KNN_Saver.save_knn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
+                if model == "Linear Regression":
+                    Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
+                if model == "X Gradient Boost":
+                    Power_Forecasting_XGB_Saver.save_xgb_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
+                if model == "Convolutional Neural Network":
+                    Power_Forecasting_CNN_Saver.save_cnn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
+            
+            # Append FSA to drop down menu list
+            global fsa_predict_list
+            fsa_predict_list.append(fsa_typed)
+            if "No Models" in fsa_predict_list:
+                fsa_predict_list.remove("No Models")
+    
+            fsa_predict_list = list(dict.fromkeys(fsa_predict_list))
+                
+            #Progress Bar Function for Ontartio training dataset
+            def update_progress():
+                for i in range(101):
+                    time.sleep(0.001)  # Simulate work being done
+                    self.progress_bar_train_ontario.set(i/100)  # Update the progress bar
+                    self.update_idletasks()
+            # Run the update_progress function in a separate thread
+            threading.Thread(target=update_progress).start()
+    
+            # Complete RGB waiting sequence
+            try:
+                Power_Forecasting_Corsair_RGB.done_waiting(rgb_lights)
+            except:
+                pass
+        except Exception as error:
+            print("An exception occurred:", error)
+            # Complete RGB waiting sequence
+            try:
+                Power_Forecasting_Corsair_RGB.done_waiting(rgb_lights)
+            except:
+                pass
         
     def train_input_excel_models_button_event(self):
-        
-        weather_data =  pd.read_excel(input_data_filename, sheet_name = "Weather_Information", header = 0)
-        weather_data = Power_Forecasting_dataCollectionAndPreprocessingFlow.add_calendar_columns(weather_data)
-        weather_data = Power_Forecasting_dataCollectionAndPreprocessingFlow.add_lags_to_weather_data(weather_data, 23)
-        
-        
-        power_data = pd.read_excel(input_data_filename, sheet_name = "Power_Consumption", header = 0)
-        power_data = power_data.rename(columns={"Power Consumption": "TOTAL_CONSUMPTION"})
-        power_data = power_data.rename(columns={"Year": "YEAR"})
-        power_data = power_data.rename(columns={"Month": "MONTH"})
-        power_data = power_data.rename(columns={"Day": "DAY"})
-        power_data = power_data.rename(columns={"Hour": "HOUR"})
-        
-        # Normalize Data
-        norm_weather_data, norm_power_data, weather_scaler, power_scaler = Power_Forecasting_dataCollectionAndPreprocessingFlow.normalize_data(weather_data, power_data)
-        
-        # Save Scaler
-        file_path_scalar = os.path.join(saved_model_path, "power_scaler_" + input_data_basename + ".pkl")
-        joblib.dump(power_scaler, file_path_scalar)
-        
-        file_path_scalar = os.path.join(saved_model_path, "weather_scaler_" + input_data_basename + ".pkl")
-        joblib.dump(weather_scaler, file_path_scalar)
-        
-        total_features = []
-        # Convert year, month, day, hour to boolean values
-        # Day range 1 to 31 (subtract last day for 0 condition)
-        days = [*range(1, 31)]
-        # Hour range 0 to 23 (subtract last hour for 0 condition)
-        hours = [*range(0, 23)]
-        # Hour range 0 to 23 (subtract last month for 0 condition)
-        months = [*range(1, 12)]
-        
-        # Year range depending on weather data columns
-        years_range = weather_data.columns
-        
-        for year in years_range:
-            if ("Year_" in year):
-                total_features.append(year)
-
-        for month in months:
-            total_features.append("Month_" + str(month))
-
-        for day in days:
-            total_features.append("Day_" + str(day))
-        
-        for hour in hours:
-            total_features.append("Hour_" + str(hour))
-                     
-        for feature in selected_features:
-            total_features.append(feature)
+        try:
+            # Begin RGB waiting sequence
+            try:
+                Power_Forecasting_Corsair_RGB.waiting(rgb_lights)
+            except:
+                pass
             
-        total_features_temp = total_features.copy()
-        for lag in range (1, 24):
-            for feature in total_features_temp:
-                if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
-                    continue
-                else:
-                    total_features.append(feature+"_Lag_"+str(lag))
-        
-        # Train and Save Models
-        for model in selected_models:
-            if model == "K-Nearest Neighbors":
-                Power_Forecasting_KNN_Saver.save_knn_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)
-            if model == "Linear Regression":
-                Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)
-            if model == "X Gradient Boost":
-                Power_Forecasting_XGB_Saver.save_xgb_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)   
-            if model == "Convolutional Neural Network":
-                Power_Forecasting_CNN_Saver.save_cnn_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)
+            weather_data =  pd.read_excel(input_data_filename, sheet_name = "Weather_Information", header = 0)
+            weather_data = Power_Forecasting_dataCollectionAndPreprocessingFlow.add_calendar_columns(weather_data)
+            weather_data = Power_Forecasting_dataCollectionAndPreprocessingFlow.add_lags_to_weather_data(weather_data, 23)
+            
+            
+            power_data = pd.read_excel(input_data_filename, sheet_name = "Power_Consumption", header = 0)
+            power_data = power_data.rename(columns={"Power Consumption": "TOTAL_CONSUMPTION"})
+            power_data = power_data.rename(columns={"Year": "YEAR"})
+            power_data = power_data.rename(columns={"Month": "MONTH"})
+            power_data = power_data.rename(columns={"Day": "DAY"})
+            power_data = power_data.rename(columns={"Hour": "HOUR"})
+            
+            # Normalize Data
+            norm_weather_data, norm_power_data, weather_scaler, power_scaler = Power_Forecasting_dataCollectionAndPreprocessingFlow.normalize_data(weather_data, power_data)
+            
+            # Save Scaler
+            file_path_scalar = os.path.join(saved_model_path, "power_scaler_" + input_data_basename + ".pkl")
+            joblib.dump(power_scaler, file_path_scalar)
+            
+            file_path_scalar = os.path.join(saved_model_path, "weather_scaler_" + input_data_basename + ".pkl")
+            joblib.dump(weather_scaler, file_path_scalar)
+            
+            total_features = []
+            # Convert year, month, day, hour to boolean values
+            # Day range 1 to 31 (subtract last day for 0 condition)
+            days = [*range(1, 31)]
+            # Hour range 0 to 23 (subtract last hour for 0 condition)
+            hours = [*range(0, 23)]
+            # Hour range 0 to 23 (subtract last month for 0 condition)
+            months = [*range(1, 12)]
+            
+            # Year range depending on weather data columns
+            years_range = weather_data.columns
+            
+            for year in years_range:
+                if ("Year_" in year):
+                    total_features.append(year)
+    
+            for month in months:
+                total_features.append("Month_" + str(month))
+    
+            for day in days:
+                total_features.append("Day_" + str(day))
+            
+            for hour in hours:
+                total_features.append("Hour_" + str(hour))
+                         
+            for feature in selected_features:
+                total_features.append(feature)
                 
-        #Progress Bar Function for any training dataset
-        def update_progress():
-            for i in range(101):
-                time.sleep(0.001)  # Simulate work being done
-                self.progress_bar_train_any.set(i/100)  # Update the progress bar
-                self.update_idletasks()
-        # Run the update_progress function in a separate thread
-        threading.Thread(target=update_progress).start()
-        
+            total_features_temp = total_features.copy()
+            for lag in range (1, 24):
+                for feature in total_features_temp:
+                    if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
+                        continue
+                    else:
+                        total_features.append(feature+"_Lag_"+str(lag))
+            
+            # Train and Save Models
+            for model in selected_models:
+                if model == "K-Nearest Neighbors":
+                    Power_Forecasting_KNN_Saver.save_knn_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)
+                if model == "Linear Regression":
+                    Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)
+                if model == "X Gradient Boost":
+                    Power_Forecasting_XGB_Saver.save_xgb_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)   
+                if model == "Convolutional Neural Network":
+                    Power_Forecasting_CNN_Saver.save_cnn_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)
+                    
+            #Progress Bar Function for any training dataset
+            def update_progress():
+                for i in range(101):
+                    time.sleep(0.001)  # Simulate work being done
+                    self.progress_bar_train_any.set(i/100)  # Update the progress bar
+                    self.update_idletasks()
+            # Run the update_progress function in a separate thread
+            threading.Thread(target=update_progress).start()
+            
+            # Complete RGB waiting sequence
+            try:
+                Power_Forecasting_Corsair_RGB.done_waiting(rgb_lights)
+            except:
+                pass
+        except Exception as error:
+            print("An exception occurred:", error)
+            # Complete RGB waiting sequence
+            try:
+                Power_Forecasting_Corsair_RGB.done_waiting(rgb_lights)
+            except:
+                pass
         
         
     def predict_input_excel_models_button_event(self):
-        
-        # Function to plot the model figures
-        def plot_figures_model_2(self, weather_data, Y_pred_denorm_saved_df_saved, metrics_values, table_values, model_frame, model_event_next, model_event_back, model_name):
-                
-            model_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
-            # Create background image
-            image = PIL.Image.open(model_menu_image_path)
-            background_image_model = customtkinter.CTkImage(image, size=(1920, 1080))
-            
-            
-            self.background_label = customtkinter.CTkLabel(model_frame,
-                                                         image=background_image_model,
-                                                         text="")  # Empty text
-            self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
-         
-            my_title_font = customtkinter.CTkFont(family="RobotoCondensed-ExtraBoldItalic", size=50, weight="bold", slant = "italic")
-            self.model_frame_Label_Title = customtkinter.CTkLabel(model_frame, text=model_name, font=my_title_font, 
-                                                                 bg_color='#05122d', text_color=("white"))
-            self.model_frame_Label_Title.grid(row=0, column=0, padx=20, pady=(40, 10), columnspan=2, sticky = "n")  
-            if (model_frame != self.summary_frame): 
-                
-                self.next_button = customtkinter.CTkButton(model_frame, text="→", command=model_event_next, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
-                self.next_button.grid(row=4, column=1, padx=20, pady=20,  sticky = "se")  
-                
-                if (model_frame != self.model_1_frame):
-                    self.next_button = customtkinter.CTkButton(model_frame, text="←", command=model_event_back, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
-                    self.next_button.grid(row=4, column=0, padx=20, pady=20,  sticky = "sw") 
-            
-            
-            # Plot models on same graph
-            fig, ax = plt.subplots(figsize = (15, 5))
-            fig.patch.set_facecolor('#05122d')  # Set the figure background color
-            ax.set_facecolor('#05122d')  # Set the axes background color
-            
-            
-            if (model_frame == self.summary_frame): 
-                for model_name in selected_models:
-                    if model_name == "K-Nearest Neighbors":
-                        color_name = "purple"
-                        model_name = "KNN"
-                    if model_name == "Convolutional Neural Network":
-                        color_name = "indigo"
-                        model_name = "CNN" 
-                    if model_name == "Linear Regression":
-                        color_name = "violet"
-                        model_name = "LR"
-                    if model_name == "X Gradient Boost":
-                        color_name = "darkviolet"
-                        model_name = "XGB" 
-                    try:
-                        ax.plot(weather_data["DATE"], Y_pred_denorm_saved_df_saved[model_name]["FORECASTED CONSUMPTION (MW)"], 'o-', label = model_name + " Forecast", color = color_name)
-                        ax.legend(loc = "best", facecolor='#34495E', edgecolor='pink', labelcolor='white')
-                    except:
-                        continue
-            else:
-                ax.plot(weather_data["DATE"], Y_pred_denorm_saved_df_saved["TOTAL_CONSUMPTION"], 'o-', label = "Forecasted Consumption", color = "purple")
-                ax.legend(loc = "upper left", facecolor='#34495E', edgecolor='pink', labelcolor='white')
-            
-            ax.set_title(title, color="white")     
-            ax.set_xlabel("Hour", color = "white")
-            ax.set_ylabel("Consumption [MW]",color = "white")
-            
-            
-            # Customize the x and y axis lines and text color
-            ax.spines['bottom'].set_color('white')
-            ax.spines['left'].set_color('white')
-            ax.tick_params(axis='x', colors='white')
-            ax.tick_params(axis='y', colors='white')
-            ax.spines['top'].set_color('#05122d')
-            ax.spines['right'].set_color('#05122d')
-
-            ax.xaxis.set_major_formatter(mdates.DateFormatter('%b-%d, %H:%M'))
-            plot_svg =  os.path.join(image_path, "Predicted_Actual_Graph.png")
-            plt.savefig(plot_svg)
-            plt.close()
-            
-            # Positining of Figure
-            self.model_image = customtkinter.CTkImage(Image.open(os.path.join(image_path, "Predicted_Actual_Graph.png")), size=(1500, 500))
-            
-            self.model_frame_image_label = customtkinter.CTkLabel(model_frame, text="", image=self.model_image)
-            self.model_frame_image_label.grid(row=1, column=0, padx=20, pady=10, columnspan=2)
-            
-            if (model_frame != self.summary_frame): 
-                # Display Table of Error
-                table_values_tp = table_values.transpose()
+        try:
+            # Function to plot the model figures
+            def plot_figures_model_2(self, weather_data, Y_pred_denorm_saved_df_saved, metrics_values, table_values, model_frame, model_event_next, model_event_back, model_name):
+                    
+                model_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
+                # Create background image
+                image = PIL.Image.open(model_menu_image_path)
+                background_image_model = customtkinter.CTkImage(image, size=(1920, 1080))
                 
                 
-                # Positining of Figure
-                self.model_table = CTkTable(model_frame, width=1, height=1, values=table_values_tp.values.tolist(), 
-                            fg_color='#05122d',       # Foreground color (table background)
-                            bg_color='#05122d',       # Background color (frame background)
-                            text_color='white',     # Text color
-                            header_color='#560067',
-                            hover_color=("gray70", "gray30"), anchor="w",
-                             font = customtkinter.CTkFont(family="Roboto Condensed", size=12))
-                self.model_table.grid(row=2, column=0, padx=20, pady=10, columnspan=2)
+                self.background_label = customtkinter.CTkLabel(model_frame,
+                                                             image=background_image_model,
+                                                             text="")  # Empty text
+                self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
+             
+                my_title_font = customtkinter.CTkFont(family="RobotoCondensed-ExtraBoldItalic", size=50, weight="bold", slant = "italic")
+                self.model_frame_Label_Title = customtkinter.CTkLabel(model_frame, text=model_name, font=my_title_font, 
+                                                                     bg_color='#05122d', text_color=("white"))
+                self.model_frame_Label_Title.grid(row=0, column=0, padx=20, pady=(40, 10), columnspan=2, sticky = "n")  
+                if (model_frame != self.summary_frame): 
+                    
+                    self.next_button = customtkinter.CTkButton(model_frame, text="→", command=model_event_next, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
+                    self.next_button.grid(row=4, column=1, padx=20, pady=20,  sticky = "se")  
+                    
+                    if (model_frame != self.model_1_frame):
+                        self.next_button = customtkinter.CTkButton(model_frame, text="←", command=model_event_back, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
+                        self.next_button.grid(row=4, column=0, padx=20, pady=20,  sticky = "sw") 
                 
                 
-                # Positining of Figure
-                self.metrix_table = CTkTable(model_frame, width=1, height=1, values=metrics_values.values.tolist(), 
-                            fg_color='#05122d',       # Foreground color (table background)
-                            bg_color='#05122d',       # Background color (frame background)
-                            text_color='white',     # Text color
-                            header_color='#560067',
-                            hover_color=("gray70", "gray30"), anchor="w",
-                             font = customtkinter.CTkFont(family="Roboto Condensed", size=12))
-                self.metrix_table.grid(row=3, column=0, padx=20, pady=10, columnspan=2)
-            else:
-                self.save_results_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Save Results (Most Recent Run)",
-                                                              bg_color='#05122d',
-                                                              fg_color="#4B0082",
-                                                              hover_color="#560067",
-                                                              text_color=("gray10", "gray90"),
-                                                              font = my_button_font,
-                                                              anchor="center", command=self.save_results_button_event)
-                self.save_results_button.grid(row=2, column=0, padx = 100, pady = 30, sticky = "new")
+                # Plot models on same graph
+                fig, ax = plt.subplots(figsize = (15, 5))
+                fig.patch.set_facecolor('#05122d')  # Set the figure background color
+                ax.set_facecolor('#05122d')  # Set the axes background color
                 
-                self.restart_program_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
-                                                              bg_color='#05122d',
-                                                              fg_color="#4B0082",
-                                                              hover_color="#560067",
-                                                              text_color=("gray10", "gray90"),
-                                                              font = my_button_font,
-                                                              anchor="center", command=self.restart_program_button_event)
-                self.restart_program_button.grid(row=2, column=1, padx = 100, pady = 30, sticky = "new")
-            
-            
-        # Function to display when no model is saved
-        def plot_no_model_2(self, model_frame, model_event_next, model_event_back, model_name):
-            
-            
-            model_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
-            # Create background image
-            image = PIL.Image.open(model_menu_image_path)
-            background_image_model = customtkinter.CTkImage(image, size=(1920, 1080))
-            
-            
-            self.background_label = customtkinter.CTkLabel(model_frame,
-                                                         image=background_image_model,
-                                                         text="")  # Empty text
-            self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
-         
-
-            self.model_frame_Label_Title = customtkinter.CTkLabel(model_frame, text=model_name, font=customtkinter.CTkFont(family="RobotoCondensed-ExtraBoldItalic", size=50, weight="bold", slant = "italic"), 
-                                                                 bg_color='#05122d', text_color=("white"))
-            self.model_frame_Label_Title.grid(row=0, column=0, padx=20, pady=(40, 10), columnspan=2, sticky = "n")  
-            
-            if (model_frame != self.summary_frame): 
-                self.next_button = customtkinter.CTkButton(model_frame, text="→", command=model_event_next, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
-                self.next_button.grid(row=4, column=1, padx=20, pady=20,  sticky = "se")  
                 
-                if (model_frame != self.model_1_frame):
-                    self.next_button = customtkinter.CTkButton(model_frame, text="←", command=model_event_back, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
-                    self.next_button.grid(row=4, column=0, padx=20, pady=20,  sticky = "sw") 
-            else:
-                self.restart_program_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
-                                                              bg_color='#05122d',
-                                                              fg_color="#4B0082",
-                                                              hover_color="#560067",
-                                                              text_color=("gray10", "gray90"),
-                                                              font = my_button_font,
-                                                              anchor="center", command=self.restart_program_button_event)
-                self.restart_program_button.grid(row=1, column=0, columnspan = 2, padx = 100, pady = 30, sticky = "new")
-        
-        
-        
-        
-        weather_data =  pd.read_excel(input_data_filename, sheet_name = "Weather_Forecast", header = 0)
-        weather_data = Power_Forecasting_dataCollectionAndPreprocessingFlow.add_calendar_columns(weather_data)
-        weather_data = Power_Forecasting_dataCollectionAndPreprocessingFlow.add_lags_to_weather_data(weather_data, 23)
-        
-        weather_data_cnn = weather_data.copy()
-
-        # Remove X days because of lags
-        weather_data = weather_data.reset_index(drop = True)
-        
-        for day in range(cnn_days_back):
-            index_remove_day = weather_data[(weather_data['Day'] == weather_data["Day"].iloc[0])].index     
-            weather_data = weather_data.drop(index_remove_day, axis='index', inplace = False).reset_index(drop=True)
-    
-        # Open weather scaler
-        scaler_path = os.path.join(saved_model_path, "weather_scaler_"+input_data_basename+".pkl")
-        if not os.path.exists(scaler_path):
-            raise FileNotFoundError(f"Scaler file not found: {scaler_path}")
-        weather_scaler = joblib.load(scaler_path)
-        
-        
-        # Drop temporary year month day hour columns
-        weather_data_dropped = weather_data.drop(columns=['Year', 'Month', 'Day', 'Hour'])
-        # Drop temporary year month day hour columns
-        weather_data_cnn_dropped = weather_data_cnn.drop(columns=['Year', 'Month', 'Day', 'Hour'])
-        
-        # Normalize Weather
-        norm_weather_data = weather_scaler.transform(weather_data_dropped)
-        norm_weather_data = pd.DataFrame(norm_weather_data, columns = weather_data_dropped.columns)
-        
-        # Normalize CNN Weather
-        norm_weather_data_cnn = weather_scaler.transform(weather_data_cnn_dropped)
-        norm_weather_data_cnn = pd.DataFrame(norm_weather_data_cnn, columns = weather_data_cnn_dropped.columns)
-        
-        for feature in norm_weather_data_cnn.columns:
-          if ("Lag" in feature):
-            norm_weather_data_cnn = norm_weather_data_cnn.drop(columns = [feature])
-        
-       
-        ###############################################################################
-        # Import and predict Models
-        ###############################################################################
-        num_of_days = weather_data["Day"].nunique()
-        
-        total_features = []
-        # Convert year, month, day, hour to boolean values
-        # Day range 1 to 31 (subtract last day for 0 condition)
-        days = [*range(1, 31)]
-        # Hour range 0 to 23 (subtract last hour for 0 condition)
-        hours = [*range(0, 23)]
-        # Hour range 0 to 23 (subtract last month for 0 condition)
-        months = [*range(1, 12)]
-        
-        # Year range depending on weather data columns
-        years_range = weather_data.columns
-        
-        for year in years_range:
-            if ("Year_" in year):
-                total_features.append(year)
-
-        for month in months:
-            total_features.append("Month_" + str(month))
-
-        for day in days:
-            total_features.append("Day_" + str(day))
-        
-        for hour in hours:
-            total_features.append("Hour_" + str(hour))
-                     
-        for feature in selected_features:
-            total_features.append(feature)
-            
-        total_features_temp = total_features.copy()
-        for lag in range (1, 24):
-            for feature in total_features_temp:
-                if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
-                    continue
+                if (model_frame == self.summary_frame): 
+                    for model_name in selected_models:
+                        if model_name == "K-Nearest Neighbors":
+                            color_name = "purple"
+                            model_name = "KNN"
+                        if model_name == "Convolutional Neural Network":
+                            color_name = "indigo"
+                            model_name = "CNN" 
+                        if model_name == "Linear Regression":
+                            color_name = "violet"
+                            model_name = "LR"
+                        if model_name == "X Gradient Boost":
+                            color_name = "darkviolet"
+                            model_name = "XGB" 
+                        try:
+                            ax.plot(weather_data["DATE"], Y_pred_denorm_saved_df_saved[model_name]["FORECASTED CONSUMPTION (MW)"], 'o-', label = model_name + " Forecast", color = color_name)
+                            ax.legend(loc = "best", facecolor='#34495E', edgecolor='pink', labelcolor='white')
+                        except:
+                            continue
                 else:
-                    total_features.append(feature+"_Lag_"+str(lag))
-        
-        
-        
-        # Dictionary for model prediction dataframes error 
-        # model -> Value
-        Y_pred_denorm_saved_df = {}
-        
-        for model_name in selected_models:
-            if model_name == "K-Nearest Neighbors":
-                model_name = "KNN"
-            if model_name == "Convolutional Neural Network":
-                model_name = "CNN" 
-            if model_name == "Linear Regression":
-                model_name = "LR"
-            if model_name == "X Gradient Boost":
-                model_name = "XGB" 
+                    ax.plot(weather_data["DATE"], Y_pred_denorm_saved_df_saved["TOTAL_CONSUMPTION"], 'o-', label = "Forecasted Consumption", color = "purple")
+                    ax.legend(loc = "upper left", facecolor='#34495E', edgecolor='pink', labelcolor='white')
+                
+                ax.set_title(title, color="white")     
+                ax.set_xlabel("Hour", color = "white")
+                ax.set_ylabel("Consumption [MW]",color = "white")
+                
+                
+                # Customize the x and y axis lines and text color
+                ax.spines['bottom'].set_color('white')
+                ax.spines['left'].set_color('white')
+                ax.tick_params(axis='x', colors='white')
+                ax.tick_params(axis='y', colors='white')
+                ax.spines['top'].set_color('#05122d')
+                ax.spines['right'].set_color('#05122d')
+    
+                ax.xaxis.set_major_formatter(mdates.DateFormatter('%b-%d, %H:%M'))
+                plot_svg =  os.path.join(image_path, "Predicted_Actual_Graph.png")
+                plt.savefig(plot_svg)
+                plt.close()
+                
+                # Positining of Figure
+                self.model_image = customtkinter.CTkImage(Image.open(os.path.join(image_path, "Predicted_Actual_Graph.png")), size=(1500, 500))
+                
+                self.model_frame_image_label = customtkinter.CTkLabel(model_frame, text="", image=self.model_image)
+                self.model_frame_image_label.grid(row=1, column=0, padx=20, pady=10, columnspan=2)
+                
+                if (model_frame != self.summary_frame): 
+                    # Display Table of Error
+                    table_values_tp = table_values.transpose()
+                    
+                    
+                    # Positining of Figure
+                    self.model_table = CTkTable(model_frame, width=1, height=1, values=table_values_tp.values.tolist(), 
+                                fg_color='#05122d',       # Foreground color (table background)
+                                bg_color='#05122d',       # Background color (frame background)
+                                text_color='white',     # Text color
+                                header_color='#560067',
+                                hover_color=("gray70", "gray30"), anchor="w",
+                                 font = customtkinter.CTkFont(family="Roboto Condensed", size=12))
+                    self.model_table.grid(row=2, column=0, padx=20, pady=10, columnspan=2)
+                    
+                    
+                    # Positining of Figure
+                    self.metrix_table = CTkTable(model_frame, width=1, height=1, values=metrics_values.values.tolist(), 
+                                fg_color='#05122d',       # Foreground color (table background)
+                                bg_color='#05122d',       # Background color (frame background)
+                                text_color='white',     # Text color
+                                header_color='#560067',
+                                hover_color=("gray70", "gray30"), anchor="w",
+                                 font = customtkinter.CTkFont(family="Roboto Condensed", size=12))
+                    self.metrix_table.grid(row=3, column=0, padx=20, pady=10, columnspan=2)
+                else:
+                    self.save_results_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Save Results (Most Recent Run)",
+                                                                  bg_color='#05122d',
+                                                                  fg_color="#4B0082",
+                                                                  hover_color="#560067",
+                                                                  text_color=("gray10", "gray90"),
+                                                                  font = my_button_font,
+                                                                  anchor="center", command=self.save_results_button_event)
+                    self.save_results_button.grid(row=2, column=0, padx = 100, pady = 30, sticky = "new")
+                    
+                    self.restart_program_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
+                                                                  bg_color='#05122d',
+                                                                  fg_color="#4B0082",
+                                                                  hover_color="#560067",
+                                                                  text_color=("gray10", "gray90"),
+                                                                  font = my_button_font,
+                                                                  anchor="center", command=self.restart_program_button_event)
+                    self.restart_program_button.grid(row=2, column=1, padx = 100, pady = 30, sticky = "new")
+                
+                
+            # Function to display when no model is saved
+            def plot_no_model_2(self, model_frame, model_event_next, model_event_back, model_name):
+                
+                
+                model_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
+                # Create background image
+                image = PIL.Image.open(model_menu_image_path)
+                background_image_model = customtkinter.CTkImage(image, size=(1920, 1080))
+                
+                
+                self.background_label = customtkinter.CTkLabel(model_frame,
+                                                             image=background_image_model,
+                                                             text="")  # Empty text
+                self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
+             
+    
+                self.model_frame_Label_Title = customtkinter.CTkLabel(model_frame, text=model_name, font=customtkinter.CTkFont(family="RobotoCondensed-ExtraBoldItalic", size=50, weight="bold", slant = "italic"), 
+                                                                     bg_color='#05122d', text_color=("white"))
+                self.model_frame_Label_Title.grid(row=0, column=0, padx=20, pady=(40, 10), columnspan=2, sticky = "n")  
+                
+                if (model_frame != self.summary_frame): 
+                    self.next_button = customtkinter.CTkButton(model_frame, text="→", command=model_event_next, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
+                    self.next_button.grid(row=4, column=1, padx=20, pady=20,  sticky = "se")  
+                    
+                    if (model_frame != self.model_1_frame):
+                        self.next_button = customtkinter.CTkButton(model_frame, text="←", command=model_event_back, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
+                        self.next_button.grid(row=4, column=0, padx=20, pady=20,  sticky = "sw") 
+                else:
+                    self.restart_program_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
+                                                                  bg_color='#05122d',
+                                                                  fg_color="#4B0082",
+                                                                  hover_color="#560067",
+                                                                  text_color=("gray10", "gray90"),
+                                                                  font = my_button_font,
+                                                                  anchor="center", command=self.restart_program_button_event)
+                    self.restart_program_button.grid(row=1, column=0, columnspan = 2, padx = 100, pady = 30, sticky = "new")
             
-            # Import saved CSV into script as dataframes
-            if model_name == "CNN":
-                X_test = norm_weather_data_cnn[total_features]
-            else:
-                X_test = norm_weather_data[total_features]
             
-            # Load model from gui_pickup folder using joblib
+            # Begin RGB waiting sequence
             try:
-                if model_name == "CNN":
-                    pipe_saved = models.load_model(os.path.join(saved_model_path, (model_name+"_"+input_data_basename+"_Model_" + "_".join(selected_features_3_digits) + ".keras")))
-                else:
-                    pipe_saved = joblib.load(os.path.join(saved_model_path, (model_name+"_"+input_data_basename+"_Model_" + "_".join(selected_features_3_digits) + ".pkl")))
+                Power_Forecasting_Corsair_RGB.waiting(rgb_lights)
             except:
-                continue
-
-            if (model_name == "CNN"):
-                
-                for feature in X_test.columns:
-                  if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature) or ("Hour_" in feature)):
-                    X_test[feature].astype('bool')
-                  if ("Lag" in feature):
-                    X_test = X_test.drop(columns = [feature])
-                
-                # Create dataframe without humidity and speed
-                data = X_test
-                
-                #window_size = 168  # Last 168 hours (one week)
-                window_size = 24  # Last 24 hours (one day)
-                forecast_horizon = 24  # Next 24 hours
-                
-                
-                # Create input-output pairs using a sliding window
-                Y_pred_saved = pd.DataFrame(columns=['TOTAL_CONSUMPTION'])
-                for day in range(num_of_days):
-                    X_data = []
-
-                    X_data.append(data.iloc[day*24:day*24 + window_size + forecast_horizon].values)  # Collect 24 hours of feature data
-                    
-                    # Convert to numpy arrays
-                    X_data = np.array(X_data, dtype=np.float16)
-                    X_data = np.expand_dims(X_data, axis=-1)
+                pass
+            
+            weather_data =  pd.read_excel(input_data_filename, sheet_name = "Weather_Forecast", header = 0)
+            weather_data = Power_Forecasting_dataCollectionAndPreprocessingFlow.add_calendar_columns(weather_data)
+            weather_data = Power_Forecasting_dataCollectionAndPreprocessingFlow.add_lags_to_weather_data(weather_data, 23)
+            
+            weather_data_cnn = weather_data.copy()
     
-                    # Predict using loaded model
-                    Y_pred_cnn = pipe_saved.predict(X_data)
-                    Y_pred_cnn = pd.DataFrame(Y_pred_cnn)
-                    
-                    # Ensure Y_pred and Y_test are reshaped correctly
-                    Y_pred_cnn = Y_pred_cnn.values.reshape(-1, 1)
-                    
-                    Y_pred_cnn = pd.DataFrame(Y_pred_cnn, columns=['TOTAL_CONSUMPTION'])
-                    
-                    print(Y_pred_cnn)
-                    Y_pred_saved = pd.concat([Y_pred_saved, Y_pred_cnn], axis=0, ignore_index=True)
-                    print(Y_pred_saved)
-
-            else:
-                # Predict using loaded model
-                Y_pred_saved = pipe_saved.predict(X_test)
-                
-                # Ensure Y_pred and Y_test are reshaped correctly
-                Y_pred_saved = Y_pred_saved.reshape(-1, 1)
+            # Remove X days because of lags
+            weather_data = weather_data.reset_index(drop = True)
             
-            
-            # Denormalize Y_pred and Y_test with min_max_scaler_y.pkl using joblib
-            scaler_path = os.path.join(saved_model_path, "power_scaler_"+input_data_basename+".pkl")
+            for day in range(cnn_days_back):
+                index_remove_day = weather_data[(weather_data['Day'] == weather_data["Day"].iloc[0])].index     
+                weather_data = weather_data.drop(index_remove_day, axis='index', inplace = False).reset_index(drop=True)
+        
+            # Open weather scaler
+            scaler_path = os.path.join(saved_model_path, "weather_scaler_"+input_data_basename+".pkl")
             if not os.path.exists(scaler_path):
                 raise FileNotFoundError(f"Scaler file not found: {scaler_path}")
-            power_scaler = joblib.load(scaler_path)
+            weather_scaler = joblib.load(scaler_path)
             
-            # Inverse Transform power scaler
-            Y_pred_denorm_saved = power_scaler.inverse_transform(Y_pred_saved)
-
-            # Save power scaler to dictionary of models
-            Y_pred_denorm_saved_df[model_name] = pd.DataFrame(Y_pred_denorm_saved, columns=['TOTAL_CONSUMPTION'])
-
-            # Convert to MW
-            Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name]*0.001
             
-            # Convert to float64
-            Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].astype(float)
+            # Drop temporary year month day hour columns
+            weather_data_dropped = weather_data.drop(columns=['Year', 'Month', 'Day', 'Hour'])
+            # Drop temporary year month day hour columns
+            weather_data_cnn_dropped = weather_data_cnn.drop(columns=['Year', 'Month', 'Day', 'Hour'])
             
-            # Round to 4 decimal places
-            Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].round(decimals = 4)
-       
-        # Dictionary for model prediction dataframes error 
-        # model -> Value
-        table_values = {}
-        metrics_values = {}
-        save_results_dic.clear()
-        table_values_df = pd.DataFrame() 
+            # Normalize Weather
+            norm_weather_data = weather_scaler.transform(weather_data_dropped)
+            norm_weather_data = pd.DataFrame(norm_weather_data, columns = weather_data_dropped.columns)
+            
+            # Normalize CNN Weather
+            norm_weather_data_cnn = weather_scaler.transform(weather_data_cnn_dropped)
+            norm_weather_data_cnn = pd.DataFrame(norm_weather_data_cnn, columns = weather_data_cnn_dropped.columns)
+            
+            for feature in norm_weather_data_cnn.columns:
+              if ("Lag" in feature):
+                norm_weather_data_cnn = norm_weather_data_cnn.drop(columns = [feature])
+            
+           
+            ###############################################################################
+            # Import and predict Models
+            ###############################################################################
+            num_of_days = weather_data["Day"].nunique()
+            
+            total_features = []
+            # Convert year, month, day, hour to boolean values
+            # Day range 1 to 31 (subtract last day for 0 condition)
+            days = [*range(1, 31)]
+            # Hour range 0 to 23 (subtract last hour for 0 condition)
+            hours = [*range(0, 23)]
+            # Hour range 0 to 23 (subtract last month for 0 condition)
+            months = [*range(1, 12)]
+            
+            # Year range depending on weather data columns
+            years_range = weather_data.columns
+            
+            for year in years_range:
+                if ("Year_" in year):
+                    total_features.append(year)
+    
+            for month in months:
+                total_features.append("Month_" + str(month))
+    
+            for day in days:
+                total_features.append("Day_" + str(day))
+            
+            for hour in hours:
+                total_features.append("Hour_" + str(hour))
+                         
+            for feature in selected_features:
+                total_features.append(feature)
+                
+            total_features_temp = total_features.copy()
+            for lag in range (1, 24):
+                for feature in total_features_temp:
+                    if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
+                        continue
+                    else:
+                        total_features.append(feature+"_Lag_"+str(lag))
+            
+            
+            
+            # Dictionary for model prediction dataframes error 
+            # model -> Value
+            Y_pred_denorm_saved_df = {}
+            
+            for model_name in selected_models:
+                if model_name == "K-Nearest Neighbors":
+                    model_name = "KNN"
+                if model_name == "Convolutional Neural Network":
+                    model_name = "CNN" 
+                if model_name == "Linear Regression":
+                    model_name = "LR"
+                if model_name == "X Gradient Boost":
+                    model_name = "XGB" 
+                
+                # Import saved CSV into script as dataframes
+                if model_name == "CNN":
+                    X_test = norm_weather_data_cnn[total_features]
+                else:
+                    X_test = norm_weather_data[total_features]
+                
+                # Load model from gui_pickup folder using joblib
+                try:
+                    if model_name == "CNN":
+                        pipe_saved = models.load_model(os.path.join(saved_model_path, (model_name+"_"+input_data_basename+"_Model_" + "_".join(selected_features_3_digits) + ".keras")))
+                    else:
+                        pipe_saved = joblib.load(os.path.join(saved_model_path, (model_name+"_"+input_data_basename+"_Model_" + "_".join(selected_features_3_digits) + ".pkl")))
+                except:
+                    continue
+    
+                if (model_name == "CNN"):
+                    
+                    for feature in X_test.columns:
+                      if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature) or ("Hour_" in feature)):
+                        X_test[feature].astype('bool')
+                      if ("Lag" in feature):
+                        X_test = X_test.drop(columns = [feature])
+                    
+                    # Create dataframe without humidity and speed
+                    data = X_test
+                    
+                    #window_size = 168  # Last 168 hours (one week)
+                    window_size = 24  # Last 24 hours (one day)
+                    forecast_horizon = 24  # Next 24 hours
+                    
+                    
+                    # Create input-output pairs using a sliding window
+                    Y_pred_saved = pd.DataFrame(columns=['TOTAL_CONSUMPTION'])
+                    for day in range(num_of_days):
+                        X_data = []
+    
+                        X_data.append(data.iloc[day*24:day*24 + window_size + forecast_horizon].values)  # Collect 24 hours of feature data
+                        
+                        # Convert to numpy arrays
+                        X_data = np.array(X_data, dtype=np.float16)
+                        X_data = np.expand_dims(X_data, axis=-1)
         
-        weather_data["DATE"] = pd.to_datetime(weather_data[["Year", "Month", "Day","Hour"]])
-
+                        # Predict using loaded model
+                        Y_pred_cnn = pipe_saved.predict(X_data)
+                        Y_pred_cnn = pd.DataFrame(Y_pred_cnn)
+                        
+                        # Ensure Y_pred and Y_test are reshaped correctly
+                        Y_pred_cnn = Y_pred_cnn.values.reshape(-1, 1)
+                        
+                        Y_pred_cnn = pd.DataFrame(Y_pred_cnn, columns=['TOTAL_CONSUMPTION'])
+                        
+                        print(Y_pred_cnn)
+                        Y_pred_saved = pd.concat([Y_pred_saved, Y_pred_cnn], axis=0, ignore_index=True)
+                        print(Y_pred_saved)
+    
+                else:
+                    # Predict using loaded model
+                    Y_pred_saved = pipe_saved.predict(X_test)
+                    
+                    # Ensure Y_pred and Y_test are reshaped correctly
+                    Y_pred_saved = Y_pred_saved.reshape(-1, 1)
+                
+                
+                # Denormalize Y_pred and Y_test with min_max_scaler_y.pkl using joblib
+                scaler_path = os.path.join(saved_model_path, "power_scaler_"+input_data_basename+".pkl")
+                if not os.path.exists(scaler_path):
+                    raise FileNotFoundError(f"Scaler file not found: {scaler_path}")
+                power_scaler = joblib.load(scaler_path)
+                
+                # Inverse Transform power scaler
+                Y_pred_denorm_saved = power_scaler.inverse_transform(Y_pred_saved)
+    
+                # Save power scaler to dictionary of models
+                Y_pred_denorm_saved_df[model_name] = pd.DataFrame(Y_pred_denorm_saved, columns=['TOTAL_CONSUMPTION'])
+    
+                # Convert to MW
+                Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name]*0.001
+                
+                # Convert to float64
+                Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].astype(float)
+                
+                # Round to 4 decimal places
+                Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].round(decimals = 4)
+           
+            # Dictionary for model prediction dataframes error 
+            # model -> Value
+            table_values = {}
+            metrics_values = {}
+            save_results_dic.clear()
+            table_values_df = pd.DataFrame() 
+            
+            weather_data["DATE"] = pd.to_datetime(weather_data[["Year", "Month", "Day","Hour"]])
+    
+            
+            
+            year = str(weather_data["Year"].iloc[0])
+            month = str(weather_data["Month"].iloc[0])
+            day = str(weather_data["Day"].iloc[0])
+            
+            
+            
+            for day_num in range (num_of_days):
+                # Append next day to another dataframe to plot on same figure
+                if (day_num == 0):
+                    title = "Hourly Power Consumption"
         
-        
-        year = str(weather_data["Year"].iloc[0])
-        month = str(weather_data["Month"].iloc[0])
-        day = str(weather_data["Day"].iloc[0])
-        
-        
-        
-        for day_num in range (num_of_days):
-            # Append next day to another dataframe to plot on same figure
-            if (day_num == 0):
-                title = "Hourly Power Consumption"
+                for model_name in selected_models:
+                    if model_name == "K-Nearest Neighbors":
+                        model_name = "KNN"
+                    if model_name == "Convolutional Neural Network":
+                        model_name = "CNN" 
+                    if model_name == "Linear Regression":
+                        model_name = "LR"
+                    if model_name == "X Gradient Boost":
+                        model_name = "XGB" 
+    
+                    try:
+                    
+                        Y_pred_denorm_saved_df_day = Y_pred_denorm_saved_df[model_name].iloc[(24*day_num):(24*day_num + 24)]
+                            
+                        if (day_num == 0):
+                            table_values_df["Hour"] = (Y_pred_denorm_saved_df_day.index%24)
+                            table_values[model_name] = table_values_df
+                           
+                        table_values[model_name]["Forecasted Consumption: Day " + str(day_num+1) + " (MW)"] = Y_pred_denorm_saved_df_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
+                        table_values[model_name] = table_values[model_name].round(decimals = 4)
+    
+                    except:
+                        continue 
     
             for model_name in selected_models:
                 if model_name == "K-Nearest Neighbors":
@@ -1966,94 +2062,81 @@ class App(customtkinter.CTk):
                     model_name = "LR"
                 if model_name == "X Gradient Boost":
                     model_name = "XGB" 
-
-                try:
-                
-                    Y_pred_denorm_saved_df_day = Y_pred_denorm_saved_df[model_name].iloc[(24*day_num):(24*day_num + 24)]
-                        
-                    if (day_num == 0):
-                        table_values_df["Hour"] = (Y_pred_denorm_saved_df_day.index%24)
-                        table_values[model_name] = table_values_df
-                       
-                    table_values[model_name]["Forecasted Consumption: Day " + str(day_num+1) + " (MW)"] = Y_pred_denorm_saved_df_day["TOTAL_CONSUMPTION"].reset_index(drop = True)
-                    table_values[model_name] = table_values[model_name].round(decimals = 4)
-
+                try:  
+                    Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].reset_index(drop = True)
+                    weather_data = weather_data.reset_index(drop = True)
+                    
+                    save_results_dic[model_name] = pd.concat([weather_data[["Year", "Month", "Day", "Hour"]], Y_pred_denorm_saved_df[model_name]], axis=1)
+                    save_results_dic[model_name].columns.values[4] = "FORECASTED CONSUMPTION (MW)"
+                    save_results_dic[model_name] = save_results_dic[model_name].rename(columns={"Year": "YEAR"})
+                    save_results_dic[model_name] = save_results_dic[model_name].rename(columns={"Month": "MONTH"})
+                    save_results_dic[model_name] = save_results_dic[model_name].rename(columns={"Day": "DAY"})
+                    save_results_dic[model_name] = save_results_dic[model_name].rename(columns={"Hour": "HOUR"})
+                    
+                    metrics_model_path = os.path.join(saved_model_path, model_name+"_"+input_data_basename+"_Metrics_" + "_".join(selected_features_3_digits) + ".csv") 
+                    metrics_values[model_name] = pd.read_csv(metrics_model_path, header=0)
+                    metrics_values[model_name] = metrics_values[model_name].round(decimals = 4)
+                    
+                    save_results_dic[model_name] = pd.concat([save_results_dic[model_name],  metrics_values[model_name][["MAPE (%)", "MAE (MW)", "r2", "MSE (MW Squared)", "RMSE (MW)"]]], axis=1).fillna("")
+                    
+                    
+                    
+                    metrics_values_columns = pd.DataFrame([metrics_values[model_name].columns], columns = metrics_values[model_name].columns)
+                    table_values_columns = pd.DataFrame([table_values[model_name].columns], columns = table_values[model_name].columns)
+                    print(metrics_values_columns)
+                    
+                    metrics_values[model_name] = pd.concat([metrics_values_columns, metrics_values[model_name].iloc[0:]]).reset_index(drop=True) 
+                    table_values[model_name] = pd.concat([table_values_columns, table_values[model_name].iloc[0:]]).reset_index(drop=True)
                 except:
-                    continue 
-
-        for model_name in selected_models:
-            if model_name == "K-Nearest Neighbors":
-                model_name = "KNN"
-            if model_name == "Convolutional Neural Network":
-                model_name = "CNN" 
-            if model_name == "Linear Regression":
-                model_name = "LR"
-            if model_name == "X Gradient Boost":
-                model_name = "XGB" 
-            try:  
-                Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].reset_index(drop = True)
-                weather_data = weather_data.reset_index(drop = True)
-                
-                save_results_dic[model_name] = pd.concat([weather_data[["Year", "Month", "Day", "Hour"]], Y_pred_denorm_saved_df[model_name]], axis=1)
-                save_results_dic[model_name].columns.values[4] = "FORECASTED CONSUMPTION (MW)"
-                save_results_dic[model_name] = save_results_dic[model_name].rename(columns={"Year": "YEAR"})
-                save_results_dic[model_name] = save_results_dic[model_name].rename(columns={"Month": "MONTH"})
-                save_results_dic[model_name] = save_results_dic[model_name].rename(columns={"Day": "DAY"})
-                save_results_dic[model_name] = save_results_dic[model_name].rename(columns={"Hour": "HOUR"})
-                
-                metrics_model_path = os.path.join(saved_model_path, model_name+"_"+input_data_basename+"_Metrics_" + "_".join(selected_features_3_digits) + ".csv") 
-                metrics_values[model_name] = pd.read_csv(metrics_model_path, header=0)
-                metrics_values[model_name] = metrics_values[model_name].round(decimals = 4)
-                
-                save_results_dic[model_name] = pd.concat([save_results_dic[model_name],  metrics_values[model_name][["MAPE (%)", "MAE (MW)", "r2", "MSE (MW Squared)", "RMSE (MW)"]]], axis=1).fillna("")
-                
-                
-                
-                metrics_values_columns = pd.DataFrame([metrics_values[model_name].columns], columns = metrics_values[model_name].columns)
-                table_values_columns = pd.DataFrame([table_values[model_name].columns], columns = table_values[model_name].columns)
-                print(metrics_values_columns)
-                
-                metrics_values[model_name] = pd.concat([metrics_values_columns, metrics_values[model_name].iloc[0:]]).reset_index(drop=True) 
-                table_values[model_name] = pd.concat([table_values_columns, table_values[model_name].iloc[0:]]).reset_index(drop=True)
+                    continue
+            count_no_models = 0
+            try:
+                plot_figures_model_2(self, weather_data, Y_pred_denorm_saved_df["LR"], metrics_values["LR"], table_values["LR"], self.model_1_frame, self.model_2_button_event, "N/A", model_names_list[0])
             except:
-                continue
-        count_no_models = 0
-        try:
-            plot_figures_model_2(self, weather_data, Y_pred_denorm_saved_df["LR"], metrics_values["LR"], table_values["LR"], self.model_1_frame, self.model_2_button_event, "N/A", model_names_list[0])
-        except:
-            plot_no_model_2(self, self.model_1_frame, self.model_2_button_event, "N/A", "NO SAVED MODEL FOR " + model_names_list[0])
-            count_no_models = count_no_models + 1
-        try:
-            plot_figures_model_2(self, weather_data, Y_pred_denorm_saved_df["XGB"], metrics_values["XGB"], table_values["XGB"], self.model_2_frame, self.model_3_button_event, self.model_1_button_event, model_names_list[1])
-        except:
-            plot_no_model_2(self, self.model_2_frame, self.model_3_button_event, self.model_1_button_event, "NO SAVED MODEL FOR " + model_names_list[1])
-            count_no_models = count_no_models + 1
-        
-        try:
-            plot_figures_model_2(self, weather_data, Y_pred_denorm_saved_df["KNN"], metrics_values["KNN"], table_values["KNN"], self.model_3_frame, self.model_4_button_event, self.model_2_button_event, model_names_list[2])
-        except:
-            plot_no_model_2(self, self.model_3_frame, self.model_4_button_event, self.model_2_button_event, "NO SAVED MODEL FOR " + model_names_list[2])
-            count_no_models = count_no_models + 1
-        
-        try:
-            plot_figures_model_2(self, weather_data, Y_pred_denorm_saved_df["CNN"], metrics_values["CNN"], table_values["CNN"], self.model_4_frame, self.summary_button_event, self.model_3_button_event, model_names_list[3])
-        except:
-            plot_no_model_2(self, self.model_4_frame, self.summary_button_event, self.model_3_button_event, "NO SAVED MODEL FOR " + model_names_list[3])
-            count_no_models = count_no_models + 1
-        
-        try:
-            if (count_no_models == 4):
-                plot_no_model_2(self, self.summary_frame, "N/A","N/A", "No Saved Models")  
-            else:
-                plot_figures_model_2(self, weather_data, save_results_dic, "N/A", "N/A", self.summary_frame, "N/A", "N/A", "Summary of All Models")
+                plot_no_model_2(self, self.model_1_frame, self.model_2_button_event, "N/A", "NO SAVED MODEL FOR " + model_names_list[0])
+                count_no_models = count_no_models + 1
+            try:
+                plot_figures_model_2(self, weather_data, Y_pred_denorm_saved_df["XGB"], metrics_values["XGB"], table_values["XGB"], self.model_2_frame, self.model_3_button_event, self.model_1_button_event, model_names_list[1])
+            except:
+                plot_no_model_2(self, self.model_2_frame, self.model_3_button_event, self.model_1_button_event, "NO SAVED MODEL FOR " + model_names_list[1])
+                count_no_models = count_no_models + 1
             
-        except:
-            plot_no_model_2(self, self.summary_frame, "N/A","N/A", "No Saved Models")
-        
-        count_no_models = 0
-        self.select_frame_by_name("Model: Linear Regression")
-        
-        
+            try:
+                plot_figures_model_2(self, weather_data, Y_pred_denorm_saved_df["KNN"], metrics_values["KNN"], table_values["KNN"], self.model_3_frame, self.model_4_button_event, self.model_2_button_event, model_names_list[2])
+            except:
+                plot_no_model_2(self, self.model_3_frame, self.model_4_button_event, self.model_2_button_event, "NO SAVED MODEL FOR " + model_names_list[2])
+                count_no_models = count_no_models + 1
+            
+            try:
+                plot_figures_model_2(self, weather_data, Y_pred_denorm_saved_df["CNN"], metrics_values["CNN"], table_values["CNN"], self.model_4_frame, self.summary_button_event, self.model_3_button_event, model_names_list[3])
+            except:
+                plot_no_model_2(self, self.model_4_frame, self.summary_button_event, self.model_3_button_event, "NO SAVED MODEL FOR " + model_names_list[3])
+                count_no_models = count_no_models + 1
+            
+            try:
+                if (count_no_models == 4):
+                    plot_no_model_2(self, self.summary_frame, "N/A","N/A", "No Saved Models")  
+                else:
+                    plot_figures_model_2(self, weather_data, save_results_dic, "N/A", "N/A", self.summary_frame, "N/A", "N/A", "Summary of All Models")
+                
+            except:
+                plot_no_model_2(self, self.summary_frame, "N/A","N/A", "No Saved Models")
+            
+            count_no_models = 0
+            self.select_frame_by_name("Model: Linear Regression")
+            
+            # Complete RGB waiting sequence
+            try:
+                Power_Forecasting_Corsair_RGB.done_waiting(rgb_lights)
+            except:
+                pass
+        except Exception as error:
+            print("An exception occurred:", error)
+            # Complete RGB waiting sequence
+            try:
+                Power_Forecasting_Corsair_RGB.done_waiting(rgb_lights)
+            except:
+                pass
         
         
     def open_file_button_event(self):
@@ -2190,7 +2273,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = user_run
+    run_student = joseph_pc_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):
@@ -2206,9 +2289,6 @@ if __name__ == "__main__":
         
     dirs_inputs = run_student[0]
     
-
-    #%% Collect actual hourly consumption data that will be used for the model.
-
     
     
     
