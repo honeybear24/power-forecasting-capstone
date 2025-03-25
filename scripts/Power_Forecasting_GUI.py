@@ -240,7 +240,7 @@ class App(customtkinter.CTk):
         # Create frame
         home_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
         
-        # Create background image
+        # Create home background image
         image = PIL.Image.open(home_menu_image_path)
         background_image_home = customtkinter.CTkImage(image, size=(1920, 1080))
         
@@ -598,6 +598,15 @@ class App(customtkinter.CTk):
         ###############################################################################        
         # Create second frame (Model 1) (all code for desired frame is in here)
         ###############################################################################
+        
+        # Create frame
+        model_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
+        
+        # Create home background image
+        image = PIL.Image.open(model_menu_image_path)
+        background_image_model = customtkinter.CTkImage(image, size=(1920, 1080))
+        
+        
         self.model_1_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
         self.model_1_frame.grid_columnconfigure(0, weight=1)
         self.model_1_frame.grid_columnconfigure(1, weight=1)
@@ -608,7 +617,7 @@ class App(customtkinter.CTk):
         self.model_1_frame.grid_rowconfigure(4, weight=1)
         
         self.background_label = customtkinter.CTkLabel(self.model_1_frame,
-                                                     image=background_image_home,
+                                                     image=background_image_model,
                                                      text="")  # Empty text
         self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
         
@@ -627,7 +636,7 @@ class App(customtkinter.CTk):
         
         
         self.background_label = customtkinter.CTkLabel(self.model_2_frame,
-                                                     image=background_image_home,
+                                                     image=background_image_model,
                                                      text="")  # Empty text
         self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
@@ -645,7 +654,7 @@ class App(customtkinter.CTk):
         self.model_3_frame.grid_rowconfigure(4, weight=1)
         
         self.background_label = customtkinter.CTkLabel(self.model_3_frame,
-                                                     image=background_image_home,
+                                                     image=background_image_model,
                                                      text="")  # Empty text
         self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
@@ -663,7 +672,7 @@ class App(customtkinter.CTk):
         self.model_4_frame.grid_rowconfigure(4, weight=1)
         
         self.background_label = customtkinter.CTkLabel(self.model_4_frame,
-                                                     image=background_image_home,
+                                                     image=background_image_model,
                                                      text="")  # Empty text
         self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
         
@@ -679,7 +688,7 @@ class App(customtkinter.CTk):
         self.summary_frame.grid_rowconfigure(2, weight=1)
         
         self.background_label = customtkinter.CTkLabel(self.summary_frame,
-                                                     image=background_image_home,
+                                                     image=background_image_model,
                                                      text="")  # Empty text
         self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
         
@@ -825,8 +834,10 @@ class App(customtkinter.CTk):
             def plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df_saved, metrics_values, hourly_data_month_day_error, model_frame, model_event_next, model_event_back, model_name):
             
                 
-                
-                model_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
+                if (model_frame != self.summary_frame):
+                    model_menu_image_path = os.path.join(background_images_path, "Model_Page.png")
+                else:
+                    model_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
                 # Create background image
                 image = PIL.Image.open(model_menu_image_path)
                 background_image_model = customtkinter.CTkImage(image, size=(1920, 1080))
@@ -955,7 +966,11 @@ class App(customtkinter.CTk):
             def plot_no_model(self, model_frame, model_event_next, model_event_back, model_name):
                 
                 
-                model_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
+                if (model_frame != self.summary_frame):
+                    model_menu_image_path = os.path.join(background_images_path, "Model_Page.png")
+                else:
+                    model_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
+                    
                 # Create background image
                 image = PIL.Image.open(model_menu_image_path)
                 background_image_model = customtkinter.CTkImage(image, size=(1920, 1080))
@@ -1682,7 +1697,10 @@ class App(customtkinter.CTk):
             # Function to plot the model figures
             def plot_figures_model_2(self, weather_data, Y_pred_denorm_saved_df_saved, metrics_values, table_values, model_frame, model_event_next, model_event_back, model_name):
                     
-                model_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
+                if (model_frame != self.summary_frame):
+                    model_menu_image_path = os.path.join(background_images_path, "Model_Page.png")
+                else:
+                    model_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
                 # Create background image
                 image = PIL.Image.open(model_menu_image_path)
                 background_image_model = customtkinter.CTkImage(image, size=(1920, 1080))
@@ -1809,7 +1827,10 @@ class App(customtkinter.CTk):
             def plot_no_model_2(self, model_frame, model_event_next, model_event_back, model_name):
                 
                 
-                model_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
+                if (model_frame != self.summary_frame):
+                    model_menu_image_path = os.path.join(background_images_path, "Model_Page.png")
+                else:
+                    model_menu_image_path = os.path.join(background_images_path, "Home_Page.png")
                 # Create background image
                 image = PIL.Image.open(model_menu_image_path)
                 background_image_model = customtkinter.CTkImage(image, size=(1920, 1080))
