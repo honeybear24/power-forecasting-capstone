@@ -134,47 +134,105 @@ def add_lags_to_weather_data(data: pd.DataFrame, lag: int):
 
 
 
+# find_fsa_index - Find index of FSA in fsa_map dictiionary
+def find_fsa_index(fsa: str, fsa_map: dict):
+    index = 0
+    for key in fsa_map:
+        if key == fsa:
+            return index
+        index += 1
+    return 272 # Return 272 if FSA not found (default case and good location since it is near good weather stations)
+
+# find_fsa_lat_lon - Find lat and lon of FSA given the index in the fsa_map dictionary
+def find_fsa_lat_lon(index: int, fsa_map : dict):
+    for i, key in enumerate(fsa_map):
+        if i == index:
+            return fsa_map[key]["lat"], fsa_map[key]["lon"]
+    return 43.27, -79.95 # Return default lat and lon if index not found (default case and good location since it is near good weather stations)
+
 # get_weather_data - For a given day and FSA (through the lat and long), get the weather data for that day
-async def get_weather_data(session: aiohttp.ClientSession, current_date: datetime, next_date: datetime, lat: float, lon: float):
+async def get_weather_data(session: aiohttp.ClientSession, current_date: datetime, next_date: datetime, lat: float, lon: float, fsa: str, fsa_map: dict):
 
     # Set Up
     weather_data = []   # List to store weather data 
     bbox_limit = 0.2   # Bounding box limit for data collection
+    current_lat = lat # Current latitude
+    current_lon = lon # Current longitude
+    hard_reset = 20 # If the code can't get data after 20 tries, it will hard reset the lat and lon to a neighboring FSA
+    reset_counter = 0 # Counter to keep track of how many times the code has tried to get data
 
     while True: # Loop to get data until enough data is collected (need at least 24 data points for day)
-        bbox = f'{lon-bbox_limit},{lat-bbox_limit},{lon+bbox_limit},{lat+bbox_limit}' # Bounding box for data collection
+        reset_counter += 1 # Increment counter
+
+        # If counter is greater than hard reset, reset lat and lon to a neighboring FSA
+        if reset_counter > hard_reset:
+            reset_counter = 0 # Reset counter
+            print("FAILED TO FIND WEATHER DATA FOR - " + fsa + " - " + str(current_date) + " - " + str(next_date) + " - WILL GET FROM NEIGHBORING FSA") # alert user of hard reset
+
+            # Find index of current FSA in fsa_map dictionary
+            fsa_index = find_fsa_index(fsa, fsa_map)
+
+            # Get the lat long of a neighboring FSA  index
+            if fsa_index > 230: # If index number is greater than 230, get the lat long of the previous index
+                current_lat, current_lon = find_fsa_lat_lon(fsa_index-1, fsa_map)
+            else: # If index number is less than 230, get the lat long of the previous index
+                current_lat, current_lon = find_fsa_lat_lon(fsa_index+1, fsa_map)
+            bbox_limit = 0.2 # Reset bounding box limit
+
+        bbox = f'{current_lon-bbox_limit},{current_lat-bbox_limit},{current_lon+bbox_limit},{current_lat+bbox_limit}' # Bounding box for data collection
         url = f'https://api.weather.gc.ca/collections/climate-hourly/items?bbox={bbox}&datetime={current_date.isoformat()}/{next_date.isoformat()}' # URL to get data from API
 
         # Make request to API
         response = await session.get(url) # Make function wait for response
-        response_data = await response.json() # Get data from response
+        
+        # Check if response data is in JSON format
+        try:
+            response_data = await response.json() # Get data from response
 
-        # If enough data was found, extract data and stron in weather_data list
-        if 'features' in response_data and len(response_data['features']) > 23:
-            for data_point in response_data['features']:
-                weather_data.append({
-                    #'Station Name': data_point['properties'].get('STATION_NAME'),
-                    'Date/Time (LST)': data_point['properties'].get('LOCAL_DATE'),
-                    'Year': data_point['properties'].get('LOCAL_YEAR'),
-                    'Month': data_point['properties'].get('LOCAL_MONTH'),
-                    'Day': data_point['properties'].get('LOCAL_DAY'),
-                    'Hour': data_point['properties'].get('LOCAL_HOUR'),
-                    'Temperature': data_point['properties'].get('TEMP'),
-                    'Dew Point Temperature': data_point['properties'].get('DEW_POINT_TEMP'),
-                    'Wind Speed': data_point['properties'].get('WIND_SPEED'),
-                    'Station Pressure': data_point['properties'].get('STATION_PRESSURE'),
-                    'Humidity': data_point['properties'].get('RELATIVE_HUMIDITY'),
-                    'Windchill': data_point['properties'].get('WINDCHILL'),
-                })
+            # If enough data was found, extract data and stron in weather_data list
+            if 'features' in response_data and len(response_data['features']) > 23:
+                for data_point in response_data['features']:
+                    weather_data.append({
+                        #'Station Name': data_point['properties'].get('STATION_NAME'),
+                        'Date/Time (LST)': data_point['properties'].get('LOCAL_DATE'),
+                        'Year': data_point['properties'].get('LOCAL_YEAR'),
+                        'Month': data_point['properties'].get('LOCAL_MONTH'),
+                        'Day': data_point['properties'].get('LOCAL_DAY'),
+                        'Hour': data_point['properties'].get('LOCAL_HOUR'),
+                        'Temperature': data_point['properties'].get('TEMP'),
+                        'Dew Point Temperature': data_point['properties'].get('DEW_POINT_TEMP'),
+                        'Wind Speed': data_point['properties'].get('WIND_SPEED'),
+                        'Station Pressure': data_point['properties'].get('STATION_PRESSURE'),
+                        'Humidity': data_point['properties'].get('RELATIVE_HUMIDITY'),
+                        'Windchill': data_point['properties'].get('WINDCHILL'),
+                    })
+                
+                weather_data_df_temp = pd.DataFrame(weather_data)
+                hour_unique_count = weather_data_df_temp['Hour'].nunique()
+                if(hour_unique_count>23):
+                    break # Break loop if enough data is found
+
+            else: # If not enough data is found, increase the bounding box to get more data
+                bbox_limit += 0.2
+                await asyncio.sleep(0.25) # Add a slight delay to avoid overloading the server
+
+        except: # If response data is not in JSON format
             
-            weather_data_df_temp = pd.DataFrame(weather_data)
-            hour_unique_count = weather_data_df_temp['Hour'].nunique()
-            if(hour_unique_count>23):
-                break # Break loop if enough data is found
+            reset_counter = 0 # Reset counter
 
-        else: # If not enough data is found, increase the bounding box to get more data
-            bbox_limit += 0.15
-            await asyncio.sleep(0.5) # Add a slight delay to avoid overloading the server
+            print("EDGE CASE FOUND - " + fsa + " - " + str(current_date) + " - " + str(next_date)) # print edge case found
+
+            # Find index of current FSA in fsa_map dictionary
+            fsa_index = find_fsa_index(fsa, fsa_map)
+
+            # Get the lat long of a neighboring FSA  index
+            if fsa_index > 230: # If index number is greater than 230, get the lat long of the previous index
+                current_lat, current_lon = find_fsa_lat_lon(fsa_index-1, fsa_map)
+            else: # If index number is less than 230, get the lat long of the previous index
+                current_lat, current_lon = find_fsa_lat_lon(fsa_index+1, fsa_map)
+            bbox_limit = 0.2 # Reset bounding box limit
+            await asyncio.sleep(0.25) # Add a slight delay to avoid overloading the server
+
 
     # Turn list of dictionaries into a pandas dataframe
     weather_data_df = pd.DataFrame(weather_data)
@@ -227,7 +285,7 @@ def get_power_data(data_path, start_date: datetime, end_date: datetime, fsa: str
     return filtered_power_data_df
 
 # get_data_for_time_range - get data for a given time range for a given latitude and longitude
-async def get_data_for_time_range(data_path, start_date: datetime, end_date: datetime, fsa, lat: float, lon: float):
+async def get_data_for_time_range(data_path, start_date: datetime, end_date: datetime, fsa, lat: float, lon: float, fsa_map: dict):
     # Weather Data Collection - Done asynchronously wtih Weather API #
     async with aiohttp.ClientSession() as session: # Using session to make requests
         
@@ -243,7 +301,7 @@ async def get_data_for_time_range(data_path, start_date: datetime, end_date: dat
             next_date = current_date + timedelta(days=1) - timedelta(hours=1) 
 
             # Get weather data for current day
-            weather_jobs.append(get_weather_data(session, current_date, next_date, lat, lon))
+            weather_jobs.append(get_weather_data(session, current_date, next_date, lat, lon, fsa, fsa_map))
 
             # Move to next day
             current_date = current_date + timedelta(days=1)  

@@ -112,12 +112,18 @@ class App(customtkinter.CTk):
         
         customtkinter.set_default_color_theme("blue") # change the colour theme of the application
         super().__init__()    
-        self.title("Power Forecasting.py")
+        self.title("Power Forecasting")
         self.geometry("1920x1080")
         
         # Set grid layout 1x2
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
+        
+        # Path for Icon
+        icon_path = os.path.join(background_images_path, "Power_Forecasting_Icon.ico")
+        
+        # Set Icon for GUI
+        self.iconbitmap(icon_path)
         
         # Path for start menu background
         start_menu_image_path = os.path.join(background_images_path, "Start_Menu_Page.png")
@@ -140,7 +146,7 @@ class App(customtkinter.CTk):
         
         global cnn_days_back
         # Get X dates behind for CNN model Lags
-        cnn_days_back = 2
+        cnn_days_back = 7
         
         
         ###############################################################################
@@ -986,6 +992,11 @@ class App(customtkinter.CTk):
             
             # Begin RGB waiting sequence
             try:
+                Power_Forecasting_Corsair_RGB.connect(rgb_lights)
+            except:
+                pass
+            
+            try:
                 Power_Forecasting_Corsair_RGB.waiting(rgb_lights)
             except:
                 pass
@@ -1068,10 +1079,10 @@ class App(customtkinter.CTk):
     
             # # Collect data - Using asynchronous functions
             # 
-            weather_data, dummy_hourly_data_month_day = asyncio.run(Power_Forecasting_dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date, end_date, fsa_chosen, lat, lon))
+            weather_data, dummy_hourly_data_month_day = asyncio.run(Power_Forecasting_dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date, end_date, fsa_chosen, lat, lon, fsa_map))
             
             # CNN weather data
-            weather_data_cnn, dummy_hourly_data_month_day = asyncio.run(Power_Forecasting_dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date_cnn, end_date, fsa_chosen, lat, lon))
+            weather_data_cnn, dummy_hourly_data_month_day = asyncio.run(Power_Forecasting_dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date_cnn, end_date, fsa_chosen, lat, lon, fsa_map))
             
             dummy_hourly_data_month_day = dummy_hourly_data_month_day.reset_index(drop = True) 
             weather_data = weather_data.reset_index(drop = True)
@@ -1417,7 +1428,7 @@ class App(customtkinter.CTk):
             print("An exception occurred:", error)
             # Complete RGB waiting sequence
             try:
-                Power_Forecasting_Corsair_RGB.done_waiting(rgb_lights)
+                Power_Forecasting_Corsair_RGB.error(rgb_lights)
             except:
                 pass
         
@@ -1425,6 +1436,11 @@ class App(customtkinter.CTk):
     def train_models_button_event(self):
         try:
             # Begin RGB waiting sequence
+            try:
+                Power_Forecasting_Corsair_RGB.connect(rgb_lights)
+            except:
+                pass
+            
             try:
                 Power_Forecasting_Corsair_RGB.waiting(rgb_lights)
             except:
@@ -1459,7 +1475,7 @@ class App(customtkinter.CTk):
                 weather_data = pd.read_csv(f'{power_weather_data_path}/weather_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv')
                 power_data = pd.read_csv(f'{power_weather_data_path}/power_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv')
             except FileNotFoundError: 
-                weather_data, power_data = asyncio.run(Power_Forecasting_dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date, end_date, fsa_typed, lat, lon))
+                weather_data, power_data = asyncio.run(Power_Forecasting_dataCollectionAndPreprocessingFlow.get_data_for_time_range(dirs_inputs, start_date, end_date, fsa_typed, lat, lon, fsa_map))
                 weather_data.to_csv(f'{power_weather_data_path}/weather_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
                 power_data.to_csv(f'{power_weather_data_path}/power_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
             
@@ -1552,13 +1568,18 @@ class App(customtkinter.CTk):
             print("An exception occurred:", error)
             # Complete RGB waiting sequence
             try:
-                Power_Forecasting_Corsair_RGB.done_waiting(rgb_lights)
+                Power_Forecasting_Corsair_RGB.error(rgb_lights)
             except:
                 pass
         
     def train_input_excel_models_button_event(self):
         try:
             # Begin RGB waiting sequence
+            try:
+                Power_Forecasting_Corsair_RGB.connect(rgb_lights)
+            except:
+                pass
+            
             try:
                 Power_Forecasting_Corsair_RGB.waiting(rgb_lights)
             except:
@@ -1651,7 +1672,7 @@ class App(customtkinter.CTk):
             print("An exception occurred:", error)
             # Complete RGB waiting sequence
             try:
-                Power_Forecasting_Corsair_RGB.done_waiting(rgb_lights)
+                Power_Forecasting_Corsair_RGB.error(rgb_lights)
             except:
                 pass
         
@@ -1823,6 +1844,11 @@ class App(customtkinter.CTk):
             
             
             # Begin RGB waiting sequence
+            try:
+                Power_Forecasting_Corsair_RGB.connect(rgb_lights)
+            except:
+                pass
+            
             try:
                 Power_Forecasting_Corsair_RGB.waiting(rgb_lights)
             except:
@@ -2134,7 +2160,7 @@ class App(customtkinter.CTk):
             print("An exception occurred:", error)
             # Complete RGB waiting sequence
             try:
-                Power_Forecasting_Corsair_RGB.done_waiting(rgb_lights)
+                Power_Forecasting_Corsair_RGB.error(rgb_lights)
             except:
                 pass
         
@@ -2183,6 +2209,11 @@ class App(customtkinter.CTk):
     def restart_program_button_event(self): 
         global restart_program
         restart_program = 1
+        # Complete RGB waiting sequence
+        try:
+            Power_Forecasting_Corsair_RGB.done_waiting(rgb_lights)
+        except:
+            pass
         self.quit()
         
     ###############################################################################
@@ -2259,6 +2290,8 @@ class App(customtkinter.CTk):
         self.navigation_visible = not self.navigation_visible
     
     
+
+    
     
 if __name__ == "__main__":
     #%% Student directory
@@ -2297,6 +2330,7 @@ if __name__ == "__main__":
     app = App()
     app.mainloop()
     restart_program = 1
+    
     while restart_program == 1:
         try:
             app.destroy()
