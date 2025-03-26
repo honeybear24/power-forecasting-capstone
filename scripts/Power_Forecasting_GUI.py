@@ -146,7 +146,7 @@ class App(customtkinter.CTk):
         
         global cnn_days_back
         # Get X dates behind for CNN model Lags
-        cnn_days_back = 7
+        cnn_days_back = 2
         
         
         ###############################################################################
@@ -259,7 +259,7 @@ class App(customtkinter.CTk):
         self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
         
         # Fonts
-        global my_button_font, padding_x_option1
+        global my_button_font, padding_x_option1, padding_x_option2, padding_x_option3
         my_text_font = customtkinter.CTkFont(family="Roboto Condensed", size=16)
         my_button_font = customtkinter.CTkFont(family="Roboto Condensed", size=18, weight="bold")
         my_title_font = customtkinter.CTkFont(family="Roboto Condensed", size=30)
@@ -296,12 +296,12 @@ class App(customtkinter.CTk):
         self.option2_frame = customtkinter.CTkFrame(self.home_frame, fg_color = '#05122d',bg_color = '#05122d')
         self.option3_frame = customtkinter.CTkFrame(self.home_frame, fg_color = '#05122d', bg_color = '#05122d')
         for frame in [self.option1_frame, self.option2_frame, self.option3_frame]:
-            frame.grid(row=4, column=0, rowspan=10, columnspan=5, sticky="nsew", padx=50, pady=60)
-            frame.grid_columnconfigure(0,weight=10)
+            frame.grid(row=4, column=0, rowspan=10, columnspan=5, sticky="nsew", padx=200, pady=60)
+            frame.grid_columnconfigure(0,weight=5)
             frame.grid_columnconfigure(1,weight=1)
             frame.grid_columnconfigure(2,weight=1)
             frame.grid_columnconfigure(3,weight=1)
-            frame.grid_columnconfigure(4,weight=10)
+            frame.grid_columnconfigure(4,weight=5)
             
             frame.rowconfigure(0,weight=1)
             frame.rowconfigure(1,weight=1)
@@ -546,14 +546,14 @@ class App(customtkinter.CTk):
         self.upload_file_button.grid(row=1, column=3, padx = padding_x_option3, pady = 20, sticky = "new")
         
         # Create Train button
-        self.train_models_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Train Models",
+        self.train_models_button_any = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Train Models",
                                                       fg_color="#14206d",
                                                       bg_color= "#05122d",
                                                       hover_color="#560067",
                                                       text_color=("gray10", "gray90"),
                                                       font = my_button_font,
                                                       anchor="center", command=self.train_input_excel_models_button_event)
-        self.train_models_button.grid(row=2, column=1, padx = padding_x_option3, pady = 20, sticky = "sew")
+        self.train_models_button_any.grid(row=2, column=1, padx = padding_x_option3, pady = 20, sticky = "sew")
         
         # Create progress bar for training Ontario data
         self.progress_bar_train_any = customtkinter.CTkProgressBar(self.option3_frame, width=200, fg_color="#14206d")
@@ -682,7 +682,6 @@ class App(customtkinter.CTk):
         ###############################################################################
         self.summary_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
         self.summary_frame.grid_columnconfigure(0, weight=1)
-        self.summary_frame.grid_columnconfigure(1, weight=1)
         self.summary_frame.grid_rowconfigure(0, weight=1)
         self.summary_frame.grid_rowconfigure(1, weight=1)
         self.summary_frame.grid_rowconfigure(2, weight=1)
@@ -755,8 +754,6 @@ class App(customtkinter.CTk):
             self.navigation_frame.grid_forget()
             self.navigation_visible = False
         else:
-            self.progress_bar_train_any.set(0)  # Initialize the progress bar to 0
-            self.progress_bar_train_ontario.set(0)  # Initialize the progress bar to 0
             self.home_frame.grid_forget()
         if name == "Model: Linear Regression":
             self.model_1_frame.grid(row=0, column=1, sticky="nsew")
@@ -942,23 +939,35 @@ class App(customtkinter.CTk):
                                  font = customtkinter.CTkFont(family="Roboto Condensed", size=12))
                     self.metrix_table.grid(row=3, column=0, padx=20, pady=10, columnspan=2)
                 else:
-                    self.save_results_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Save Results (Most Recent Run)",
+                    
+                    # Create frame for save results and back to start menu buttons
+                    self.button_summary_frame = customtkinter.CTkFrame(self.summary_frame, fg_color = '#05122d', bg_color = '#05122d')
+                    self.button_summary_frame.grid(row=2, column=0, columnspan=5, sticky="nsew", padx=200, pady=80)
+                    self.button_summary_frame.grid_columnconfigure(0,weight=5)
+                    self.button_summary_frame.grid_columnconfigure(1,weight=1)
+                    self.button_summary_frame.grid_columnconfigure(2,weight=1)
+                    self.button_summary_frame.grid_columnconfigure(3,weight=1)
+                    self.button_summary_frame.grid_columnconfigure(4,weight=5)
+                    self.button_summary_frame.rowconfigure(0,weight=1)
+                
+                    
+                    self.save_results_button = customtkinter.CTkButton(self.button_summary_frame, corner_radius=20, height=40, border_spacing=10, text="Save Results (Most Recent Run)",
                                                                   bg_color='#05122d',
                                                                   fg_color="#4B0082",
                                                                   hover_color="#560067",
                                                                   text_color=("gray10", "gray90"),
                                                                   font = my_button_font,
                                                                   anchor="center", command=self.save_results_button_event)
-                    self.save_results_button.grid(row=2, column=0, padx = 100, pady = 30, sticky = "new")
+                    self.save_results_button.grid(row=0, column=1, sticky = "new")
                     
-                    self.restart_program_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
+                    self.restart_program_button = customtkinter.CTkButton(self.button_summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
                                                                   bg_color='#05122d',
                                                                   fg_color="#4B0082",
                                                                   hover_color="#560067",
                                                                   text_color=("gray10", "gray90"),
                                                                   font = my_button_font,
                                                                   anchor="center", command=self.restart_program_button_event)
-                    self.restart_program_button.grid(row=2, column=1, padx = 100, pady = 30, sticky = "new")
+                    self.restart_program_button.grid(row=0, column=3, sticky = "new")
      
                 
                 
@@ -995,15 +1004,22 @@ class App(customtkinter.CTk):
                         self.next_button = customtkinter.CTkButton(model_frame, text="←", command=model_event_back, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
                         self.next_button.grid(row=4, column=0, padx=20, pady=20,  sticky = "sw") 
                 else:
+                    # Create frame for save results and back to start menu buttons
+                    self.button_summary_frame = customtkinter.CTkFrame(self.summary_frame, fg_color = '#05122d', bg_color = '#05122d')
+                    self.button_summary_frame.grid(row=1, column=0, columnspan=5, sticky="nsew", padx=200, pady=80)
+                    self.button_summary_frame.grid_columnconfigure(0,weight=2)
+                    self.button_summary_frame.grid_columnconfigure(1,weight=1)
+                    self.button_summary_frame.grid_columnconfigure(2,weight=2)
+                    self.button_summary_frame.rowconfigure(0,weight=1)
                     
-                    self.restart_program_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
-                                                                  bg_color='#05122d',
+                    self.restart_program_button = customtkinter.CTkButton(self.button_summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
+                                                                  bg_color='#05122d', 
                                                                   fg_color="#4B0082",
                                                                   hover_color="#560067",
                                                                   text_color=("gray10", "gray90"),
                                                                   font = my_button_font,
                                                                   anchor="center", command=self.restart_program_button_event)
-                    self.restart_program_button.grid(row=1, column=0, columnspan = 2, padx = 100, pady = 30, sticky = "new")
+                    self.restart_program_button.grid(row=0, column=1, sticky = "new")
             
             # Begin RGB waiting sequence
             try:
@@ -1450,6 +1466,23 @@ class App(customtkinter.CTk):
         
     def train_models_button_event(self):
         try:
+            
+            # Reset progress bar to 0 and make color of button the hover color
+            self.train_models_button.grid_forget()
+            self.train_models_button = customtkinter.CTkButton(self.option2_frame, corner_radius=20, height=40, border_spacing=10, text="Train Models",
+                                                          fg_color="#560067",  
+                                                          bg_color= "#05122d",
+                                                          text_color=("gray10", "gray90"),
+                                                          font = my_button_font,
+                                                          anchor="center", command=self.train_models_button_event)
+            self.train_models_button.grid(row=2, column=2, padx = padding_x_option2, pady = (10, 10), sticky = "new")
+            
+            self.progress_bar_train_ontario.grid_forget()
+            self.progress_bar_train_ontario = customtkinter.CTkProgressBar(self.option2_frame, width=300, fg_color="#14206d")
+            self.progress_bar_train_ontario.grid(row=3, column=2, padx = padding_x_option2, pady=0, sticky="new")
+            self.progress_bar_train_ontario.set(0)  # Initialize the progress bar to 0
+            self.update_idletasks()
+            
             # Begin RGB waiting sequence
             try:
                 Power_Forecasting_Corsair_RGB.connect(rgb_lights)
@@ -1460,7 +1493,7 @@ class App(customtkinter.CTk):
                 Power_Forecasting_Corsair_RGB.waiting(rgb_lights)
             except:
                 pass
-    
+
             nest_asyncio.apply() # Apply nest_asyncio to allow for nested asyncio operations
             
             fsa_typed = self.fsa_search_bar.get()
@@ -1564,6 +1597,16 @@ class App(customtkinter.CTk):
                 fsa_predict_list.remove("No Models")
     
             fsa_predict_list = list(dict.fromkeys(fsa_predict_list))
+            
+            # Add normal button back
+            self.train_models_button = customtkinter.CTkButton(self.option2_frame, corner_radius=20, height=40, border_spacing=10, text="Train Models",
+                                                          fg_color="#14206d",  
+                                                          
+                                                          bg_color= "#05122d",hover_color="#560067",
+                                                          text_color=("gray10", "gray90"),
+                                                          font = my_button_font,
+                                                          anchor="center", command=self.train_models_button_event)
+            self.train_models_button.grid(row=2, column=2, padx = padding_x_option2, pady = (10, 10), sticky = "new")
                 
             #Progress Bar Function for Ontartio training dataset
             def update_progress():
@@ -1581,14 +1624,43 @@ class App(customtkinter.CTk):
                 pass
         except Exception as error:
             print("An exception occurred:", error)
+            
+            # Add normal button back
+            self.train_models_button = customtkinter.CTkButton(self.option2_frame, corner_radius=20, height=40, border_spacing=10, text="Train Models",
+                                                          fg_color="#14206d",  
+                                                          
+                                                          bg_color= "#05122d",hover_color="#560067",
+                                                          text_color=("gray10", "gray90"),
+                                                          font = my_button_font,
+                                                          anchor="center", command=self.train_models_button_event)
+            self.train_models_button.grid(row=2, column=2, padx = padding_x_option2, pady = (10, 10), sticky = "new")
+            
             # Complete RGB waiting sequence
             try:
                 Power_Forecasting_Corsair_RGB.error(rgb_lights)
             except:
                 pass
+            
         
     def train_input_excel_models_button_event(self):
         try:
+            
+            # Reset progress bar to 0 and make color of button the hover color
+            self.train_models_button_any.grid_forget()
+            self.train_models_button_any = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Train Models",
+                                                          fg_color="#560067",
+                                                          bg_color= "#05122d",
+                                                          text_color=("gray10", "gray90"),
+                                                          font = my_button_font,
+                                                          anchor="center", command=self.train_input_excel_models_button_event)
+            self.train_models_button_any.grid(row=2, column=1, padx = padding_x_option3, pady = 20, sticky = "sew")
+            
+            self.progress_bar_train_any.grid_forget()
+            self.progress_bar_train_any = customtkinter.CTkProgressBar(self.option3_frame, width=200, fg_color="#14206d")
+            self.progress_bar_train_any.grid(row=3, column=1, padx = padding_x_option3, pady=0, sticky="new")
+            self.progress_bar_train_any.set(0)  # Initialize the progress bar to 0
+            self.update_idletasks()
+            
             # Begin RGB waiting sequence
             try:
                 Power_Forecasting_Corsair_RGB.connect(rgb_lights)
@@ -1668,7 +1740,17 @@ class App(customtkinter.CTk):
                     Power_Forecasting_XGB_Saver.save_xgb_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)   
                 if model == "Convolutional Neural Network":
                     Power_Forecasting_CNN_Saver.save_cnn_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)
-                    
+            
+            # Add normal button back
+            self.train_models_button_any = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Train Models",
+                                                          fg_color="#14206d",
+                                                          bg_color= "#05122d",
+                                                          hover_color="#560067",
+                                                          text_color=("gray10", "gray90"),
+                                                          font = my_button_font,
+                                                          anchor="center", command=self.train_input_excel_models_button_event)
+            self.train_models_button_any.grid(row=2, column=1, padx = padding_x_option3, pady = 20, sticky = "sew")
+            
             #Progress Bar Function for any training dataset
             def update_progress():
                 for i in range(101):
@@ -1678,6 +1760,7 @@ class App(customtkinter.CTk):
             # Run the update_progress function in a separate thread
             threading.Thread(target=update_progress).start()
             
+            
             # Complete RGB waiting sequence
             try:
                 Power_Forecasting_Corsair_RGB.done_waiting(rgb_lights)
@@ -1685,6 +1768,17 @@ class App(customtkinter.CTk):
                 pass
         except Exception as error:
             print("An exception occurred:", error)
+            
+            # Add normal button back
+            self.train_models_button_any = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Train Models",
+                                                          fg_color="#14206d",
+                                                          bg_color= "#05122d",
+                                                          hover_color="#560067",
+                                                          text_color=("gray10", "gray90"),
+                                                          font = my_button_font,
+                                                          anchor="center", command=self.train_input_excel_models_button_event)
+            self.train_models_button_any.grid(row=2, column=1, padx = padding_x_option3, pady = 20, sticky = "sew")
+            
             # Complete RGB waiting sequence
             try:
                 Power_Forecasting_Corsair_RGB.error(rgb_lights)
@@ -1804,23 +1898,34 @@ class App(customtkinter.CTk):
                                  font = customtkinter.CTkFont(family="Roboto Condensed", size=12))
                     self.metrix_table.grid(row=3, column=0, padx=20, pady=10, columnspan=2)
                 else:
-                    self.save_results_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Save Results (Most Recent Run)",
+                    # Create frame for save results and back to start menu buttons
+                    self.button_summary_frame = customtkinter.CTkFrame(self.summary_frame, fg_color = '#05122d', bg_color = '#05122d')
+                    self.button_summary_frame.grid(row=2, column=0, columnspan=5, sticky="nsew", padx=200, pady=80)
+                    self.button_summary_frame.grid_columnconfigure(0,weight=5)
+                    self.button_summary_frame.grid_columnconfigure(1,weight=1)
+                    self.button_summary_frame.grid_columnconfigure(2,weight=1)
+                    self.button_summary_frame.grid_columnconfigure(3,weight=1)
+                    self.button_summary_frame.grid_columnconfigure(4,weight=5)
+                    self.button_summary_frame.rowconfigure(0,weight=1)
+                
+                    
+                    self.save_results_button = customtkinter.CTkButton(self.button_summary_frame, corner_radius=20, height=40, border_spacing=10, text="Save Results (Most Recent Run)",
                                                                   bg_color='#05122d',
                                                                   fg_color="#4B0082",
                                                                   hover_color="#560067",
                                                                   text_color=("gray10", "gray90"),
                                                                   font = my_button_font,
                                                                   anchor="center", command=self.save_results_button_event)
-                    self.save_results_button.grid(row=2, column=0, padx = 100, pady = 30, sticky = "new")
+                    self.save_results_button.grid(row=0, column=1, sticky = "new")
                     
-                    self.restart_program_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
+                    self.restart_program_button = customtkinter.CTkButton(self.button_summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
                                                                   bg_color='#05122d',
                                                                   fg_color="#4B0082",
                                                                   hover_color="#560067",
                                                                   text_color=("gray10", "gray90"),
                                                                   font = my_button_font,
                                                                   anchor="center", command=self.restart_program_button_event)
-                    self.restart_program_button.grid(row=2, column=1, padx = 100, pady = 30, sticky = "new")
+                    self.restart_program_button.grid(row=0, column=3, sticky = "new")
                 
                 
             # Function to display when no model is saved
@@ -1854,14 +1959,22 @@ class App(customtkinter.CTk):
                         self.next_button = customtkinter.CTkButton(model_frame, text="←", command=model_event_back, height=40, width=45, font=customtkinter.CTkFont(family="Roboto Flex", size= 30), corner_radius=40, bg_color='#05122d',fg_color="#4B0082")
                         self.next_button.grid(row=4, column=0, padx=20, pady=20,  sticky = "sw") 
                 else:
-                    self.restart_program_button = customtkinter.CTkButton(self.summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
-                                                                  bg_color='#05122d',
+                    # Create frame for save results and back to start menu buttons
+                    self.button_summary_frame = customtkinter.CTkFrame(self.summary_frame, fg_color = '#05122d', bg_color = '#05122d')
+                    self.button_summary_frame.grid(row=1, column=0, columnspan=5, sticky="nsew", padx=200, pady=80)
+                    self.button_summary_frame.grid_columnconfigure(0,weight=2)
+                    self.button_summary_frame.grid_columnconfigure(1,weight=1)
+                    self.button_summary_frame.grid_columnconfigure(2,weight=2)
+                    self.button_summary_frame.rowconfigure(0,weight=1)
+                    
+                    self.restart_program_button = customtkinter.CTkButton(self.button_summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
+                                                                  bg_color='#05122d', 
                                                                   fg_color="#4B0082",
                                                                   hover_color="#560067",
                                                                   text_color=("gray10", "gray90"),
                                                                   font = my_button_font,
                                                                   anchor="center", command=self.restart_program_button_event)
-                    self.restart_program_button.grid(row=1, column=0, columnspan = 2, padx = 100, pady = 30, sticky = "new")
+                    self.restart_program_button.grid(row=0, column=1, sticky = "new")
             
             
             # Begin RGB waiting sequence
