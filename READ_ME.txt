@@ -5,7 +5,7 @@
 The only thing needed from the user is to make sure that 
 the "power-forecasting-capstone" folder is saved directly
 in the "C:\" folder. The program cannot run properly if
-this inital step is missed.
+this initial step is missed.
 
 Once downloaded and saved directly onto the C drive, please
 open the shortcut found in the first level of the
@@ -14,5 +14,5 @@ executable file.
 
 That is it!
 
-Sincerly,
+Sincerely,
 BV05, The Power Forecasters
