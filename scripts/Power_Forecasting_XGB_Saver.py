@@ -1,11 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Spyder Editor
-
-This is a temporary script file.
-"""
-
-#%% Libraries
+# Libraries
 import sys
 import os
 import pandas as pd

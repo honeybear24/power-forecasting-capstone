@@ -1,5 +1,4 @@
-
-#%% Libraries
+# Libraries
 import pandas as pd
 import datetime
 from datetime import datetime, date, timedelta
@@ -21,8 +20,43 @@ from tensorflow import keras
 from keras import models, layers, optimizers, callbacks
 import gc
 
-def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler, fsa, file_path, selected_features):
-
+def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler, fsa, file_path, selected_features, cnn_param_file_path):
+    # Read in CNN parameters excel file
+    file_path_cnn_params = os.path.join(cnn_param_file_path, "CNN_Hyperparameters.xlsx")   
+    cnn_params = pd.read_excel(file_path_cnn_params, sheet_name="User_Input", header = 0, usecols = "A:F")
+    
+    # Convert all parameters to desired type
+    epochs_param = cnn_params["Epochs"].iloc[0]
+    epochs_param = epochs_param.astype(int)
+    
+    iterations_param = cnn_params["Iterations"].iloc[0]
+    iterations_param = iterations_param.astype(int)
+    
+    batch_param = cnn_params["Batch Size"].iloc[0]
+    batch_param = batch_param.astype(int)
+    
+    activation_param = cnn_params["Activation Function"].iloc[0]
+    activation_param = str(activation_param)
+    
+    loss_param = cnn_params["Loss Function"].iloc[0]
+    loss_param = str(loss_param)
+    
+    layer_param = cnn_params["Hidden Layers"].iloc[0]
+    layer_param = layer_param.astype(int)
+    
+    # Choose loss function based on excel input
+    if loss_param == "huber":
+        loss_object_param = keras.losses.Huber()
+    if loss_param == "mean absolute error":
+        loss_object_param = keras.losses.MeanAbsoluteError()
+    if loss_param == "mean absolute percentage error":
+        loss_object_param = keras.losses.MeanAbsolutePercentageError()
+    if loss_param == "mean squared error":
+        loss_object_param = keras.losses.MeanSquaredError()
+    if loss_param == "mean squared logarithmic error":
+        loss_object_param = keras.losses.MeanSquaredLogarithmicError()
+    
+    # Preprocesing data for CNN
     Y_df_CNN = Y_df_CNN['TOTAL_CONSUMPTION']
     
     for feature in X_df_CNN.columns:
@@ -52,92 +86,98 @@ def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler,
     X_data = np.expand_dims(X_data, axis=-1)
     
     X_train, X_test, Y_train, Y_test = train_test_split(X_data, y_data, test_size=730/(61320), shuffle=False, random_state=42)
-    print(X_test.shape)
-    print(X_test)
     
     gc.collect()
-  
-    # Better model
-    cnn_model = models.Sequential(
-        [
-            layers.Input(shape=X_train.shape[-3:]),
-            layers.Conv2D(
-                filters=32, kernel_size=(3, 3), padding="same", activation="relu"
-            ),
-            layers.MaxPool2D(
-                pool_size=(1, 2)
-            ),  # Keep the width the same size, pool the height
-            layers.Conv2D(
-                filters=64, kernel_size=(3, 3), padding="same", activation="relu"
-            ),
-            layers.MaxPool2D(pool_size=(1, 2)),
-            layers.Conv2D(
-                filters=128, kernel_size=(3, 3), padding="same", activation="relu"
-            ),
-            layers.MaxPool2D(pool_size=(1, 2)),
-            # this is added
-            layers.Conv2D(
-                filters=128, kernel_size=(3, 3), padding="same", activation="relu"
-            ),
-            layers.MaxPool2D(pool_size=(1, 2)),
-            layers.Conv2D(
-                filters=128, kernel_size=(3, 3), padding="same", activation="relu"
-            ),
-            layers.Conv2D(
-                filters=128, kernel_size=(3, 3), padding="same", activation="relu"
-            ),
-            # Flatten the layers to feed into dense network
-            layers.Flatten(),
-            layers.BatchNormalization(),
-            # Add dense layers
-            layers.Dense(128, activation="relu"),
-            layers.Dense(
-                24
-            ),  # This is the output layer, we are predicting 24 hours!!!
-        ]
-    )
+    mape_list = []
     
-    # Customizing the Adam optimizer
-    optimizer = optimizers.Adam(
-        # learning_rate=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-07
-    )
+    # List for sequential
+    sequential_list = []
+    sequential_list.append(layers.Input(shape=X_train.shape[-3:]))
+    sequential_list.append(layers.Conv2D(filters=32, kernel_size=(3, 3), padding="same", activation=activation_param))
+    # Keep the width the same size, pool the height
+    sequential_list.append(layers.MaxPool2D(pool_size=(1, 2))) 
+    sequential_list.append(layers.Conv2D(filters=64, kernel_size=(3, 3), padding="same", activation=activation_param))
+    sequential_list.append(layers.MaxPool2D(pool_size=(1, 2)))
     
-    # Compile the model
-    cnn_model.compile(optimizer=optimizer, loss=keras.losses.Huber(), metrics=["mae"])
+    for i in range(layer_param-2):
+        sequential_list.append(layers.Conv2D(filters=128, kernel_size=(3, 3), padding="same", activation=activation_param))
+        if i<4:
+            sequential_list.append(layers.MaxPool2D(pool_size=(1, 2)))
     
-    early_stopping = callbacks.EarlyStopping(
-        monitor="val_loss",  # Metric to monitor
-        patience=5,  # Number of epochs with no improvement after which training will be stopped
-        restore_best_weights=True,  # Restore model weights from the epoch with the best value of the monitored quantity
-    )
+    # Flatten the layers to feed into dense network
+    sequential_list.append(layers.Flatten()) 
     
-    # Train the model
-    history = cnn_model.fit(
-        X_train,
-        Y_train,
-        epochs=15,
-        batch_size=32,
-        validation_split=0.2,
-        callbacks=[early_stopping],
-    )
+    # Add dense layers
+    sequential_list.append(layers.Dense(128, activation=activation_param))
+    sequential_list.append(layers.Dense(24))
+    
+    for i in range(iterations_param):
+        
+        cnn_model = models.Sequential(sequential_list)
+        
+        # Customizing the Adam optimizer
+        optimizer = optimizers.Adam(
+            # learning_rate=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-07
+        )
+        
+        # Compile the model
+        cnn_model.compile(optimizer=optimizer, loss=loss_object_param, metrics=["mae"])
+        
+        early_stopping = callbacks.EarlyStopping(
+            monitor="val_loss",  # Metric to monitor
+            patience=8,  # Number of epochs with no improvement after which training will be stopped
+            restore_best_weights=True,  # Restore model weights from the epoch with the best value of the monitored quantity
+        )
+        
+        # Train the model
+        history = cnn_model.fit(
+            X_train,
+            Y_train,
+            epochs = epochs_param,
+            batch_size = batch_param,
+            validation_split=0.2,
+            callbacks=[early_stopping],
+        )
+        
+        # Get metric evaluation
+        Y_pred_temp = cnn_model.predict(X_test)
+        
+        # Denomalize nomalized power data to check and see if matching with original data
+        Y_pred_denormalized_temp = pd.DataFrame(Y_pred_temp.copy())
+        Y_pred_denormalized_temp = power_scaler.inverse_transform(Y_pred_denormalized_temp.values.reshape(-1, 1))
+        
+        # Denomalize nomalized power data to check and see if matching with original data
+        Y_test_denormalized_temp = pd.DataFrame(Y_test.copy())
+        Y_test_denormalized_temp = power_scaler.inverse_transform(Y_test_denormalized_temp.values.reshape(-1, 1))
 
+        mape = mean_absolute_percentage_error(Y_test_denormalized_temp, Y_pred_denormalized_temp)
+        mape_list.append(mape*100)
+        
+        if (i == 0):
+            smallest_mape = mape
+            
+            # Save model
+            file_path_model = os.path.join(file_path, "CNN_" + fsa + "_Model_" + "_".join(selected_features) + ".keras")
+            cnn_model.save(file_path_model)
+            
+            Y_test_denormalized = Y_test_denormalized_temp
+            Y_pred_denormalized = Y_pred_denormalized_temp
+        elif (mape < smallest_mape):
+            smallest_mape = mape
+            
+            # Save model
+            file_path_model = os.path.join(file_path, "CNN_" + fsa + "_Model_" + "_".join(selected_features) + ".keras")
+            cnn_model.save(file_path_model)
+            
+            Y_test_denormalized = Y_test_denormalized_temp
+            Y_pred_denormalized = Y_pred_denormalized_temp
+            
+        keras.backend.clear_session()
     
-    # Save model
-    file_path_model = os.path.join(file_path, "CNN_" + fsa + "_Model_" + "_".join(selected_features) + ".keras")
-    cnn_model.save(file_path_model)
+    mape = smallest_mape
+    mape_list_df = pd.DataFrame(mape_list)
+    mape_list_df = mape_list_df.rename(columns={0: 'MAPE (%)'})
     
-    # Get metric evaluation
-    Y_pred = cnn_model.predict(X_test)
-
-    # Denomalize nomalized power data to check and see if matching with original data
-    Y_pred_denormalized = pd.DataFrame(Y_pred.copy())
-    Y_pred_denormalized = power_scaler.inverse_transform(Y_pred_denormalized.values.reshape(-1, 1))
-    
-    # Denomalize nomalized power data to check and see if matching with original data
-    Y_test_denormalized = pd.DataFrame(Y_test.copy())
-    Y_test_denormalized = power_scaler.inverse_transform(Y_test_denormalized.values.reshape(-1, 1))
-    
-    mape = mean_absolute_percentage_error(Y_test_denormalized, Y_pred_denormalized)
     mae = mean_absolute_error(Y_test_denormalized, Y_pred_denormalized)
     mse = mean_squared_error(Y_test_denormalized, Y_pred_denormalized)
     r2 = r2_score(Y_test_denormalized, Y_pred_denormalized)
@@ -155,5 +195,10 @@ def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler,
     
     file_path_metrics = os.path.join(file_path, "CNN_" + fsa + "_Metrics_" + "_".join(selected_features) + ".csv")   
     metrix_evaluation.to_csv(file_path_metrics, index=False)
+    
+    file_path_mape = os.path.join(file_path, "CNN_" + fsa + "_MAPE_Tracker_" + "_".join(selected_features) + ".csv")   
+    mape_list_df.to_csv(file_path_mape, index=False)
+    
+    
 
 

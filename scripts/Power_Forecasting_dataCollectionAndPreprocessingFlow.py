@@ -1,6 +1,5 @@
 # Used to collect collect meteorlogical data from Envirnment Canada's Weather API + Power Demand data from IESO
-
-### Imports ###
+# Libraries
 import sys
 import os
 import pandas as pd
@@ -11,7 +10,6 @@ import asyncio  # Import asyncio library for async operations
 import aiohttp # Import aiohttp library for making HTTP requests
 import nest_asyncio # Allows for asyncio to be nested
 nest_asyncio.apply() # Apply nest_asyncio to allow for nested asyncio operations
-#import canada_holiday # Import library to get Canadian Holidays
 from sklearn import preprocessing # Import preprocessing library for data normalization
 import joblib # Import joblib to save and load models
 import canada_holiday

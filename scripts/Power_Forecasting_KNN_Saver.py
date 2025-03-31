@@ -1,11 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Spyder Editor
-
-This is a temporary script file.
-"""
-
-#%% Libraries
+# Libraries
 import pandas as pd
 import datetime
 from datetime import datetime, date, timedelta

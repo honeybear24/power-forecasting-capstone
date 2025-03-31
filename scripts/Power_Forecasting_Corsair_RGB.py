@@ -1,10 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Mar 23 20:59:05 2025
-
-@author: sposa
-"""
-
+# Libraries
 from pyrgbdev import Corsair
 import time
 

@@ -1,6 +1,5 @@
 # Ridge Regression model with splines (using optimized values)
-
-# Set Up
+# Libraries
 import os
 import pandas as pd
 import numpy as np

@@ -2,8 +2,12 @@
 """
 Created on Wed Jan  8 14:18:11 2025
 
-@author: sposa
+@author: BV05 Power Forecasting
 """
+
+import warnings
+# Do not print any warnings to screen
+warnings.filterwarnings('ignore')
 
 import Power_Forecasting_dataCollectionAndPreprocessingFlow
 import Power_Forecasting_KNN_Saver
@@ -11,10 +15,9 @@ import Power_Forecasting_LR_Saver
 import Power_Forecasting_XGB_Saver
 import Power_Forecasting_CNN_Saver
 import Power_Forecasting_Corsair_RGB
-import asyncio  # Import asyncio library for async operations
-import aiohttp # Import aiohttp library for making HTTP requests
-import nest_asyncio # Allows for asyncio to be nested
-
+import asyncio
+import aiohttp 
+import nest_asyncio 
 import customtkinter
 from CTkTable import *
 import tkinter as Tk
@@ -26,7 +29,6 @@ import os
 import glob
 import PIL
 from PIL import Image
-
 import pandas as pd
 import datetime
 from datetime import datetime, date, timedelta
@@ -40,17 +42,15 @@ import math
 import numpy as np
 import canada_holiday
 from keras import models
-
 import time
 import threading
-
 import joblib
 import gc
-
 from pyrgbdev import Corsair
-
-
-
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
 
 
 #%%  Code for Initalization of scollable frame
@@ -246,10 +246,12 @@ class App(customtkinter.CTk):
         
         # Create frame
         self.home_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
-        self.home_frame.grid_columnconfigure(0, weight=2)
+        self.home_frame.grid_columnconfigure(0, weight=10)
         self.home_frame.grid_columnconfigure(1, weight=1)
-        self.home_frame.grid_columnconfigure(2, weight=2)
-        self.home_frame.grid_columnconfigure(3, weight=3)
+        self.home_frame.grid_columnconfigure(2, weight=1)
+        self.home_frame.grid_columnconfigure(3, weight=1)
+        self.home_frame.grid_columnconfigure(4, weight=1)
+        self.home_frame.grid_columnconfigure(5, weight=10)
 
 
         # Insert background image
@@ -259,7 +261,7 @@ class App(customtkinter.CTk):
         self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
         
         # Fonts
-        global my_button_font, padding_x_option1, padding_x_option2, padding_x_option3
+        global my_button_font, padding_x, padding_x_option1, padding_x_option2, padding_x_option3
         my_text_font = customtkinter.CTkFont(family="Roboto Condensed", size=16)
         my_button_font = customtkinter.CTkFont(family="Roboto Condensed", size=18, weight="bold")
         my_title_font = customtkinter.CTkFont(family="Roboto Condensed", size=30)
@@ -275,7 +277,7 @@ class App(customtkinter.CTk):
         # Create main title and description
         self.home_frame_Label_Title = customtkinter.CTkLabel(self.home_frame, text="Welcome to Power Forecasting!", font=customtkinter.CTkFont(family="RobotoCondensed-ExtraBoldItalic", size=50, weight="bold", slant = "italic"), 
                                                              bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Title.grid(row=0, column=0, padx = padding_x, pady = 20, columnspan=4)
+        self.home_frame_Label_Title.grid(row=0, column=0, padx = padding_x, pady = 20, columnspan=6)
         
         # Get FSA List
         fsa_predict_list = ["No Models"]
@@ -296,7 +298,7 @@ class App(customtkinter.CTk):
         self.option2_frame = customtkinter.CTkFrame(self.home_frame, fg_color = '#05122d',bg_color = '#05122d')
         self.option3_frame = customtkinter.CTkFrame(self.home_frame, fg_color = '#05122d', bg_color = '#05122d')
         for frame in [self.option1_frame, self.option2_frame, self.option3_frame]:
-            frame.grid(row=4, column=0, rowspan=10, columnspan=5, sticky="nsew", padx=200, pady=60)
+            frame.grid(row=4, column=0, rowspan=10, columnspan=6, sticky="nsew", padx=200, pady=60)
             frame.grid_columnconfigure(0,weight=5)
             frame.grid_columnconfigure(1,weight=1)
             frame.grid_columnconfigure(2,weight=1)
@@ -315,16 +317,19 @@ class App(customtkinter.CTk):
         # Create titles for selecting models, features, and option
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select models to train and forecast, and corresponding features.", font=my_title_font,
             bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=1, column=0, padx = padding_x, pady = (40, 10), columnspan=4)
+        self.home_frame_Label_Selection.grid(row=1, column=0, padx = padding_x, pady = (40, 10), columnspan=6)
         
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Models to Train and Forecast", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=2, column=1, padx = padding_x,  pady = (0,1), sticky = "w")
+        self.home_frame_Label_Selection.grid(row=2, column=1, padx = padding_x,  pady = (0,1), sticky = "ew")
         
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Training Features", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=2, column=2, padx = padding_x, pady = (0,1), sticky = "w")
+        self.home_frame_Label_Selection.grid(row=2, column=2, padx = padding_x, pady = (0,1), sticky = "ew")
+
+        self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select CNN Hyperparameters", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
+        self.home_frame_Label_Selection.grid(row=2, column=3, padx = padding_x, pady = (0,1), sticky = "ew")
 
         self.home_frame_Label_Selection = customtkinter.CTkLabel(self.home_frame, text="Select Option", font=customtkinter.CTkFont(family="Roboto Flex", size=20, weight="bold"), bg_color='#05122d', text_color=("white"))
-        self.home_frame_Label_Selection.grid(row=2, column=3, padx = padding_x, pady = (0,1), sticky = "w")
+        self.home_frame_Label_Selection.grid(row=2, column=4, padx = padding_x, pady = (0,1), sticky = "ew")
         
         # Create scrollable check box of models
         model_names_list = ["Linear Regression", "X Gradient Boost", "K-Nearest Neighbors", "Convolutional Neural Network"]
@@ -358,12 +363,22 @@ class App(customtkinter.CTk):
         self.scrollable_features_checkbox_frame.grid(row=3, column=2, padx = padding_x, pady = (10, 0), sticky = "ew")
         self.scrollable_features_checkbox_frame._scrollbar.configure(height=0)
         
+        # Create open excel file button for CNN parameters
+        self.upload_open_cnn_param_button = customtkinter.CTkButton(self.home_frame, corner_radius=20, height=40, border_spacing=10, text="Modify and Save Hyperparameters",
+                                                      bg_color="#05122d",
+                                                      fg_color="#14206d",
+                                                      hover_color="#560067",
+                                                      text_color=("gray10", "gray90"),
+                                                      font = my_button_font,
+                                                      anchor="center", command=self.upload_open_cnn_param_button_event)
+        self.upload_open_cnn_param_button.grid(row=3, column=3, padx = padding_x, pady = (10, 0), sticky = "new")
+        
         # Create drop down menu for options
         options_list = ["Forecast Ontario Models", "Train Ontario Models", "Train and Forecast Provided Dataset Models"]
         self.options_dropdown_menu = customtkinter.CTkOptionMenu(self.home_frame, values=options_list, command=self.show_frame_based_on_option,
             fg_color="#14206d", button_color="#14206d", dropdown_fg_color="#05122d", bg_color="#05122d", font=my_text_font)
         self.options_dropdown_menu.set(options_list[0])
-        self.options_dropdown_menu.grid(row=3, column=3, padx=padding_x, pady = (10, 0), sticky ='nw')
+        self.options_dropdown_menu.grid(row=3, column=4, padx=padding_x, pady = (10, 0), sticky ='new')
         
         self.show_frame_based_on_option(options_list[0])
         
@@ -401,7 +416,7 @@ class App(customtkinter.CTk):
         # Set maximum date
         max_date = date(2024, 11, 28)
         
-        self.calendar = Calendar(self.option1_frame, selectmode='day', year=2023, month=1, day=1, mindate = min_date, maxdate = max_date,
+        self.calendar = Calendar(self.option1_frame, selectmode='day', year=min_date.year, month=min_date.month, day=min_date.day, mindate = min_date, maxdate = max_date,
                    background='#14206d',  # Dark Blue Background
                     foreground='#FFFFFF',  # White Text
                     selectbackground='#05122d',  # Turquoise for Selected Date
@@ -480,7 +495,6 @@ class App(customtkinter.CTk):
         # Create Train button
         self.train_models_button = customtkinter.CTkButton(self.option2_frame, corner_radius=20, height=40, border_spacing=10, text="Train Models",
                                                       fg_color="#14206d",  
-                                                      
                                                       bg_color= "#05122d",hover_color="#560067",
                                                       text_color=("gray10", "gray90"),
                                                       font = my_button_font,
@@ -825,7 +839,6 @@ class App(customtkinter.CTk):
         self.toggle_navigation()
        
     def predict_models_button_event(self):
-
         try:
             # Function to plot the model figures
             def plot_figures_model(self, hourly_data_month_day_saved, Y_pred_denorm_saved_df_saved, metrics_values, hourly_data_month_day_error, model_frame, model_event_next, model_event_back, model_name):
@@ -949,8 +962,9 @@ class App(customtkinter.CTk):
                     self.button_summary_frame.grid_columnconfigure(3,weight=1)
                     self.button_summary_frame.grid_columnconfigure(4,weight=5)
                     self.button_summary_frame.rowconfigure(0,weight=1)
+                    self.button_summary_frame.rowconfigure(1,weight=1)
                 
-                    
+                    # Save Results
                     self.save_results_button = customtkinter.CTkButton(self.button_summary_frame, corner_radius=20, height=40, border_spacing=10, text="Save Results (Most Recent Run)",
                                                                   bg_color='#05122d',
                                                                   fg_color="#4B0082",
@@ -958,7 +972,28 @@ class App(customtkinter.CTk):
                                                                   text_color=("gray10", "gray90"),
                                                                   font = my_button_font,
                                                                   anchor="center", command=self.save_results_button_event)
-                    self.save_results_button.grid(row=0, column=1, sticky = "new")
+                    self.save_results_button.grid(row=0, column=1, padx = padding_x, sticky = "ew")
+                    
+                    
+                    # Create search bar for Email
+                    self.email_search_bar = customtkinter.CTkEntry(self.button_summary_frame, placeholder_text ="Enter Email(s) (ex. john.doe@gmail.com, ...)",
+                                            fg_color="#14206d",  # Foreground color (entry background)
+                                          bg_color="#05122d",  # Background color (frame background)
+                                          text_color="#ffffff",  # Text color
+                                          font=my_text_font)
+                    self.email_search_bar.grid(row=0, column=2, padx = padding_x, sticky = "ew")
+                    
+                    # Create Email button
+                    self.email_button = customtkinter.CTkButton(self.button_summary_frame, corner_radius=20, height=40, border_spacing=10, text="Send Saved Results to Email",
+                                                                  fg_color="#4B0082",  
+                                                                  bg_color= '#05122d',hover_color="#560067",
+                                                                  text_color=("gray10", "gray90"),
+                                                                  font = my_button_font,
+                                                                  anchor="center", command=self.send_email_button_event)
+                    self.email_button.grid(row=1, column=2, padx = padding_x, sticky = "new")
+                    
+                    
+                    
                     
                     self.restart_program_button = customtkinter.CTkButton(self.button_summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
                                                                   bg_color='#05122d',
@@ -967,7 +1002,7 @@ class App(customtkinter.CTk):
                                                                   text_color=("gray10", "gray90"),
                                                                   font = my_button_font,
                                                                   anchor="center", command=self.restart_program_button_event)
-                    self.restart_program_button.grid(row=0, column=3, sticky = "new")
+                    self.restart_program_button.grid(row=0, column=3, padx = padding_x, sticky = "ew")
      
                 
                 
@@ -1020,6 +1055,7 @@ class App(customtkinter.CTk):
                                                                   font = my_button_font,
                                                                   anchor="center", command=self.restart_program_button_event)
                     self.restart_program_button.grid(row=0, column=1, sticky = "new")
+            print("Forecasting Ontario Model(s)...")
             
             # Begin RGB waiting sequence
             try:
@@ -1118,6 +1154,8 @@ class App(customtkinter.CTk):
             dummy_hourly_data_month_day = dummy_hourly_data_month_day.reset_index(drop = True) 
             weather_data = weather_data.reset_index(drop = True)
             
+            
+            print("    Data is collected.")
             
     
             index_first_day = weather_data[(weather_data['Day'] == start_day)].index
@@ -1277,8 +1315,7 @@ class App(customtkinter.CTk):
                 
                 # Round to 4 decimal places
                 Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].round(decimals = 4)
-                
-                print(Y_pred_denorm_saved_df[model_name])
+                print("    " + model_name + " - Forecast Generated.")
             
             # Dictionary for model prediction dataframes error 
             # model -> Value
@@ -1446,6 +1483,8 @@ class App(customtkinter.CTk):
             except:
                 plot_no_model(self, self.summary_frame, "N/A","N/A", "No Saved Models")
             
+            print("Done Forecating!")
+            print("\n")
             # Complete RGB waiting sequence
             try:
                 Power_Forecasting_Corsair_RGB.done_waiting(rgb_lights)
@@ -1466,7 +1505,7 @@ class App(customtkinter.CTk):
         
     def train_models_button_event(self):
         try:
-            
+            print("Training Ontario Models...")
             # Reset progress bar to 0 and make color of button the hover color
             self.train_models_button.grid_forget()
             self.train_models_button = customtkinter.CTkButton(self.option2_frame, corner_radius=20, height=40, border_spacing=10, text="Train Models",
@@ -1493,7 +1532,7 @@ class App(customtkinter.CTk):
                 Power_Forecasting_Corsair_RGB.waiting(rgb_lights)
             except:
                 pass
-
+    
             nest_asyncio.apply() # Apply nest_asyncio to allow for nested asyncio operations
             
             fsa_typed = self.fsa_search_bar.get()
@@ -1527,7 +1566,7 @@ class App(customtkinter.CTk):
                 weather_data.to_csv(f'{power_weather_data_path}/weather_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
                 power_data.to_csv(f'{power_weather_data_path}/power_data_{fsa_typed}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.csv', index=False)
             
-            
+            print("    Data is collected.")
             
             
             # Normalize Data
@@ -1583,12 +1622,19 @@ class App(customtkinter.CTk):
             for model in selected_models:
                 if model == "K-Nearest Neighbors":
                     Power_Forecasting_KNN_Saver.save_knn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
+                    print("    "+ model +" Trained.")
                 if model == "Linear Regression":
                     Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
+                    print("    "+ model +" Trained.")
                 if model == "X Gradient Boost":
                     Power_Forecasting_XGB_Saver.save_xgb_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
+                    print("    "+ model +" Trained.")
                 if model == "Convolutional Neural Network":
-                    Power_Forecasting_CNN_Saver.save_cnn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits)
+                    Power_Forecasting_CNN_Saver.save_cnn_model(norm_weather_data[total_features], norm_power_data, power_scaler, fsa_typed, saved_model_path, selected_features_3_digits, x_y_input_path)
+                    print("    "+ model +" Trained.")
+                    
+            print("Done Training!")
+            print("\n")
             
             # Append FSA to drop down menu list
             global fsa_predict_list
@@ -1607,7 +1653,7 @@ class App(customtkinter.CTk):
                                                           font = my_button_font,
                                                           anchor="center", command=self.train_models_button_event)
             self.train_models_button.grid(row=2, column=2, padx = padding_x_option2, pady = (10, 10), sticky = "new")
-                
+                    
             #Progress Bar Function for Ontartio training dataset
             def update_progress():
                 for i in range(101):
@@ -1644,8 +1690,8 @@ class App(customtkinter.CTk):
         
     def train_input_excel_models_button_event(self):
         try:
-            
-            # Reset progress bar to 0 and make color of button the hover color
+            print("Training Provided Dataset Models...")
+            # Reset progress bar to 0 and make color of button the hover colnor
             self.train_models_button_any.grid_forget()
             self.train_models_button_any = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Train Models",
                                                           fg_color="#560067",
@@ -1734,12 +1780,20 @@ class App(customtkinter.CTk):
             for model in selected_models:
                 if model == "K-Nearest Neighbors":
                     Power_Forecasting_KNN_Saver.save_knn_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)
+                    print("    "+ model +" Trained.")
                 if model == "Linear Regression":
                     Power_Forecasting_LR_Saver.save_lr_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)
+                    print("    "+ model +" Trained.")
                 if model == "X Gradient Boost":
                     Power_Forecasting_XGB_Saver.save_xgb_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)   
+                    print("    "+ model +" Trained.")
                 if model == "Convolutional Neural Network":
-                    Power_Forecasting_CNN_Saver.save_cnn_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits)
+                    Power_Forecasting_CNN_Saver.save_cnn_model(norm_weather_data[total_features], norm_power_data, power_scaler, input_data_basename, saved_model_path, selected_features_3_digits, x_y_input_path)
+                    print("    "+ model +" Trained.")
+                    
+            print("Done Training!")
+            print("\n")
+            
             
             # Add normal button back
             self.train_models_button_any = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Train Models",
@@ -1907,8 +1961,9 @@ class App(customtkinter.CTk):
                     self.button_summary_frame.grid_columnconfigure(3,weight=1)
                     self.button_summary_frame.grid_columnconfigure(4,weight=5)
                     self.button_summary_frame.rowconfigure(0,weight=1)
+                    self.button_summary_frame.rowconfigure(1,weight=1)
                 
-                    
+                    # Save Results
                     self.save_results_button = customtkinter.CTkButton(self.button_summary_frame, corner_radius=20, height=40, border_spacing=10, text="Save Results (Most Recent Run)",
                                                                   bg_color='#05122d',
                                                                   fg_color="#4B0082",
@@ -1916,7 +1971,28 @@ class App(customtkinter.CTk):
                                                                   text_color=("gray10", "gray90"),
                                                                   font = my_button_font,
                                                                   anchor="center", command=self.save_results_button_event)
-                    self.save_results_button.grid(row=0, column=1, sticky = "new")
+                    self.save_results_button.grid(row=0, column=1, padx = padding_x, sticky = "ew")
+                    
+                    
+                    # Create search bar for Email
+                    self.email_search_bar = customtkinter.CTkEntry(self.button_summary_frame, placeholder_text ="Enter Email(s) (ex. john.doe@gmail.com, ...)",
+                                            fg_color="#14206d",  # Foreground color (entry background)
+                                          bg_color="#05122d",  # Background color (frame background)
+                                          text_color="#ffffff",  # Text color
+                                          font=my_text_font)
+                    self.email_search_bar.grid(row=0, column=2, padx = padding_x, sticky = "ew")
+                    
+                    # Create Email button
+                    self.email_button = customtkinter.CTkButton(self.button_summary_frame, corner_radius=20, height=40, border_spacing=10, text="Send Saved Results to Email",
+                                                                  fg_color="#4B0082",  
+                                                                  bg_color= '#05122d',hover_color="#560067",
+                                                                  text_color=("gray10", "gray90"),
+                                                                  font = my_button_font,
+                                                                  anchor="center", command=self.send_email_button_event)
+                    self.email_button.grid(row=1, column=2, padx = padding_x, sticky = "new")
+                    
+                    
+                    
                     
                     self.restart_program_button = customtkinter.CTkButton(self.button_summary_frame, corner_radius=20, height=40, border_spacing=10, text="Exit Back to Start Menu",
                                                                   bg_color='#05122d',
@@ -1925,7 +2001,7 @@ class App(customtkinter.CTk):
                                                                   text_color=("gray10", "gray90"),
                                                                   font = my_button_font,
                                                                   anchor="center", command=self.restart_program_button_event)
-                    self.restart_program_button.grid(row=0, column=3, sticky = "new")
+                    self.restart_program_button.grid(row=0, column=3, padx = padding_x, sticky = "ew")
                 
                 
             # Function to display when no model is saved
@@ -1976,7 +2052,7 @@ class App(customtkinter.CTk):
                                                                   anchor="center", command=self.restart_program_button_event)
                     self.restart_program_button.grid(row=0, column=1, sticky = "new")
             
-            
+            print("Forecasting Predicted Datset Models.")
             # Begin RGB waiting sequence
             try:
                 Power_Forecasting_Corsair_RGB.connect(rgb_lights)
@@ -1991,8 +2067,8 @@ class App(customtkinter.CTk):
             weather_data =  pd.read_excel(input_data_filename, sheet_name = "Weather_Forecast", header = 0)
             weather_data = Power_Forecasting_dataCollectionAndPreprocessingFlow.add_calendar_columns(weather_data)
             weather_data = Power_Forecasting_dataCollectionAndPreprocessingFlow.add_lags_to_weather_data(weather_data, 23)
-            
             weather_data_cnn = weather_data.copy()
+            
     
             # Remove X days because of lags
             weather_data = weather_data.reset_index(drop = True)
@@ -2021,11 +2097,7 @@ class App(customtkinter.CTk):
             norm_weather_data_cnn = weather_scaler.transform(weather_data_cnn_dropped)
             norm_weather_data_cnn = pd.DataFrame(norm_weather_data_cnn, columns = weather_data_cnn_dropped.columns)
             
-            for feature in norm_weather_data_cnn.columns:
-              if ("Lag" in feature):
-                norm_weather_data_cnn = norm_weather_data_cnn.drop(columns = [feature])
-            
-           
+      
             ###############################################################################
             # Import and predict Models
             ###############################################################################
@@ -2110,7 +2182,7 @@ class App(customtkinter.CTk):
                     data = X_test
                     
                     #window_size = 168  # Last 168 hours (one week)
-                    window_size = 24  # Last 24 hours (one day)
+                    window_size = 24*cnn_days_back  # Last 24 hours (one day)
                     forecast_horizon = 24  # Next 24 hours
                     
                     
@@ -2134,9 +2206,7 @@ class App(customtkinter.CTk):
                         
                         Y_pred_cnn = pd.DataFrame(Y_pred_cnn, columns=['TOTAL_CONSUMPTION'])
                         
-                        print(Y_pred_cnn)
                         Y_pred_saved = pd.concat([Y_pred_saved, Y_pred_cnn], axis=0, ignore_index=True)
-                        print(Y_pred_saved)
     
                 else:
                     # Predict using loaded model
@@ -2166,7 +2236,9 @@ class App(customtkinter.CTk):
                 
                 # Round to 4 decimal places
                 Y_pred_denorm_saved_df[model_name] = Y_pred_denorm_saved_df[model_name].round(decimals = 4)
-           
+                
+                print("    " + model_name + " - Forecast Generated.")
+                
             # Dictionary for model prediction dataframes error 
             # model -> Value
             table_values = {}
@@ -2243,7 +2315,6 @@ class App(customtkinter.CTk):
                     
                     metrics_values_columns = pd.DataFrame([metrics_values[model_name].columns], columns = metrics_values[model_name].columns)
                     table_values_columns = pd.DataFrame([table_values[model_name].columns], columns = table_values[model_name].columns)
-                    print(metrics_values_columns)
                     
                     metrics_values[model_name] = pd.concat([metrics_values_columns, metrics_values[model_name].iloc[0:]]).reset_index(drop=True) 
                     table_values[model_name] = pd.concat([table_values_columns, table_values[model_name].iloc[0:]]).reset_index(drop=True)
@@ -2284,6 +2355,8 @@ class App(customtkinter.CTk):
             
             count_no_models = 0
             self.select_frame_by_name("Model: Linear Regression")
+            print("Done Forecating!")
+            print("\n")
             
             # Complete RGB waiting sequence
             try:
@@ -2298,7 +2371,10 @@ class App(customtkinter.CTk):
             except:
                 pass
         
-        
+    def upload_open_cnn_param_button_event(self):
+        cnn_param_template_path = os.path.join(x_y_input_path, "CNN_Hyperparameters.xlsx")
+        os.startfile(cnn_param_template_path)
+
     def open_file_button_event(self):
         input_excel_template_path = os.path.join(input_excel_path, "Input_Data_Excel_File_Template.xlsm")
         os.startfile(input_excel_template_path)
@@ -2312,37 +2388,110 @@ class App(customtkinter.CTk):
         input_data_basename = input_data_basename_split[0]
         
     def save_results_button_event(self):
-        blank_dataframe = pd.DataFrame(columns=['No Saved Results'])
-        saved_results_path = os.path.join(output_results_path, "Output_Results.xlsx")
-        writer = pd.ExcelWriter(saved_results_path, engine = "xlsxwriter")
-        for model_name in model_names_list:
-            if model_name == "K-Nearest Neighbors":
-                model_name = "KNN"
-            if model_name == "Convolutional Neural Network":
-                model_name = "CNN" 
-            if model_name == "Linear Regression":
-                model_name = "LR"
-            if model_name == "X Gradient Boost":
-                model_name = "XGB" 
+        try:
+            blank_dataframe = pd.DataFrame(columns=['No Saved Results'])
+            saved_results_path = os.path.join(output_results_path, "Output_Results.xlsx")
+            writer = pd.ExcelWriter(saved_results_path, engine = "xlsxwriter")
+            for model_name in model_names_list:
+                if model_name == "K-Nearest Neighbors":
+                    model_name = "KNN"
+                if model_name == "Convolutional Neural Network":
+                    model_name = "CNN" 
+                if model_name == "Linear Regression":
+                    model_name = "LR"
+                if model_name == "X Gradient Boost":
+                    model_name = "XGB" 
+                try:
+                    save_results_dic[model_name].to_excel(writer, sheet_name = (model_name + "_Model_Results"), index = False)
+                    workbook  = writer.book
+                    worksheet = writer.sheets[(model_name + "_Model_Results")]
+                    worksheet.set_column('A:D', 10)
+                    worksheet.set_column('E:F', 30)
+                    worksheet.set_column('G:K', 20)
+                except:
+                    blank_dataframe.to_excel(writer, sheet_name = (model_name + "_Model_Results"), index = False)
+                    workbook  = writer.book
+                    worksheet = writer.sheets[(model_name + "_Model_Results")]
+                    worksheet.set_column('A:A', 29)
+                    continue
+            writer.close()
+            os.startfile(saved_results_path)
+        except Exception as error:
+            print("An exception occurred:", error)
+            # Complete RGB waiting sequence
             try:
-                save_results_dic[model_name].to_excel(writer, sheet_name = (model_name + "_Model_Results"), index = False)
-                workbook  = writer.book
-                worksheet = writer.sheets[(model_name + "_Model_Results")]
-                worksheet.set_column('A:D', 10)
-                worksheet.set_column('E:F', 30)
-                worksheet.set_column('G:K', 20)
+                Power_Forecasting_Corsair_RGB.error(rgb_lights)
             except:
-                blank_dataframe.to_excel(writer, sheet_name = (model_name + "_Model_Results"), index = False)
-                workbook  = writer.book
-                worksheet = writer.sheets[(model_name + "_Model_Results")]
-                worksheet.set_column('A:A', 29)
-                continue
-        writer.close()
-        os.startfile(saved_results_path)
-        
+                pass
+    
+    def send_email_button_event(self):
+        try:
+            
+            # Begin RGB waiting sequence
+            try:
+                Power_Forecasting_Corsair_RGB.connect(rgb_lights)
+            except:
+                pass
+            
+            try:
+                Power_Forecasting_Corsair_RGB.waiting(rgb_lights)
+            except:
+                pass
+            
+            receiver_email = self.email_search_bar.get()
+            receiver_email = "".join(receiver_email.split())
+            receiver_email = receiver_email.split(",")
+            print(receiver_email)
+            
+            subject = "BV05 Power Forecasting - Results"
+            body = "Hello,\n\nPlease see attached results.\n\nSincerely,\nThe Power Forecasters"
+            sender_email = "powerforecasting@gmail.com"
+            recipient_email = receiver_email
+            sender_password = "eepk rmfp cmlu lyup"
+            smtp_server = 'smtp.gmail.com'
+            smtp_port = 465
+            
+            saved_results_path = os.path.join(output_results_path, "Output_Results.xlsx")
+            path_to_file = saved_results_path
+            
+            # MIMEMultipart() creates a container for an email message that can hold
+            # different parts, like text and attachments and in next line we are
+            # attaching different parts to email container like subject and others.
+            message = MIMEMultipart()
+            message['Subject'] = subject
+            message['From'] = sender_email
+            message['To'] = ', '.join(recipient_email)
+            body_part = MIMEText(body)
+            message.attach(body_part)
+            
+            # section 1 to attach file
+            with open(path_to_file,'rb') as file:
+                # Attach the file with filename to the email
+                message.attach(MIMEApplication(file.read(), Name="Output_Results.xlsx"))
+            
+            # secction 2 for sending email
+            with smtplib.SMTP_SSL(smtp_server, smtp_port) as server:
+               server.login(sender_email, sender_password)
+               server.sendmail(sender_email, recipient_email, message.as_string())
+            print("Message Sent!")
+            
+            # Complete RGB waiting sequence
+            try:
+                Power_Forecasting_Corsair_RGB.done_waiting(rgb_lights)
+            except:
+                pass
+        except Exception as error:
+            print("An exception occurred:", error)
+            # Complete RGB waiting sequence
+            try:
+                Power_Forecasting_Corsair_RGB.error(rgb_lights)
+            except:
+                pass
+
     def restart_program_button_event(self): 
         global restart_program
         restart_program = 1
+        
         # Complete RGB waiting sequence
         try:
             Power_Forecasting_Corsair_RGB.done_waiting(rgb_lights)
@@ -2392,23 +2541,17 @@ class App(customtkinter.CTk):
             else:
                 selected_features_3_digits.append(selected_features_str[:3])
         
-        print("checkbox frame modified: ", selected_features)
-        print("checkbox frame modified: ", selected_features_3_digits)
+        #print("checkbox frame modified: ", selected_features)
+        #print("checkbox frame modified: ", selected_features_3_digits)
         
     def models_checkbox_event(self):
         global selected_models
         selected_models = self.scrollable_models_checkbox_frame.get_checked_items()
-        print("checkbox frame modified: ", selected_models)
+        #print("checkbox frame modified: ", selected_models)
     
     def show_table_checkbox_event(self):
         self.detailed_table_checkbox_var.get()
         #print("checkbox toggled, current value:", self.detailed_table_checkbox_var.get())
-    
-    def print_calendar_size(self, event=None):
-        bbox = self.calendar.bbox("1.0")
-        width = bbox[2] - bbox[0]
-        height = bbox[3] - bbox[1]
-        print(f"Calendar size - Width: {width}, Height: {height}")
     
     
     
@@ -2423,11 +2566,8 @@ class App(customtkinter.CTk):
             self.navigation_frame.grid(row=0, column=0, sticky="nsew")
         self.navigation_visible = not self.navigation_visible
     
-    
-
-    
-    
 if __name__ == "__main__":
+    
     #%% Student directory
     hanad_run = ["./data", 1]
     clover_run = ["./data", 2]
@@ -2455,10 +2595,6 @@ if __name__ == "__main__":
         print("ERROR!! NO ELIGIBLE STUDENT!")
         
     dirs_inputs = run_student[0]
-    
-    
-    
-    
     
     #%% Run GUI
     app = App()
