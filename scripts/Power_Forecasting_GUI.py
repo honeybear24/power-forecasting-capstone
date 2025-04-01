@@ -34,11 +34,7 @@ import datetime
 from datetime import datetime, date, timedelta
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import os
-import openpyxl
 import xlsxwriter
-import math
 import numpy as np
 import canada_holiday
 from keras import models
@@ -2444,7 +2440,7 @@ class App(customtkinter.CTk):
             print(receiver_email)
             
             subject = "BV05 Power Forecasting - Results"
-            body = "Hello,\n\nPlease see attached results.\n\nSincerely,\nThe Power Forecasters"
+            body = "Hello,\n\nThank you for using our Power Forecasting tool. Please find the attached data file containing the detailed forecasted power consumption values for your selected area and selected machine learning models. We trust this information will be valuable to your analysis.\n\nIf you have any questions or need further assistance, please do not hesitate to contact us.\n\nSincerely,\nThe Power Forecasters\nHanad Mohamud | Clover K. Joseph | Joseph Sposato | Janna Wong\nEmail: powerforecasting@gmail.com"
             sender_email = "powerforecasting@gmail.com"
             recipient_email = receiver_email
             sender_password = "eepk rmfp cmlu lyup"
@@ -2580,7 +2576,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_pc_run
+    run_student = user_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):

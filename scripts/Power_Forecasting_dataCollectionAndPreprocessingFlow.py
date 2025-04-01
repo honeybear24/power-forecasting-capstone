@@ -145,8 +145,8 @@ def find_fsa_index(fsa: str, fsa_map: dict):
 def find_fsa_lat_lon(index: int, fsa_map : dict):
     for i, key in enumerate(fsa_map):
         if i == index:
-            return fsa_map[key]["lat"], fsa_map[key]["lon"]
-    return 43.27, -79.95 # Return default lat and lon if index not found (default case and good location since it is near good weather stations)
+            return fsa_map[key]["lat"], fsa_map[key]["lon"], key
+    return 43.27, -79.95, "M2M" # Return default lat and lon if index not found (default case and good location since it is near good weather stations)
 
 # get_weather_data - For a given day and FSA (through the lat and long), get the weather data for that day
 async def get_weather_data(session: aiohttp.ClientSession, current_date: datetime, next_date: datetime, lat: float, lon: float, fsa: str, fsa_map: dict):
@@ -156,25 +156,26 @@ async def get_weather_data(session: aiohttp.ClientSession, current_date: datetim
     bbox_limit = 0.2   # Bounding box limit for data collection
     current_lat = lat # Current latitude
     current_lon = lon # Current longitude
+    current_fsa = fsa
     hard_reset = 20 # If the code can't get data after 20 tries, it will hard reset the lat and lon to a neighboring FSA
     reset_counter = 0 # Counter to keep track of how many times the code has tried to get data
 
     while True: # Loop to get data until enough data is collected (need at least 24 data points for day)
         reset_counter += 1 # Increment counter
-
+        
         # If counter is greater than hard reset, reset lat and lon to a neighboring FSA
         if reset_counter > hard_reset:
             reset_counter = 0 # Reset counter
-            print("FAILED TO FIND WEATHER DATA FOR - " + fsa + " - " + str(current_date) + " - " + str(next_date) + " - WILL GET FROM NEIGHBORING FSA") # alert user of hard reset
-
+            print("FAILED TO FIND WEATHER DATA FOR - " + current_fsa + " - " + str(current_date) + " - " + str(next_date) + " - WILL GET FROM NEIGHBORING FSA") # alert user of hard reset
+            
             # Find index of current FSA in fsa_map dictionary
-            fsa_index = find_fsa_index(fsa, fsa_map)
+            fsa_index = find_fsa_index(current_fsa, fsa_map)
 
             # Get the lat long of a neighboring FSA  index
             if fsa_index > 230: # If index number is greater than 230, get the lat long of the previous index
-                current_lat, current_lon = find_fsa_lat_lon(fsa_index-1, fsa_map)
+                current_lat, current_lon, current_fsa = find_fsa_lat_lon(fsa_index-1, fsa_map)
             else: # If index number is less than 230, get the lat long of the previous index
-                current_lat, current_lon = find_fsa_lat_lon(fsa_index+1, fsa_map)
+                current_lat, current_lon, current_fsa = find_fsa_lat_lon(fsa_index+1, fsa_map)
             bbox_limit = 0.2 # Reset bounding box limit
 
         bbox = f'{current_lon-bbox_limit},{current_lat-bbox_limit},{current_lon+bbox_limit},{current_lat+bbox_limit}' # Bounding box for data collection
@@ -218,16 +219,16 @@ async def get_weather_data(session: aiohttp.ClientSession, current_date: datetim
             
             reset_counter = 0 # Reset counter
 
-            print("EDGE CASE FOUND - " + fsa + " - " + str(current_date) + " - " + str(next_date)) # print edge case found
+            print("EDGE CASE FOUND - " + current_fsa + " - " + str(current_date) + " - " + str(next_date)) # print edge case found
 
             # Find index of current FSA in fsa_map dictionary
-            fsa_index = find_fsa_index(fsa, fsa_map)
+            fsa_index = find_fsa_index(current_fsa, fsa_map)
 
             # Get the lat long of a neighboring FSA  index
             if fsa_index > 230: # If index number is greater than 230, get the lat long of the previous index
-                current_lat, current_lon = find_fsa_lat_lon(fsa_index-1, fsa_map)
+                current_lat, current_lon, current_fsa = find_fsa_lat_lon(fsa_index-1, fsa_map)
             else: # If index number is less than 230, get the lat long of the previous index
-                current_lat, current_lon = find_fsa_lat_lon(fsa_index+1, fsa_map)
+                current_lat, current_lon, current_fsa = find_fsa_lat_lon(fsa_index+1, fsa_map)
             bbox_limit = 0.2 # Reset bounding box limit
             await asyncio.sleep(0.25) # Add a slight delay to avoid overloading the server
 

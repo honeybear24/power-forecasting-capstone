@@ -112,7 +112,10 @@ def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler,
     sequential_list.append(layers.Dense(24))
     
     for i in range(iterations_param):
+        # Print what iteration is being conducted
+        print("Iteration " + str(i+1) + "/" + str(iterations_param))
         
+        # Define CNN model
         cnn_model = models.Sequential(sequential_list)
         
         # Customizing the Adam optimizer
@@ -173,6 +176,7 @@ def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler,
             Y_pred_denormalized = Y_pred_denormalized_temp
             
         keras.backend.clear_session()
+        print("\n")
     
     mape = smallest_mape
     mape_list_df = pd.DataFrame(mape_list)
