@@ -1221,7 +1221,7 @@ class App(customtkinter.CTk):
             total_features_temp = total_features.copy()
             for lag in range (1, 24):
                 for feature in total_features_temp:
-                    if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
+                    if (feature == "Weekend" or feature == "Season" or feature == "Holiday (Ontario)" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
                         continue
                     else:
                         total_features.append(feature+"_Lag_"+str(lag))
@@ -1257,7 +1257,7 @@ class App(customtkinter.CTk):
                 if (model_name == "CNN"):
                     
                     for feature in X_test.columns:
-                      if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature) or ("Hour_" in feature)):
+                      if (feature == "Weekend" or feature == "Season" or feature == "Holiday (Ontario)" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature) or ("Hour_" in feature)):
                         X_test[feature].astype('bool')
                       if ("Lag" in feature):
                         X_test = X_test.drop(columns = [feature])
@@ -1617,7 +1617,7 @@ class App(customtkinter.CTk):
             total_features_temp = total_features.copy()
             for lag in range (1, 24):
                 for feature in total_features_temp:
-                    if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
+                    if (feature == "Weekend" or feature == "Season" or feature == "Holiday (Ontario)" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
                         continue
                     else:
                         total_features.append(feature+"_Lag_"+str(lag))
@@ -1776,7 +1776,7 @@ class App(customtkinter.CTk):
             total_features_temp = total_features.copy()
             for lag in range (1, 24):
                 for feature in total_features_temp:
-                    if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
+                    if (feature == "Weekend" or feature == "Season" or feature == "Holiday (Ontario)" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
                         continue
                     else:
                         total_features.append(feature+"_Lag_"+str(lag))
@@ -2143,7 +2143,7 @@ class App(customtkinter.CTk):
             total_features_temp = total_features.copy()
             for lag in range (1, 24):
                 for feature in total_features_temp:
-                    if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
+                    if (feature == "Weekend" or feature == "Season" or feature == "Holiday (Ontario)" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature)):
                         continue
                     else:
                         total_features.append(feature+"_Lag_"+str(lag))
@@ -2182,7 +2182,7 @@ class App(customtkinter.CTk):
                 if (model_name == "CNN"):
                     
                     for feature in X_test.columns:
-                      if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature) or ("Hour_" in feature)):
+                      if (feature == "Weekend" or feature == "Season" or feature == "Holiday (Ontario)" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature) or ("Hour_" in feature)):
                         X_test[feature].astype('bool')
                       if ("Lag" in feature):
                         X_test = X_test.drop(columns = [feature])

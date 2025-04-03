@@ -52,7 +52,7 @@ def add_calendar_columns(data: pd.DataFrame):
     data['Season'] =  data['Season'].astype(int)
 
     # Add Holiday Column
-    data['Holiday'] = 0 # Initialize Holiday Column
+    data['Holiday (Ontario)'] = 0 # Initialize Holiday Column
     holiday_array = []
     temp_value = 0 # Temporary value to store holiday value for the day
     for index, row in  data.iterrows(): # Loop through all rows in dataframe
@@ -69,7 +69,7 @@ def add_calendar_columns(data: pd.DataFrame):
         else:
             holiday_array.append(temp_value)
             #data.loc[index, 'Holiday'] = temp_value # Fill in holdiay column for rest of day
-    data['Holiday'] = holiday_array
+    data['Holiday (Ontario)'] = holiday_array
     
     # Convert year, month, day, hour to boolean values
     # Day range 1 to 31 (subtract last day for 0 condition)

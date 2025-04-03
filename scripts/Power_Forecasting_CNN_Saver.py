@@ -60,7 +60,7 @@ def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler,
     Y_df_CNN = Y_df_CNN['TOTAL_CONSUMPTION']
     
     for feature in X_df_CNN.columns:
-      if (feature == "Weekend" or feature == "Season" or feature == "Holiday" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature) or ("Hour_" in feature)):
+      if (feature == "Weekend" or feature == "Season" or feature == "Holiday (Ontario)" or ("Year_" in feature) or ("Month_" in feature) or ("Day_" in feature) or ("Hour_" in feature)):
         X_df_CNN[feature].astype('bool')
       if ("Lag" in feature):
         X_df_CNN = X_df_CNN.drop(columns = [feature])
