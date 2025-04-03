@@ -153,6 +153,8 @@ async def get_weather_data(session: aiohttp.ClientSession, current_date: datetim
 
     # Set Up
     weather_data = []   # List to store weather data 
+    # count_weather_data_list = 0
+    error_occurs = 0
     bbox_limit = 0.2   # Bounding box limit for data collection
     current_lat = lat # Current latitude
     current_lon = lon # Current longitude
@@ -174,8 +176,11 @@ async def get_weather_data(session: aiohttp.ClientSession, current_date: datetim
             # Get the lat long of a neighboring FSA  index
             if fsa_index > 230: # If index number is greater than 230, get the lat long of the previous index
                 current_lat, current_lon, current_fsa = find_fsa_lat_lon(fsa_index-1, fsa_map)
+
             else: # If index number is less than 230, get the lat long of the previous index
                 current_lat, current_lon, current_fsa = find_fsa_lat_lon(fsa_index+1, fsa_map)
+
+
             bbox_limit = 0.2 # Reset bounding box limit
 
         bbox = f'{current_lon-bbox_limit},{current_lat-bbox_limit},{current_lon+bbox_limit},{current_lat+bbox_limit}' # Bounding box for data collection
@@ -187,7 +192,7 @@ async def get_weather_data(session: aiohttp.ClientSession, current_date: datetim
         # Check if response data is in JSON format
         try:
             response_data = await response.json() # Get data from response
-
+            
             # If enough data was found, extract data and stron in weather_data list
             if 'features' in response_data and len(response_data['features']) > 23:
                 for data_point in response_data['features']:
@@ -207,8 +212,19 @@ async def get_weather_data(session: aiohttp.ClientSession, current_date: datetim
                     })
                 
                 weather_data_df_temp = pd.DataFrame(weather_data)
+                
+                # dataframe to check if an entire column contains none
+                error_occurs = 0
+                weather_data_df_temp_check_none = weather_data_df_temp.drop(columns = "Windchill")
+                for column in weather_data_df_temp_check_none.columns:
+                    if weather_data_df_temp_check_none[column].isnull().all():
+                        error_occurs = 1
+                
+                
+                
                 hour_unique_count = weather_data_df_temp['Hour'].nunique()
-                if(hour_unique_count>23):
+
+                if(hour_unique_count>23 and error_occurs == 0):
                     break # Break loop if enough data is found
 
             else: # If not enough data is found, increase the bounding box to get more data

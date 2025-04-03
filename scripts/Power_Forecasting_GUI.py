@@ -14,7 +14,7 @@ import Power_Forecasting_KNN_Saver
 import Power_Forecasting_LR_Saver
 import Power_Forecasting_XGB_Saver
 import Power_Forecasting_CNN_Saver
-import Power_Forecasting_Corsair_RGB
+#import Power_Forecasting_Corsair_RGB
 import asyncio
 import aiohttp 
 import nest_asyncio 
@@ -42,7 +42,7 @@ import time
 import threading
 import joblib
 import gc
-from pyrgbdev import Corsair
+#from pyrgbdev import Corsair
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -2576,7 +2576,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = user_run
+    run_student = joseph_laptop_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):
