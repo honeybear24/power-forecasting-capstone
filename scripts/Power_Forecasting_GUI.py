@@ -436,7 +436,7 @@ class App(customtkinter.CTk):
         
         
         # Create Show Detailed Table Check Box
-        self.detailed_table_checkbox_var = customtkinter.IntVar(value = 1)
+        self.detailed_table_checkbox_var = customtkinter.IntVar(value = 0)
         self.detailed_table_checkbox = customtkinter.CTkCheckBox(self.option1_frame, text="Show Detailed Table",
                                                       text_color=("gray10", "gray90"), variable = self.detailed_table_checkbox_var, onvalue = 1, offvalue = 0, 
                                                       checkmark_color="#14206d",  
@@ -570,6 +570,15 @@ class App(customtkinter.CTk):
         self.progress_bar_train_any.grid(row=3, column=1, padx = padding_x_option3, pady=0, sticky="new")
         self.progress_bar_train_any.set(0)  # Initialize the progress bar to 0
         
+        # Create Show Detailed Table Check Box
+        self.detailed_table_checkbox_var_excel = customtkinter.IntVar(value = 0)
+        self.detailed_table_checkbox_excel = customtkinter.CTkCheckBox(self.option3_frame, text="Show Detailed Table",
+                                                      text_color=("gray10", "gray90"), variable = self.detailed_table_checkbox_var_excel, onvalue = 1, offvalue = 0, 
+                                                      checkmark_color="#14206d",  
+                                                      bg_color= "#05122d",
+                                                      command = self.show_table_checkbox_event)
+        self.detailed_table_checkbox_excel.grid(row=3, column=3, padx = padding_x_option3, pady = 0, sticky = "new")
+        
         # Create Predict button
         self.predict_models_button = customtkinter.CTkButton(self.option3_frame, corner_radius=20, height=40, border_spacing=10, text="Forecast Models",
                                                       fg_color="#14206d",
@@ -578,7 +587,7 @@ class App(customtkinter.CTk):
                                                       text_color=("gray10", "gray90"),
                                                       font = my_button_font,
                                                       anchor="center", command=self.predict_input_excel_models_button_event)
-        self.predict_models_button.grid(row=2, column=3, padx = padding_x_option3, pady = 20, sticky = "new")
+        self.predict_models_button.grid(row=2, column=3, padx = padding_x_option3, pady = 20, sticky = "sew")
  
         # Create textbox 3 for guide
         
@@ -1926,17 +1935,21 @@ class App(customtkinter.CTk):
                     # Display Table of Error
                     table_values_tp = table_values.transpose()
                     
-                    
-                    # Positining of Figure
-                    self.model_table = CTkTable(model_frame, width=1, height=1, values=table_values_tp.values.tolist(), 
-                                fg_color='#05122d',       # Foreground color (table background)
-                                bg_color='#05122d',       # Background color (frame background)
-                                text_color='white',     # Text color
-                                header_color='#560067',
-                                hover_color=("gray70", "gray30"), anchor="w",
-                                 font = customtkinter.CTkFont(family="Roboto Condensed", size=12))
-                    self.model_table.grid(row=2, column=0, padx=20, pady=10, columnspan=2)
-                    
+                    # Do not show table if user did not click "Show Detailed Table" button
+                    try:
+                        self.model_table.grid_forget()
+                    except:
+                        pass
+                    if (self.detailed_table_checkbox_var_excel.get() == 1):
+                        # Positining of Figure
+                        self.model_table = CTkTable(model_frame, width=1, height=1, values=table_values_tp.values.tolist(), 
+                                    fg_color='#05122d',       # Foreground color (table background)
+                                    bg_color='#05122d',       # Background color (frame background)
+                                    text_color='white',     # Text color
+                                    header_color='#560067',
+                                    hover_color=("gray70", "gray30"), anchor="w",
+                                     font = customtkinter.CTkFont(family="Roboto Condensed", size=12))
+                        self.model_table.grid(row=2, column=0, padx=20, pady=10, columnspan=2)
                     
                     # Positining of Figure
                     self.metrix_table = CTkTable(model_frame, width=1, height=1, values=metrics_values.values.tolist(), 
