@@ -14,7 +14,7 @@ import Power_Forecasting_KNN_Saver
 import Power_Forecasting_LR_Saver
 import Power_Forecasting_XGB_Saver
 import Power_Forecasting_CNN_Saver
-#import Power_Forecasting_Corsair_RGB
+import Power_Forecasting_Corsair_RGB
 import asyncio
 import aiohttp 
 import nest_asyncio 
@@ -42,7 +42,7 @@ import time
 import threading
 import joblib
 import gc
-#from pyrgbdev import Corsair
+from pyrgbdev import Corsair
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -105,11 +105,12 @@ class App(customtkinter.CTk):
         ###############################################################################
         # Initialize GUI
         ###############################################################################
-        
+            
         customtkinter.set_default_color_theme("blue") # change the colour theme of the application
         super().__init__()    
         self.title("Power Forecasting")
-        self.geometry("1920x1080")
+        self.after(1, self.wm_state, 'zoomed') 
+        
         
         # Set grid layout 1x2
         self.grid_rowconfigure(0, weight=1)
@@ -2589,7 +2590,7 @@ if __name__ == "__main__":
     ############### MAKE SURE TO CHANGE BEFORE RUNNING CODE #######################
     ###############################################################################
     # Paste student name_run for whoever is running the code
-    run_student = joseph_laptop_run
+    run_student = user_run
     if (run_student[1] == joseph_laptop_run[1]):
         print("JOSEPH IS RUNNING!")
     elif (run_student[1] == hanad_run[1]):
