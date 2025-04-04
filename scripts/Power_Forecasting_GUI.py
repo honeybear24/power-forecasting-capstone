@@ -14,7 +14,11 @@ import Power_Forecasting_KNN_Saver
 import Power_Forecasting_LR_Saver
 import Power_Forecasting_XGB_Saver
 import Power_Forecasting_CNN_Saver
-import Power_Forecasting_Corsair_RGB
+try:
+    import Power_Forecasting_Corsair_RGB
+    from pyrgbdev import Corsair
+except:
+    pass
 import asyncio
 import aiohttp 
 import nest_asyncio 
@@ -42,7 +46,6 @@ import time
 import threading
 import joblib
 import gc
-from pyrgbdev import Corsair
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
