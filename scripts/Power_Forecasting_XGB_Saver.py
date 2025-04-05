@@ -18,9 +18,10 @@ def save_xgb_model(X_df_XGB: pd.DataFrame, Y_df_XGB: pd.DataFrame, power_scaler,
     X_train, X_test, Y_train, Y_test = train_test_split(
         X_df_XGB, 
         Y_df_XGB["TOTAL_CONSUMPTION"],
-        test_size=730/(61320),
+        test_size=720/(60624),
         shuffle=False  # Keep time series order
     )
+    #X_train, X_test_dummy, Y_train, Y_test_dummy = train_test_split(X_train, Y_train, test_size=1/(60624), shuffle=True, random_state=42)
 
     # Create and train the XGBoost model
     xgb_model = xgb.XGBRegressor(

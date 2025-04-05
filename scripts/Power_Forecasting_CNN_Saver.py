@@ -85,7 +85,8 @@ def save_cnn_model(X_df_CNN: pd.DataFrame, Y_df_CNN: pd.DataFrame, power_scaler,
     X_data, y_data = np.array(X_data, dtype=np.float64), np.array(y_data, dtype=np.float64)
     X_data = np.expand_dims(X_data, axis=-1)
     
-    X_train, X_test, Y_train, Y_test = train_test_split(X_data, y_data, test_size=730/(61320), shuffle=False, random_state=42)
+    X_train, X_test, Y_train, Y_test = train_test_split(X_data, y_data, test_size=720/(60624), shuffle=False, random_state=42)
+    #X_train, X_test_dummy, Y_train, Y_test_dummy = train_test_split(X_train, Y_train, test_size=1/(60624), shuffle=True, random_state=42)
     
     gc.collect()
     mape_list = []

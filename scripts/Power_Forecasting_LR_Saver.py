@@ -18,7 +18,9 @@ def save_lr_model(X: pd.DataFrame, Y: pd.DataFrame, power_scaler, fsa, file_path
     pipe = make_pipeline(SplineTransformer(n_knots=6, degree=3, knots='quantile'), linear_model.Ridge(alpha=2.7755102040816326))
     
     # Train model - Extract only January from X dataframe
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y['TOTAL_CONSUMPTION'], test_size=730/(61320), shuffle=False)
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y['TOTAL_CONSUMPTION'], test_size=720/(60624), shuffle=False)
+    
+    #X_train, X_test_dummy, Y_train, Y_test_dummy = train_test_split(X_train, Y_train, test_size=1/(60624), shuffle=True, random_state=42)
     pipe.fit(X_train, Y_train)
 
     # Save model
